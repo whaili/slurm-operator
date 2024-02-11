@@ -1,0 +1,45 @@
+---
+# SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
+# SPDX-License-Identifier: Apache-2.0
+
+# https://skaffold.dev/docs/references/yaml/
+apiVersion: skaffold/v4beta1
+kind: Config
+profiles:
+  - name: dev
+    build:
+      artifacts:
+        - image: slinky.slurm.net/slurm-operator
+          context: ../../
+          docker:
+            dockerfile: Dockerfile.dev
+          hooks:
+            before:
+              - command: ["make", "vendor"]
+                dir: ../../
+                os: [linux, darwin]
+      tagPolicy:
+        inputDigest: {}
+      local:
+        push: false
+    deploy:
+      helm:
+        releases:
+          - name: slurm-operator
+            chartPath: ./
+            valuesFiles:
+              - ./values-dev.yaml
+            setValueTemplates:
+              image.repository: '{{.IMAGE_REPO_slinky_slurm_net_slurm_operator}}'
+              image.tag: '{{.IMAGE_TAG_slinky_slurm_net_slurm_operator}}'
+            namespace: slinky
+            createNamespace: true
+deploy:
+  helm:
+    releases:
+      - name: slurm-operator
+        chartPath: ./
+        valuesFiles:
+          - ./values-dev.yaml
+        namespace: slinky
+        createNamespace: true

@@ -1,0 +1,120 @@
+{{- /*
+SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+{{- if .Values.controller.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "slurm.token.name" . }}
+  namespace: {{ include "slurm.namespace" . }}
+  labels:
+    {{- include "slurm.token.labels" . | nindent 4 }}
+spec:
+  ttlSecondsAfterFinished: 0
+  template:
+    metadata:
+      annotations:
+        helm.sh/hook: post-install,post-upgrade
+        kubectl.kubernetes.io/default-container: {{ printf "token-%s" (include "slurm.user" .) }}
+      labels:
+        {{- include "slurm.token.labels" . | nindent 8 }}
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ include "slurm.cluster.name" . }}
+      dnsConfig:
+        {{- include "slurm.dnsConfig" . | nindent 8 }}
+      {{- include "slurm.imagePullSecrets" . | nindent 6 }}
+      initContainers:
+        - name: init
+          image: {{ include "slurm.controller.imageRef" . }}
+          imagePullPolicy: {{ .Values.controller.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
+          env:
+            - name: SLURM_USER
+              value: {{ include "slurm.user" . }}
+          command:
+            - bash
+            - -c
+            - |
+              {{- range .Files.Lines "scripts/init.sh" }}
+              {{ . }}
+              {{- end }}{{- /* range .Files.Lines "scripts/init.sh" */}}
+          volumeMounts:
+            {{- include "slurm.init.volumeMounts" . | nindent 12 }}
+        - name: sackd
+          image: {{ include "slurm.authcred.imageRef" . }}
+          imagePullPolicy: {{ include "slurm.imagePullPolicy" . }}
+          restartPolicy: Always
+          securityContext:
+            {{- include "slurm.securityContext" . | nindent 12 }}
+          command:
+            - bash
+            - -c
+            - |
+              sackd
+              sleep inf
+          volumeMounts:
+            {{- include "slurm.volumeMounts" . | nindent 12 }}
+            - name: authsocket
+              mountPath: /run/slurm
+      containers:
+        - name: {{ printf "token-%s" (include "slurm.user" .) }}
+          image: {{ include "slurm.controller.imageRef" . }}
+          imagePullPolicy: {{ .Values.controller.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
+          env:
+            - name: SLURM_USER
+              value: {{ include "slurm.user" . }}
+            - name: JWT_SECRET
+              value: {{ include "slurm.jwt.hs256.secretName" . }}
+            - name: TOKEN_SECRET
+              value: {{ include "slurm.cluster.secretName" . }}
+          command:
+            - bash
+            - -c
+            - |
+              {{- range .Files.Lines "scripts/init-token-secret.sh" }}
+              {{ . }}
+              {{- end }}{{- /* .Files.Lines "scripts/init-token-secret.sh" */}}
+          volumeMounts:
+            {{- include "slurm.volumeMounts" . | nindent 12 }}
+            - name: authsocket
+              mountPath: /run/slurm
+        {{- if (index .Values "slurm-exporter" "exporter" "enabled") }}
+        - name: {{ printf "token-%s" (include "exporter.user" .) }}
+          image: {{ include "slurm.controller.imageRef" . }}
+          imagePullPolicy: {{ .Values.controller.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
+          env:
+            - name: SLURM_USER
+              value: {{ include "exporter.user" . }}
+            - name: JWT_SECRET
+              value: {{ include "slurm.jwt.hs256.secretName" . }}
+            - name: TOKEN_SECRET
+              value: {{ index .Values "slurm-exporter" "exporter" "secretName" }}
+          command:
+            - bash
+            - -c
+            - |
+              {{- range .Files.Lines "scripts/init-token-secret.sh" }}
+              {{ . }}
+              {{- end }}{{- /* .Files.Lines "scripts/init-token-secret.sh" */}}
+          volumeMounts:
+            {{- include "slurm.volumeMounts" . | nindent 12 }}
+            - name: authsocket
+              mountPath: /run/slurm
+        {{- end }}{{- /* if slurm-exporter.exporter.enabled */}}
+      volumes:
+        {{- include "slurm.volumes" $ | nindent 8 }}
+        - name: slurm-config
+          projected:
+            defaultMode: 0600
+            sources:
+              - configMap:
+                  name: {{ include "slurm.configMapName" . }}
+                  items:
+                    - key: slurm.conf
+                      path: slurm.conf
+                      mode: 0644
+              - secret:
+                  name: {{ include "slurm.auth.secretName" $ }}
+{{- end }}{{- /* if .Values.controller.enabled */}}
