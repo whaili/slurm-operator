@@ -7,7 +7,7 @@ appVersion: "24.05"
 description: Helm Chart for Slurm HPC Workload Manager
 name: slurm
 type: application
-version: 0.1.0
+version: 0.2.0
 
 dependencies:
   - name: mariadb

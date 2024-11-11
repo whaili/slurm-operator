@@ -1,6 +1,6 @@
 # slurm-operator
 
-![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 24.05](https://img.shields.io/badge/AppVersion-24.05-informational?style=flat-square)
+![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 24.05](https://img.shields.io/badge/AppVersion-24.05-informational?style=flat-square)
 
 Helm Chart for Slurm HPC Workload Manager Operator
 
@@ -14,7 +14,7 @@ Helm Chart for Slurm HPC Workload Manager Operator
 | certManager.secretName | string | `"slurm-operator-webhook-ca"` |  The secret to be (created and) mounted. |
 | fullnameOverride | string | `""` |  Overrides the full name of the release. |
 | image.repository | string | `"ghcr.io/slinkyproject/slurm-operator"` |  Sets the image repository to use. |
-| image.tag | string | The Release appVersion. |  Sets the image tag to use. |
+| image.tag | string | The Release version. |  Sets the image tag to use. |
 | imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |
 | imagePullSecrets | list | `[]` |  Sets the image pull secrets. Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
 | nameOverride | string | `""` |  Overrides the name of the release. |

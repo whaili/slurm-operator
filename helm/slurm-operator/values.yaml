@@ -38,8 +38,8 @@ image:
   #
   # -- (string)
   # Sets the image tag to use.
-  # @default -- The Release appVersion.
-  tag: ""
+  # @default -- The Release version.
+  tag: 0.2.0
 
 #
 # -- (string)
