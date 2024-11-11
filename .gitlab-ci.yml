@@ -55,7 +55,7 @@ build:
         helm package --dependency-update ${chart};
       done
   rules:
-    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_REF_PROTECTED != "true"
       changes:
         - Dockerfile
         - \'**/*.go\'
@@ -83,7 +83,7 @@ push:
         helm cm-push ./${CHART_ARTIFACT} ${CI_PROJECT_NAME};
       done
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_REF_PROTECTED == "true"
       changes:
         - Dockerfile
         - \'**/*.go\'
@@ -119,7 +119,9 @@ release:
         helm pull ${CI_PROJECT_NAME}/${CHART_NAME};
         helm push ./${CHART_ARTIFACT} oci://${DOCKER_REGISTRY}/charts;
       done
-  when: manual
+  rules:
+    - if: $CI_COMMIT_REF_PROTECTED == "true"
+      when: manual
 
 include:
   - template: Jobs/Secret-Detection.gitlab-ci.yml
