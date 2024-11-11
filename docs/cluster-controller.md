@@ -2,7 +2,7 @@
 
 ## Table of Contents
 
-<!-- mdformat-toc start --slug=github --no-anchors --maxlevel=3 --minlevel=1 -->
+<!-- mdformat-toc start --slug=github --no-anchors --maxlevel=6 --minlevel=1 -->
 
 - [Cluster Controller](#cluster-controller)
   - [Table of Contents](#table-of-contents)

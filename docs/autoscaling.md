@@ -5,14 +5,16 @@ metrics. This guide discusses how to configure autoscaling using [KEDA].
 
 ## Table of Contents
 
-<!-- mdformat-toc start --slug=github --no-anchors --maxlevel=3 --minlevel=2 -->
+<!-- mdformat-toc start --slug=github --no-anchors --maxlevel=6 --minlevel=1 -->
 
-- [Table of Contents](#table-of-contents)
-- [Getting Started](#getting-started)
-  - [Dependencies](#dependencies)
-- [Autoscaling](#autoscaling-1)
-  - [NodeSet Scale Subresource](#nodeset-scale-subresource)
-  - [KEDA ScaledObject](#keda-scaledobject)
+- [Autoscaling](#autoscaling)
+  - [Table of Contents](#table-of-contents)
+  - [Getting Started](#getting-started)
+    - [Dependencies](#dependencies)
+      - [Verify KEDA Metrics API Server is running](#verify-keda-metrics-api-server-is-running)
+  - [Autoscaling](#autoscaling-1)
+    - [NodeSet Scale Subresource](#nodeset-scale-subresource)
+    - [KEDA ScaledObject](#keda-scaledobject)
 
 <!-- mdformat-toc end -->
 

@@ -5,18 +5,25 @@ development on this project.
 
 ## Table of Contents
 
-<!-- mdformat-toc start --slug=github --no-anchors --maxlevel=3 --minlevel=2 -->
+<!-- mdformat-toc start --slug=github --no-anchors --maxlevel=6 --minlevel=1 -->
 
-- [Table of Contents](#table-of-contents)
-- [Getting Started](#getting-started)
-  - [Dependencies](#dependencies)
-  - [Running on the Cluster](#running-on-the-cluster)
-- [Operator](#operator)
-  - [Install CRDs](#install-crds)
-  - [Uninstall CRDs](#uninstall-crds)
-  - [Modifying the API Definitions](#modifying-the-api-definitions)
-  - [Slurm Version Changed](#slurm-version-changed)
-  - [Running the operator locally](#running-the-operator-locally)
+- [Development](#development)
+  - [Table of Contents](#table-of-contents)
+  - [Getting Started](#getting-started)
+    - [Dependencies](#dependencies)
+      - [Pre-Commit](#pre-commit)
+      - [Docker](#docker)
+      - [Helm](#helm)
+      - [Skaffold](#skaffold)
+      - [Kubernetes Client](#kubernetes-client)
+    - [Running on the Cluster](#running-on-the-cluster)
+      - [Automatic](#automatic)
+  - [Operator](#operator)
+    - [Install CRDs](#install-crds)
+    - [Uninstall CRDs](#uninstall-crds)
+    - [Modifying the API Definitions](#modifying-the-api-definitions)
+    - [Slurm Version Changed](#slurm-version-changed)
+    - [Running the operator locally](#running-the-operator-locally)
 
 <!-- mdformat-toc end -->
 

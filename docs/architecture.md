@@ -2,13 +2,21 @@
 
 ## Table of Contents
 
-<!-- mdformat-toc start --slug=github --no-anchors --maxlevel=3 --minlevel=1 -->
+<!-- mdformat-toc start --slug=github --no-anchors --maxlevel=6 --minlevel=1 -->
 
 - [Architecture](#architecture)
   - [Table of Contents](#table-of-contents)
   - [Overview](#overview)
   - [Big Picture](#big-picture)
   - [Directory Map](#directory-map)
+    - [`api/`](#api)
+    - [`cmd/`](#cmd)
+    - [`config/`](#config)
+    - [`docs/`](#docs)
+    - [`hack/`](#hack)
+    - [`helm/`](#helm)
+    - [`internal/`](#internal)
+    - [`internal/controller/`](#internalcontroller)
 
 <!-- mdformat-toc end -->
 
