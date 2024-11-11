@@ -41,9 +41,9 @@ See the [Quickstart Guide][quickstart] to install.
 ## Overall Architecture
 
 This is a basic architecture. A more in depth description can be found
-[in the docs directory](docs/dev/architecture.md)
+[in the docs directory][architecture].
 
-![Slinky Operator Architecture Diagram](docs/assets/slurm-operator_big-picture.svg)
+![Slinky Operator Architecture Diagram](./docs/assets/slurm-operator_big-picture.svg)
 
 ## Known Issues
 
@@ -67,9 +67,10 @@ specific language governing permissions and limitations under the License.
 
 <!-- links -->
 
+[architecture]: ./docs/architecture.md
 [custom-resources]: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/
 [helm]: https://helm.sh/
 [kubernetes]: https://kubernetes.io/
 [operator]: https://kubernetes.io/docs/concepts/extend-kubernetes/operator/
-[quickstart]: ./docs/user/quickstart.md
+[quickstart]: ./docs/quickstart.md
 [slurm]: https://slurm.schedmd.com/overview.html

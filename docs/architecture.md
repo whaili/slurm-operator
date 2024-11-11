@@ -19,7 +19,7 @@ This document describes the high-level architecture of the Slinky
 
 ## Big Picture
 
-![Big Picture](../assets/slurm-operator_big-picture.svg)
+![Big Picture](./assets/slurm-operator_big-picture.svg)
 
 The `slurm-operator` follows the Kubernetes
 [operator pattern][operator-pattern].
