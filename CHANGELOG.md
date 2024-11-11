@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Added container image labels.
+
 ### Fixed
 
 - Fixed HTTP/2 enabled by default. [CVE-2023-44487] [CVE-2023-39325]
