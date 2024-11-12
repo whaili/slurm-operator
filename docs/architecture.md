@@ -52,30 +52,30 @@ This project follows the conventions of:
 - [operator-sdk]
 - [Kubebuilder]
 
-#### `api/`
+### `api/`
 
 Contains Custom Kubernetes API definitions. These become Custom Resource
 Definitions (CRDs) and are installed into a Kubernetes cluster.
 
-#### `cmd/`
+### `cmd/`
 
 Contains code to be compiled into binary commands.
 
-#### `config/`
+### `config/`
 
 Contains yaml configuration files used for [kustomize] deployments.
 
-#### `docs/`
+### `docs/`
 
 Contains project documentation.
 
-#### `hack/`
+### `hack/`
 
 Contains files for development and Kubebuilder. This includes a kind.sh script
 that can be used to create a kind cluster with all pre-requisites for local
 testing.
 
-#### `helm/`
+### `helm/`
 
 Contains [helm] deployments, including the configuration files such as
 values.yaml.
@@ -83,11 +83,11 @@ values.yaml.
 Helm is the recommended method to install this project into your Kubernetes
 cluster.
 
-#### `internal/`
+### `internal/`
 
 Contains code that is used internally. This code is not externally importable.
 
-#### `internal/controller/`
+### `internal/controller/`
 
 Contains the controllers.
 
