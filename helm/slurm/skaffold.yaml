@@ -33,8 +33,3 @@ portForward:
     resourceName: slurm-restapi
     namespace: slurm
     port: 6820
-  - resourceType: service
-    resourceName: slurm-metrics
-    namespace: slurm
-    port: 8080
-    localPort: 8082
