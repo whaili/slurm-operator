@@ -12,9 +12,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/flowcontrol"
+	kubecontroller "k8s.io/kubernetes/pkg/controller"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -24,16 +24,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
+	"github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/podcontrol"
+	"github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/slurmcontrol"
 	"github.com/SlinkyProject/slurm-operator/internal/resources"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/durationstore"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/historycontrol"
 )
 
 const (
-	// BurstReplicas is a rate limiter for booting pods on a lot of pods.
-	// The value of 250 is chosen b/c values that are too high can cause registry DoS issues.
-	BurstReplicas = 250
-
 	// BackoffGCInterval is the time that has to pass before next iteration of backoff GC is run
 	BackoffGCInterval = 1 * time.Minute
 )
@@ -53,9 +51,6 @@ func init() {
 }
 
 var (
-	// controllerKind contains the schema.GroupVersionKind for this controller type.
-	controllerKind = slinkyv1alpha1.SchemeGroupVersion.WithKind("NodeSet")
-
 	maxConcurrentReconciles = 1
 
 	// this is a short cut for any sub-functions to notify the reconcile how long to wait to requeue
@@ -68,14 +63,16 @@ var (
 // NodeSetReconciler reconciles a NodeSet object
 type NodeSetReconciler struct {
 	client.Client
-	KubeClient *kubernetes.Clientset
-	Scheme     *runtime.Scheme
+	Scheme *runtime.Scheme
 
 	SlurmClusters *resources.Clusters
 	EventCh       chan event.GenericEvent
 
-	control        NodeSetControlInterface
+	podControl     podcontrol.PodControlInterface
+	slurmControl   slurmcontrol.SlurmControlInterface
 	historyControl historycontrol.HistoryControlInterface
+	eventRecorder  record.EventRecorderLogger
+	expectations   *kubecontroller.UIDTrackingControllerExpectations
 }
 
 //+kubebuilder:rbac:groups=slinky.slurm.net,resources=nodesets,verbs=get;list;watch;create;update;patch;delete
@@ -114,43 +111,33 @@ func (r *NodeSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (re
 		_ = durationStore.Pop(req.String())
 	}()
 
-	retErr = r.control.SyncNodeSet(ctx, req)
+	retErr = r.Sync(ctx, req)
 	res = reconcile.Result{
 		RequeueAfter: durationStore.Pop(req.String()),
+	}
+	if retErr != nil {
+		logger.Error(retErr, "encountered an error while reconciling request", "request", req)
 	}
 	return res, retErr
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *NodeSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	eventRecorder := record.NewBroadcaster().NewRecorder(r.Scheme, corev1.EventSource{Component: "nodeset-controller"})
+	r.eventRecorder = record.NewBroadcaster().NewRecorder(r.Scheme, corev1.EventSource{Component: "nodeset-controller"})
 	r.historyControl = historycontrol.NewHistoryControl(r.Client)
-	r.control = NewDefaultNodeSetControl(
-		r.Client,
-		r.KubeClient,
-		eventRecorder,
-		NewNodeSetPodControl(r.Client, eventRecorder, r.SlurmClusters),
-		NewRealNodeSetStatusUpdater(r.Client),
-		r.historyControl,
-		r.SlurmClusters,
-	)
-	podEventHandler := podEventHandler{
-		Reader: mgr.GetCache(),
+	r.podControl = podcontrol.NewPodControl(r.Client, r.eventRecorder)
+	r.slurmControl = slurmcontrol.NewSlurmControl(r.SlurmClusters)
+	r.expectations = kubecontroller.NewUIDTrackingControllerExpectations(kubecontroller.NewControllerExpectations())
+	podEventHandler := &podEventHandler{
+		Reader:       mgr.GetCache(),
+		expectations: r.expectations,
 	}
 	return ctrl.NewControllerManagedBy(mgr).
 		Named("nodeset-controller").
 		For(&slinkyv1alpha1.NodeSet{}).
 		Owns(&corev1.Pod{}).
-		Watches(&corev1.Node{}, &nodeEventHandler{
-			reader: mgr.GetCache(),
-		}).
-		Watches(&corev1.Pod{}, &podEventHandler).
-		WatchesRawSource(
-			source.Channel(
-				r.EventCh,
-				&podEventHandler,
-			),
-		).
+		Watches(&corev1.Pod{}, podEventHandler).
+		WatchesRawSource(source.Channel(r.EventCh, podEventHandler)).
 		WithOptions(controller.Options{
 			MaxConcurrentReconciles: maxConcurrentReconciles,
 		}).

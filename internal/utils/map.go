@@ -33,3 +33,17 @@ func GetNumberFromAnnotations(annotations map[string]string, key string) (int32,
 	}
 	return 0, nil
 }
+
+// GetBoolFromAnnotations returns the value of annotation.
+// Returns false if not set or the value is invalid.
+func GetBoolFromAnnotations(annotations map[string]string, key string) (bool, error) {
+	if value, exist := annotations[key]; exist {
+		b, err := strconv.ParseBool(value)
+		if err != nil {
+			// make sure we default to false on error.
+			return false, err
+		}
+		return b, nil
+	}
+	return false, nil
+}

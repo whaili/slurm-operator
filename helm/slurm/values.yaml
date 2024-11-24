@@ -327,7 +327,6 @@ compute:
       #
       # -- (integer)
       # Set the number of replicas to deploy.
-      # NOTE: if empty, all nodes matching affinity will have a replica (like DaemonSet).
       replicas: 1
       #
       # -- (int)
@@ -411,15 +410,6 @@ compute:
           # pods (ex: 10%). Absolute number is calculated from percentage by
           # rounding up. This can not be 0. Defaults to 1.
           maxUnavailable: 20%
-          #
-          # -- (int)
-          # Partition indicates the number of NodeSet pods that should be
-          # not be updated to the latest version.
-          partition: 0
-          #
-          # -- (bool)
-          # Pause will halt rollingUpdate while this value is true.
-          paused: false
       #
       # -- (object)
       # The policy used for PVCs created from the NodeSet VolumeClaimTemplates.
@@ -431,6 +421,14 @@ compute:
         # of `Retain` causes PVCs to not be affected by NodeSet deletion. The
         # `Delete` policy causes those PVCs to be deleted.
         whenDeleted: Retain
+        #
+        # -- (string)
+        # WhenScaled specifies what happens to PVCs created from NodeSet
+        # VolumeClaimTemplates when the NodeSet is scaled down. The default
+        # policy of `Retain` causes PVCs to not be affected by a scale-in. The
+        # `Delete` policy causes the associated PVCs for any excess pods to be
+        # deleted.
+        whenScaled: Retain
       #
       # --(list)
       # List of claims that pods are allowed to reference.

@@ -7,7 +7,12 @@ package utils
 import (
 	"sync"
 
+	kubecontroller "k8s.io/kubernetes/pkg/controller"
 	"k8s.io/utils/integer"
+)
+
+const (
+	SlowStartInitialBatchSize = kubecontroller.SlowStartInitialBatchSize
 )
 
 // SlowStartBatch tries to call the provided function a total of 'count' times,

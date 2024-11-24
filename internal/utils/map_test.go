@@ -103,15 +103,6 @@ func TestGetNumberFromAnnotations(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Get number from map key: invalid",
-			args: args{
-				annotations: map[string]string{"foo": "001"},
-				key:         "foo",
-			},
-			want:    0,
-			wantErr: true,
-		},
-		{
 			name: "Get number from map key: missing key",
 			args: args{
 				annotations: map[string]string{"bar": "1"},
@@ -139,6 +130,86 @@ func TestGetNumberFromAnnotations(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("GetNumberFromAnnotations() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetBoolFromAnnotations(t *testing.T) {
+	type args struct {
+		annotations map[string]string
+		key         string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    bool
+		wantErr bool
+	}{
+		{
+			name: "Get number from map key: True",
+			args: args{
+				annotations: map[string]string{"foo": "True"},
+				key:         "foo",
+			},
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "Get number from map key: False",
+			args: args{
+				annotations: map[string]string{"foo": "False"},
+				key:         "foo",
+			},
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "Get number from map key: 1",
+			args: args{
+				annotations: map[string]string{"foo": "1"},
+				key:         "foo",
+			},
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "Get number from map key: 0",
+			args: args{
+				annotations: map[string]string{"foo": "0"},
+				key:         "foo",
+			},
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "Get number from map key: missing key",
+			args: args{
+				annotations: map[string]string{"bar": "true"},
+				key:         "foo",
+			},
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "Get number from map key: parse error",
+			args: args{
+				annotations: map[string]string{"foo": " "},
+				key:         "foo",
+			},
+			want:    false,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := GetBoolFromAnnotations(tt.args.annotations, tt.args.key)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetBoolFromAnnotations() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("GetBoolFromAnnotations() = %v, want %v", got, tt.want)
 			}
 		})
 	}

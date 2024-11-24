@@ -7,6 +7,8 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Added container image labels.
+- Added `NodeSet.PersistentVolumeClaimRetentionPolicy.WhenScaled`
+- Added out-of-order scale-in for NodeSet pods.
 
 ### Fixed
 
@@ -19,8 +21,14 @@ All notable changes to this project will be documented in this file.
 - Changed Slurm image version to 24.11.
 - Changed token job to only use authcred container images.
 - Changed slurm-operator-webhook to use its own image.
+- Changed NodeSet controller to scale pods similar to StatefulSet, rather than
+  DaemonSet.
+- Changed `NodeSet.Status` fields.
 
 ### Removed
+
+- Removed `NodeSet.Spec.UpdateStrategy.RollingUpdate.Partition` option.
+- Removed `NodeSet.Spec.UpdateStrategy.RollingUpdate.Paused` option.
 
 <!-- Links -->
 

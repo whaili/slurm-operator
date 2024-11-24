@@ -11,44 +11,9 @@ import (
 	"github.com/SlinkyProject/slurm-operator/internal/annotations"
 )
 
-type PodByCreationTimestampAndPhase []*corev1.Pod
-
-func (o PodByCreationTimestampAndPhase) Len() int      { return len(o) }
-func (o PodByCreationTimestampAndPhase) Swap(i, j int) { o[i], o[j] = o[j], o[i] }
-
-func (o PodByCreationTimestampAndPhase) Less(i, j int) bool {
-	// Scheduled Pod first
-	if len(o[i].Spec.NodeName) != 0 && len(o[j].Spec.NodeName) == 0 {
-		return true
-	}
-
-	if len(o[i].Spec.NodeName) == 0 && len(o[j].Spec.NodeName) != 0 {
-		return false
-	}
-
-	if o[i].CreationTimestamp.Equal(&o[j].CreationTimestamp) {
-		return o[i].Name < o[j].Name
-	}
-	return o[i].CreationTimestamp.Before(&o[j].CreationTimestamp)
-}
-
-type PodByCost []*corev1.Pod
-
-func (o PodByCost) Len() int      { return len(o) }
-func (o PodByCost) Swap(i, j int) { o[i], o[j] = o[j], o[i] }
-func (o PodByCost) Less(i, j int) bool {
-	cost1, _ := GetNumberFromAnnotations(o[i].Annotations, annotations.PodDeletionCost)
-	cost2, _ := GetNumberFromAnnotations(o[j].Annotations, annotations.PodDeletionCost)
-
-	// Fallback to Sorting by CreationTimestamp
-	if cost1 == cost2 {
-		if o[i].CreationTimestamp.Equal(&o[j].CreationTimestamp) {
-			return o[i].Name < o[j].Name
-		}
-		return o[i].CreationTimestamp.Before(&o[j].CreationTimestamp)
-	}
-
-	return cost1 < cost2
+// IsPodCordon returns true if and only if the delete annotation is nodeset to true.
+func IsPodCordon(pod *corev1.Pod) bool {
+	return pod.GetAnnotations()[annotations.PodCordon] == "true"
 }
 
 // isRunningAndReady returns true if pod is in the PodRunning Phase, if it has a condition of PodReady.

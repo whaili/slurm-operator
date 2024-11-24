@@ -24,7 +24,7 @@ type SlurmControlInterface interface {
 	PingController(ctx context.Context, cluster *slinkyv1alpha1.Cluster) (bool, error)
 }
 
-// RealPodControl is the default implementation of SlurmControlInterface.
+// realSlurmControl is the default implementation of SlurmControlInterface.
 type realSlurmControl struct {
 	slurmClusters *resources.Clusters
 }

@@ -122,6 +122,15 @@ func validateNodeSet(r *NodeSet) (admission.Warnings, []error) {
 			errs = append(errs, fmt.Errorf("`NodeSet.Spec.PersistentVolumeClaimRetentionPolicy.WhenDeleted` is not valid. Got: %v. Expected of: %s; %s",
 				r.Spec.PersistentVolumeClaimRetentionPolicy.WhenDeleted, RetainPersistentVolumeClaimRetentionPolicyType, DeletePersistentVolumeClaimRetentionPolicyType))
 		}
+		switch r.Spec.PersistentVolumeClaimRetentionPolicy.WhenScaled {
+		case RetainPersistentVolumeClaimRetentionPolicyType:
+			// valid
+		case DeletePersistentVolumeClaimRetentionPolicyType:
+			// valid
+		default:
+			errs = append(errs, fmt.Errorf("`NodeSet.Spec.PersistentVolumeClaimRetentionPolicy.WhenScaled` is not valid. Got: %v. Expected of: %s; %s",
+				r.Spec.PersistentVolumeClaimRetentionPolicy.WhenScaled, RetainPersistentVolumeClaimRetentionPolicyType, DeletePersistentVolumeClaimRetentionPolicyType))
+		}
 	}
 
 	return warns, errs

@@ -11,7 +11,6 @@ import (
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 
-	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -111,12 +110,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	kubeClient, err := kubernetes.NewForConfig(mgr.GetConfig())
-	if err != nil {
-		setupLog.Error(err, "unable to create kubeClient")
-		os.Exit(1)
-	}
-
 	slurmClusters := resources.NewClusters()
 	eventCh := make(chan event.GenericEvent, 100)
 	if err = (&cluster.ClusterReconciler{
@@ -130,7 +123,6 @@ func main() {
 	}
 	if err = (&nodeset.NodeSetReconciler{
 		Client:        mgr.GetClient(),
-		KubeClient:    kubeClient,
 		Scheme:        mgr.GetScheme(),
 		SlurmClusters: slurmClusters,
 		EventCh:       eventCh,

@@ -18,39 +18,35 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - description: The desired number of pods.
-      jsonPath: .status.desiredNumberScheduled
-      name: DESIRED
-      type: integer
     - description: The current number of pods.
-      jsonPath: .status.currentNumberScheduled
-      name: CURRENT
+      jsonPath: .status.replicas
+      name: REPLICAS
       type: integer
     - description: The number of pods updated.
-      jsonPath: .status.updatedNumberScheduled
+      jsonPath: .status.updatedReplicas
       name: UPDATED
       type: integer
     - description: The number of pods ready.
-      jsonPath: .status.numberAvailable
+      jsonPath: .status.readyReplicas
       name: READY
       type: integer
     - description: The number of IDLE slurm nodes.
-      jsonPath: .status.numberIdle
+      jsonPath: .status.slurmIdle
       name: IDLE
       priority: 1
       type: integer
     - description: The number of ALLOCATED/MIXED slurm nodes.
-      jsonPath: .status.numberAllocated
+      jsonPath: .status.slurmAllocated
       name: ALLOCATED
       priority: 1
       type: integer
     - description: The number of DOWN slurm nodes.
-      jsonPath: .status.numberDown
+      jsonPath: .status.slurmDown
       name: DOWN
       priority: 1
       type: integer
     - description: The number of DRAIN slurm nodes.
-      jsonPath: .status.numberDrain
+      jsonPath: .status.slurmDrain
       name: DRAIN
       priority: 1
       type: integer
@@ -112,21 +108,29 @@ spec:
                       of `Retain` causes PVCs to not be affected by NodeSet deletion. The
                       `Delete` policy causes those PVCs to be deleted.
                     type: string
+                  whenScaled:
+                    description: |-
+                      WhenScaled specifies what happens to PVCs created from NodeSet
+                      VolumeClaimTemplates when the NodeSet is scaled down. The default
+                      policy of `Retain` causes PVCs to not be affected by a scaledown. The
+                      `Delete` policy causes the associated PVCs for any excess pods to be
+                      deleted.
+                    type: string
                 type: object
               replicas:
                 description: |-
                   replicas is the desired number of replicas of the given Template.
                   These are replicas in the sense that they are instantiations of the
                   same Template, but individual replicas also have a consistent identity.
-                  If unspecified, defaults to 0.
+                  If unspecified, defaults to 1.
                 format: int32
                 type: integer
               revisionHistoryLimit:
                 description: |-
                   revisionHistoryLimit is the maximum number of revisions that will
-                  be maintained in the StatefulSet's revision history. The revision history
+                  be maintained in the NodeSet's revision history. The revision history
                   consists of all revisions not represented by a currently applied
-                  StatefulSetSpec version. The default value is 10.
+                  NodeSetSpec version. The default value is 0.
                 format: int32
                 type: integer
               selector:
@@ -8268,23 +8272,8 @@ spec:
                           The maximum number of pods that can be unavailable during the update.
                           Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).
                           Absolute number is calculated from percentage by rounding up. This can not be 0.
-                          Defaults to 1. This field is alpha-level and is only honored by servers that enable the
-                          MaxUnavailableStatefulSet feature. The field applies to all pods in the range 0 to
-                          Replicas-1. That means if there is any unavailable pod in the range 0 to Replicas-1, it
-                          will be counted towards MaxUnavailable.
+                          Defaults to 1.
                         x-kubernetes-int-or-string: true
-                      partition:
-                        description: |-
-                          The number of NodeSet pods remained to be old version.
-                          Maximum value is status.desiredNumberScheduled, which means no pod will be updated.
-                          Default value is 0.
-                        format: int32
-                        type: integer
-                      paused:
-                        description: |-
-                          Indicates that the nodeset is paused and will not be processed by the
-                          nodeset controller.
-                        type: boolean
                     type: object
                   type:
                     description: |-
@@ -8310,6 +8299,11 @@ spec:
           status:
             description: NodeSetStatus defines the observed state of NodeSet
             properties:
+              availableReplicas:
+                description: Total number of available pods (ready for at least minReadySeconds)
+                  targeted by this NodeSet.
+                format: int32
+                type: integer
               collisionCount:
                 description: |-
                   Count of hash collisions for the NodeSet. The NodeSet controller
@@ -8378,97 +8372,71 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
-              currentNumberScheduled:
-                description: |-
-                  The number of NodeSet pods that are running and are supposed to be
-                  running.
-                format: int32
-                type: integer
-              desiredNumberScheduled:
-                description: |-
-                  The total number of NodeSet pods that should be running, including
-                  NodeSet pods that are correctly running.
-                format: int32
-                type: integer
               nodeSetHash:
                 description: |-
                   NodeSetHash is the "controller-revision-hash", which represents the
                   latest version of the NodeSet.
                 type: string
-              numberAllocated:
-                description: |-
-                  The number of NodeSet pods that are running and are in the Slurm
-                  ALLOCATED or MIXED state. ALLOCATED/MIXED means the Slurm node is
-                  allocated one or more Slurm jobs and is doing work.
-                format: int32
-                type: integer
-              numberAvailable:
-                description: |-
-                  The number of nodes that should be running the
-                  daemon pod and have one or more of the daemon pod running and
-                  available (ready for at least spec.minReadySeconds)
-                format: int32
-                type: integer
-              numberDown:
-                description: |-
-                  The number of NodeSet pods that are running and are in the Slurm
-                  DOWN state. DOWN means the Slurm node is unavailable for use.
-                format: int32
-                type: integer
-              numberDrain:
-                description: |-
-                  The number of NodeSet pods that are running and are in the Slurm DRAIN
-                  state. DRAIN means the Slurm node becomes unschedulable but allocated
-                  Slurm jobs will not be evicted and can continue running until completion.
-                format: int32
-                type: integer
-              numberIdle:
-                description: |-
-                  The number of NodeSet pods that are running and are in the Slurm IDLE
-                  state. IDLE means the Slurm nodes is not ALLOCATED or MIXED, hence is not
-                  allocated any Slurm jobs, nor doing work.
-                format: int32
-                type: integer
-              numberMisscheduled:
-                description: |-
-                  The number of NodeSet pods that are running but are not supposed to be
-                  running.
-                format: int32
-                type: integer
-              numberReady:
-                description: |-
-                  The number of NodeSet pods that are running, supposed to be running, and
-                  have a Ready Condition.
-                format: int32
-                type: integer
-              numberUnavailable:
-                description: |-
-                  The number of nodes that should be running the
-                  daemon pod and have none of the daemon pod running and available
-                  (ready for at least spec.minReadySeconds)
-                format: int32
-                type: integer
               observedGeneration:
                 description: |-
                   observedGeneration is the most recent generation observed for this NodeSet. It corresponds to the
                   NodeSet's generation, which is updated on mutation by the API Server.
                 format: int64
                 type: integer
+              readyReplicas:
+                description: readyReplicas is the number of pods targeted by this
+                  NodeSet with a Ready Condition.
+                format: int32
+                type: integer
+              replicas:
+                description: Total number of non-terminated pods targeted by this
+                  NodeSet (their labels match the Selector).
+                format: int32
+                type: integer
               selector:
                 description: Add Selector to status for HPA support in the scale subresource.
                 type: string
-              updatedNumberScheduled:
+              slurmAllocated:
                 description: |-
-                  The total number of NodeSet pods that are running, supposed to be
-                  running, and are running updated pods.
+                  The number of NodeSet pods that are running and are in the Slurm
+                  ALLOCATED or MIXED state. ALLOCATED/MIXED means the Slurm node is
+                  allocated one or more Slurm jobs and is doing work.
+                format: int32
+                type: integer
+              slurmDown:
+                description: |-
+                  The number of NodeSet pods that are running and are in the Slurm
+                  DOWN state. DOWN means the Slurm node is unavailable for use.
+                format: int32
+                type: integer
+              slurmDrain:
+                description: |-
+                  The number of NodeSet pods that are running and are in the Slurm DRAIN
+                  state. DRAIN means the Slurm node becomes unschedulable but allocated
+                  Slurm jobs will not be evicted and can continue running until completion.
+                format: int32
+                type: integer
+              slurmIdle:
+                description: |-
+                  The number of NodeSet pods that are running and are in the Slurm IDLE
+                  state. IDLE means the Slurm nodes is not ALLOCATED or MIXED, hence is not
+                  allocated any Slurm jobs, nor doing work.
+                format: int32
+                type: integer
+              unavailableReplicas:
+                description: |-
+                  Total number of unavailable pods targeted by this NodeSet. This is the total number of
+                  pods that are still required for the NodeSet to have 100% available capacity. They may
+                  either be pods that are running but not yet available or pods that still have not been created.
+                format: int32
+                type: integer
+              updatedReplicas:
+                description: Total number of non-terminated pods targeted by this
+                  NodeSet that have the desired template spec.
                 format: int32
                 type: integer
             required:
-            - currentNumberScheduled
-            - desiredNumberScheduled
             - nodeSetHash
-            - numberMisscheduled
-            - numberReady
             - selector
             type: object
         type: object

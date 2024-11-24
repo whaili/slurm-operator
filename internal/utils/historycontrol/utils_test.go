@@ -29,7 +29,7 @@ func TestSetRevision(t *testing.T) {
 			want: nil,
 		},
 		{
-			name: "empty 2",
+			name: "empty map",
 			args: args{
 				labels:   map[string]string{},
 				revision: "",
@@ -74,7 +74,7 @@ func TestGetRevision(t *testing.T) {
 			want: "",
 		},
 		{
-			name: "empty 2",
+			name: "empty map",
 			args: args{
 				labels: map[string]string{},
 			},

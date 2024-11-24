@@ -6,6 +6,7 @@ package nodeset
 
 import (
 	"context"
+	"encoding/json"
 
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -13,6 +14,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/historycontrol"
 )
 
 // truncateHistory truncates any non-live ControllerRevisions in revisions from nodeset's history. The UpdateRevision and
@@ -20,13 +22,13 @@ import (
 // considered to be live. Non-live revisions are deleted, starting with the revision with the lowest Revision, until
 // only RevisionHistoryLimit revisions remain. If the returned error is nil the operation was successful. This method
 // expects that revisions is sorted when supplied.
-func (nsc *defaultNodeSetControl) truncateHistory(
+func (r *NodeSetReconciler) truncateHistory(
 	ctx context.Context,
 	nodeset *slinkyv1alpha1.NodeSet,
 	revisions []*appsv1.ControllerRevision,
 	current, update *appsv1.ControllerRevision,
 ) error {
-	pods, err := nsc.getNodeSetPods(ctx, nodeset)
+	pods, err := r.getNodeSetPods(ctx, nodeset)
 	if err != nil {
 		return err
 	}
@@ -41,7 +43,7 @@ func (nsc *defaultNodeSetControl) truncateHistory(
 		live[update.Name] = true
 	}
 	for i := range pods {
-		live[getPodRevision(pods[i])] = true
+		live[historycontrol.GetRevision(pods[i].GetLabels())] = true
 	}
 	// collect live revisions and historic revisions
 	for i := range revisions {
@@ -57,7 +59,7 @@ func (nsc *defaultNodeSetControl) truncateHistory(
 	// delete any non-live history to maintain the revision limit.
 	history = history[:(historyLen - historyLimit)]
 	for i := 0; i < len(history); i++ {
-		if err := nsc.historyControl.DeleteControllerRevision(history[i]); err != nil {
+		if err := r.historyControl.DeleteControllerRevision(history[i]); err != nil {
 			return err
 		}
 	}
@@ -70,7 +72,7 @@ func (nsc *defaultNodeSetControl) truncateHistory(
 // building the ControllerRevision names for name collision avoidance. This method may create
 // a new revision, or modify the Revision of an existing revision if an update to nodeset is detected.
 // This method expects that revisions is sorted when supplied.
-func (nsc *defaultNodeSetControl) getNodeSetRevisions(
+func (r *NodeSetReconciler) getNodeSetRevisions(
 	nodeset *slinkyv1alpha1.NodeSet,
 	revisions []*appsv1.ControllerRevision,
 ) (*appsv1.ControllerRevision, *appsv1.ControllerRevision, int32, error) {
@@ -102,7 +104,7 @@ func (nsc *defaultNodeSetControl) getNodeSetRevisions(
 		} else {
 			// if the equivalent revision is not immediately prior we will roll back by incrementing the
 			// Revision of the equivalent revision
-			updateRevision, err = nsc.historyControl.UpdateControllerRevision(
+			updateRevision, err = r.historyControl.UpdateControllerRevision(
 				equalRevisions[equalCount-1],
 				updateRevision.Revision)
 			if err != nil {
@@ -111,7 +113,7 @@ func (nsc *defaultNodeSetControl) getNodeSetRevisions(
 		}
 	} else {
 		// if there is no equivalent revision we create a new one
-		updateRevision, err = nsc.historyControl.CreateControllerRevision(nodeset, updateRevision, &collisionCount)
+		updateRevision, err = r.historyControl.CreateControllerRevision(nodeset, updateRevision, &collisionCount)
 		if err != nil {
 			return nil, nil, collisionCount, err
 		}
@@ -155,7 +157,7 @@ func newRevision(nodeset *slinkyv1alpha1.NodeSet, revision int64, collisionCount
 	}
 	cr, err := history.NewControllerRevision(
 		nodeset,
-		controllerKind,
+		slinkyv1alpha1.NodeSetGVK,
 		nodeset.Spec.Template.Labels,
 		runtime.RawExtension{Raw: patch},
 		revision,
@@ -170,4 +172,31 @@ func newRevision(nodeset *slinkyv1alpha1.NodeSet, revision int64, collisionCount
 		cr.ObjectMeta.Annotations[key] = value
 	}
 	return cr, nil
+}
+
+// getPatch returns a strategic merge patch that can be applied to restore a NodeSet to a
+// previous version. If the returned error is nil the patch is valid. The current state that we save is just the
+// PodSpecTemplate. We can modify this later to encompass more state (or less) and remain compatible with previously
+// recorded patches.
+func getPatch(nodeset *slinkyv1alpha1.NodeSet) ([]byte, error) {
+	setBytes, err := json.Marshal(nodeset)
+	if err != nil {
+		return nil, err
+	}
+	var raw map[string]any
+	err = json.Unmarshal(setBytes, &raw)
+	if err != nil {
+		return nil, err
+	}
+	objCopy := make(map[string]any)
+	specCopy := make(map[string]any)
+
+	// Create a patch of the NodeSet that replaces spec.template
+	spec := raw["spec"].(map[string]any)
+	template := spec["template"].(map[string]any)
+	specCopy["template"] = template
+	template["$patch"] = "replace"
+	objCopy["spec"] = specCopy
+	patch, err := json.Marshal(objCopy)
+	return patch, err
 }

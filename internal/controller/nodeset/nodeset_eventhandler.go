@@ -1,20 +1,26 @@
 // SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
+// SPDX-FileCopyrightText: Copyright 2016 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 package nodeset
 
 import (
 	"context"
+	"fmt"
 	"reflect"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog/v2"
+	podutil "k8s.io/kubernetes/pkg/api/v1/pod"
+	kubecontroller "k8s.io/kubernetes/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -25,7 +31,7 @@ import (
 	slurmtypes "github.com/SlinkyProject/slurm-client/pkg/types"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
-	"github.com/SlinkyProject/slurm-operator/internal/utils"
+	nodesetutils "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/podinfo"
 )
 
@@ -33,15 +39,21 @@ var _ handler.EventHandler = &podEventHandler{}
 
 type podEventHandler struct {
 	client.Reader
+	expectations *kubecontroller.UIDTrackingControllerExpectations
 }
 
 func enqueueNodeSet(q workqueue.TypedRateLimitingInterface[reconcile.Request], nodeset *slinkyv1alpha1.NodeSet) {
-	q.Add(reconcile.Request{
+	enqueueNodeSetAfter(q, nodeset, 0)
+}
+
+func enqueueNodeSetAfter(q workqueue.TypedRateLimitingInterface[reconcile.Request], nodeset *slinkyv1alpha1.NodeSet, duration time.Duration) {
+	req := reconcile.Request{
 		NamespacedName: types.NamespacedName{
-			Name:      nodeset.GetName(),
 			Namespace: nodeset.GetNamespace(),
+			Name:      nodeset.GetName(),
 		},
-	})
+	}
+	q.AddAfter(req, duration)
 }
 
 func (e *podEventHandler) Create(
@@ -49,22 +61,39 @@ func (e *podEventHandler) Create(
 	evt event.CreateEvent,
 	q workqueue.TypedRateLimitingInterface[reconcile.Request],
 ) {
+	pod, ok := evt.Object.(*corev1.Pod)
+	if !ok {
+		return
+	}
+	e.createPod(ctx, pod, q)
+}
+
+func (e *podEventHandler) createPod(
+	ctx context.Context,
+	pod *corev1.Pod,
+	q workqueue.TypedRateLimitingInterface[reconcile.Request],
+) {
 	logger := log.FromContext(ctx)
-	pod := evt.Object.(*corev1.Pod)
-	if utils.IsTerminating(pod) {
+
+	if pod.DeletionTimestamp != nil {
 		// on a restart of the controller manager, it's possible a new pod shows up in a state that
 		// is already pending deletion. Prevent the pod from being a creation observation.
-		e.Delete(ctx, event.DeleteEvent{Object: evt.Object}, q)
+		e.deletePod(ctx, pod, q)
 		return
 	}
 
 	// If it has a ControllerRef, that's all that matters.
 	if controllerRef := metav1.GetControllerOf(pod); controllerRef != nil {
-		nodeset := e.resolveControllerRef(pod.Namespace, controllerRef)
+		nodeset := e.resolveControllerRef(ctx, pod.Namespace, controllerRef)
 		if nodeset == nil {
 			return
 		}
-		logger.V(1).Info("Pod added", "Pod", klog.KObj(pod))
+		nodesetKey, err := kubecontroller.KeyFunc(nodeset)
+		if err != nil {
+			return
+		}
+		logger.V(4).Info("Pod created", "pod", klog.KObj(pod), "detail", pod)
+		e.expectations.CreationObserved(logger, nodesetKey)
 		enqueueNodeSet(q, nodeset)
 		return
 	}
@@ -77,8 +106,7 @@ func (e *podEventHandler) Create(
 	if len(nodesetList) == 0 {
 		return
 	}
-	logger.V(1).Info("Orphan Pod created, matched Node owners",
-		"Pod", klog.KObj(pod), "Nodes", nodesetList)
+	logger.V(4).Info("Orphan Pod created", "pod", klog.KObj(pod), "detail", pod)
 	for _, nodeset := range nodesetList {
 		enqueueNodeSet(q, nodeset)
 	}
@@ -89,12 +117,45 @@ func (e *podEventHandler) Update(
 	evt event.UpdateEvent,
 	q workqueue.TypedRateLimitingInterface[reconcile.Request],
 ) {
+	e.updatePod(ctx, evt.ObjectNew, evt.ObjectOld, q)
+}
+
+// When a pod is updated, figure out what replica nodeset/s manage it and wake them
+// up. If the labels of the pod have changed we need to awaken both the old
+// and new replica nodeset. old and cur must be *corev1.Pod types.
+func (e *podEventHandler) updatePod(
+	ctx context.Context,
+	cur, old any,
+	q workqueue.TypedRateLimitingInterface[reconcile.Request],
+) {
 	logger := log.FromContext(ctx)
-	oldPod := evt.ObjectOld.(*corev1.Pod)
-	curPod := evt.ObjectNew.(*corev1.Pod)
+	curPod, ok := cur.(*corev1.Pod)
+	if !ok {
+		return
+	}
+	oldPod, ok := old.(*corev1.Pod)
+	if !ok {
+		return
+	}
+
 	if curPod.ResourceVersion == oldPod.ResourceVersion {
 		// Periodic resync will send update events for all known pods.
 		// Two different versions of the same pod will always have different RVs.
+		return
+	}
+
+	labelChanged := !reflect.DeepEqual(curPod.Labels, oldPod.Labels)
+	if curPod.DeletionTimestamp != nil {
+		// when a pod is deleted gracefully it's deletion timestamp is first modified to reflect a grace period,
+		// and after such time has passed, the kubelet actually deletes it from the store. We receive an update
+		// for modification of the deletion timestamp and expect a nodeset to create more replicas asap, not wait
+		// until the kubelet actually deletes the pod. This is different from the Phase of a pod changing, because
+		// a nodeset never initiates a phase change, and so is never asleep waiting for the same.
+		e.deletePod(ctx, curPod, q)
+		if labelChanged {
+			// we don't need to check the oldPod.DeletionTimestamp because DeletionTimestamp cannot be unset.
+			e.deletePod(ctx, oldPod, q)
+		}
 		return
 	}
 
@@ -103,42 +164,42 @@ func (e *podEventHandler) Update(
 	controllerRefChanged := !reflect.DeepEqual(curControllerRef, oldControllerRef)
 	if controllerRefChanged && oldControllerRef != nil {
 		// The ControllerRef was changed. Sync the old controller, if any.
-		if nodeset := e.resolveControllerRef(oldPod.Namespace, oldControllerRef); nodeset != nil {
+		if nodeset := e.resolveControllerRef(ctx, oldPod.Namespace, oldControllerRef); nodeset != nil {
 			enqueueNodeSet(q, nodeset)
 		}
 	}
 
-	if curPod.DeletionTimestamp != nil {
-		// when a pod is deleted gracefully its deletion timestamp is first modified to reflect a grace period,
-		// and after such time has passed, the kubelet actually deletes it from the store. We receive an update
-		// for modification of the deletion timestamp and expect a NodeSet to create more Pods asap, not wait
-		// until the kubelet actually deletes the pod.
-		e.deletePod(ctx, curPod, q, false)
-		return
-	}
-
 	// If it has a ControllerRef, that's all that matters.
 	if curControllerRef != nil {
-		nodeset := e.resolveControllerRef(curPod.Namespace, curControllerRef)
+		nodeset := e.resolveControllerRef(ctx, curPod.Namespace, curControllerRef)
 		if nodeset == nil {
 			return
 		}
-		logger.V(1).Info("Pod updated with NodeSet owner",
-			"Pod", klog.KObj(curPod), "NodeSet", klog.KObj(nodeset))
+		logger.V(4).Info("Pod objectMeta updated.", "pod", klog.KObj(oldPod), "oldObjectMeta", oldPod.ObjectMeta, "curObjectMeta", curPod.ObjectMeta)
 		enqueueNodeSet(q, nodeset)
+		// TODO: MinReadySeconds in the Pod will generate an Available condition to be added in
+		// the Pod status which in turn will trigger a requeue of the owning nodeset thus
+		// having its status updated with the newly available replica. For now, we can fake the
+		// update by resyncing the controller MinReadySeconds after the it is requeued because
+		// a Pod transitioned to Ready.
+		// Note that this still suffers from #29229, we are just moving the problem one level
+		// "closer" to kubelet (from the deployment to the replica nodeset controller).
+		if !podutil.IsPodReady(oldPod) && podutil.IsPodReady(curPod) && nodeset.Spec.MinReadySeconds > 0 {
+			logger.V(2).Info("pod will be enqueued after a while for availability check", "duration", nodeset.Spec.MinReadySeconds, "kind", slinkyv1alpha1.NodeSetGVK, "pod", klog.KObj(oldPod))
+			requeueDuration := (time.Duration(nodeset.Spec.MinReadySeconds) * time.Second) + time.Second
+			enqueueNodeSetAfter(q, nodeset, requeueDuration)
+		}
 		return
 	}
 
 	// Otherwise, it's an orphan. If anything changed, sync matching controllers
 	// to see if anyone wants to adopt it now.
-	nodesetList := e.getPodNodeSets(ctx, curPod)
-	if len(nodesetList) == 0 {
-		return
-	}
-	logger.V(1).Info("Orphan Pod updated, matched Nodes",
-		"Pod", klog.KObj(curPod), "Nodes", nodesetList)
-	labelChanged := !reflect.DeepEqual(curPod.Labels, oldPod.Labels)
 	if labelChanged || controllerRefChanged {
+		nodesetList := e.getPodNodeSets(ctx, curPod)
+		if len(nodesetList) == 0 {
+			return
+		}
+		logger.V(4).Info("Orphan Pod objectMeta updated.", "pod", klog.KObj(oldPod), "oldObjectMeta", oldPod.ObjectMeta, "curObjectMeta", curPod.ObjectMeta)
 		for _, nodeset := range nodesetList {
 			enqueueNodeSet(q, nodeset)
 		}
@@ -150,40 +211,52 @@ func (e *podEventHandler) Delete(
 	evt event.DeleteEvent,
 	q workqueue.TypedRateLimitingInterface[reconcile.Request],
 ) {
-	logger := log.FromContext(ctx)
-	pod, ok := evt.Object.(*corev1.Pod)
-	if !ok {
-		logger.Error(nil, "DeleteEvent parse pod failed",
-			"DeleteStateUnknown", evt.DeleteStateUnknown,
-			"Object", klog.KObj(evt.Object))
-		return
-	}
-	e.deletePod(ctx, pod, q, true)
+	e.deletePod(ctx, evt.Object, q)
 }
 
+// When a pod is deleted, enqueue the replica nodeset that manages the pod and update its expectations.
+// obj could be an *corev1.Pod, or a DeletionFinalStateUnknown marker item.
 func (e *podEventHandler) deletePod(
 	ctx context.Context,
-	pod *corev1.Pod,
+	obj any,
 	q workqueue.TypedRateLimitingInterface[reconcile.Request],
-	isDeleted bool,
 ) {
 	logger := log.FromContext(ctx)
+	pod, ok := obj.(*corev1.Pod)
+
+	// When a delete is dropped, the relist will notice a pod in the store not
+	// in the list, leading to the insertion of a tombstone object which contains
+	// the deleted key/value. Note that this value might be stale. If the pod
+	// changed labels the new ReplicaSet will not be woken up till the periodic resync.
+	if !ok {
+		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
+		if !ok {
+			utilruntime.HandleError(fmt.Errorf("couldn't get object from tombstone %+v", obj))
+			return
+		}
+		pod, ok = tombstone.Obj.(*corev1.Pod)
+		if !ok {
+			utilruntime.HandleError(fmt.Errorf("tombstone contained object that is not a pod %#v", obj))
+			return
+		}
+	}
+
 	controllerRef := metav1.GetControllerOf(pod)
 	if controllerRef == nil {
 		// No controller should care about orphans being deleted.
 		return
 	}
-	nodeset := e.resolveControllerRef(pod.Namespace, controllerRef)
+	nodeset := e.resolveControllerRef(ctx, pod.Namespace, controllerRef)
 	if nodeset == nil {
 		return
 	}
-	if isDeleted {
-		logger.V(1).Info("NodeSet Pod deleted",
-			"Pod", klog.KObj(pod), "NodeSet", klog.KObj(nodeset))
-	} else {
-		logger.V(1).Info("NodeSet Pod terminating",
-			"Pod", klog.KObj(pod), "NodeSet", klog.KObj(nodeset))
+	nodesetKey, err := kubecontroller.KeyFunc(nodeset)
+	if err != nil {
+		utilruntime.HandleError(fmt.Errorf("couldn't get key for object %#v: %v", nodeset, err))
+		return
 	}
+	logger.V(4).Info("Pod deleted", "delete_by", utilruntime.GetCaller(), "deletion_timestamp", pod.DeletionTimestamp, "pod", klog.KObj(pod))
+	e.expectations.DeletionObserved(logger, nodesetKey, kubecontroller.PodKey(pod))
 	enqueueNodeSet(q, nodeset)
 }
 
@@ -192,7 +265,10 @@ func (e *podEventHandler) Generic(
 	evt event.GenericEvent,
 	q workqueue.TypedRateLimitingInterface[reconcile.Request],
 ) {
-	pod := evt.Object.(*corev1.Pod)
+	pod, ok := evt.Object.(*corev1.Pod)
+	if !ok {
+		return
+	}
 	namespacedName := types.NamespacedName{
 		Namespace: pod.Namespace,
 		Name:      pod.Name,
@@ -203,7 +279,7 @@ func (e *podEventHandler) Generic(
 
 	nodesetList := e.getPodNodeSets(ctx, pod)
 	for _, nodeset := range nodesetList {
-		if !isPodFromNodeSet(nodeset, pod) {
+		if !nodesetutils.IsPodFromNodeSet(nodeset, pod) {
 			continue
 		}
 		enqueueNodeSet(q, nodeset)
@@ -211,15 +287,17 @@ func (e *podEventHandler) Generic(
 }
 
 func (e *podEventHandler) resolveControllerRef(
+	ctx context.Context,
 	namespace string,
 	controllerRef *metav1.OwnerReference,
 ) *slinkyv1alpha1.NodeSet {
-	if controllerRef.Kind != controllerKind.Kind || controllerRef.APIVersion != controllerKind.GroupVersion().String() {
+	if controllerRef.Kind != slinkyv1alpha1.NodeSetKind || controllerRef.APIVersion != slinkyv1alpha1.NodeSetAPIVersion {
 		return nil
 	}
 
 	nodeset := &slinkyv1alpha1.NodeSet{}
-	if err := e.Get(context.TODO(), types.NamespacedName{Namespace: namespace, Name: controllerRef.Name}, nodeset); err != nil {
+	key := types.NamespacedName{Namespace: namespace, Name: controllerRef.Name}
+	if err := e.Get(ctx, key, nodeset); err != nil {
 		return nil
 	}
 	if nodeset.UID != controllerRef.UID {
@@ -233,7 +311,7 @@ func (e *podEventHandler) resolveControllerRef(
 func (e *podEventHandler) getPodNodeSets(ctx context.Context, pod *corev1.Pod) []*slinkyv1alpha1.NodeSet {
 	logger := log.FromContext(ctx)
 	nodesetList := slinkyv1alpha1.NodeSetList{}
-	if err := e.List(context.TODO(), &nodesetList, client.InNamespace(pod.Namespace)); err != nil {
+	if err := e.List(ctx, &nodesetList, client.InNamespace(pod.Namespace)); err != nil {
 		return nil
 	}
 
@@ -244,7 +322,6 @@ func (e *podEventHandler) getPodNodeSets(ctx context.Context, pod *corev1.Pod) [
 		if err != nil || selector.Empty() || !selector.Matches(labels.Set(pod.Labels)) {
 			continue
 		}
-
 		nsMatched = append(nsMatched, nodeset)
 	}
 
@@ -255,98 +332,6 @@ func (e *podEventHandler) getPodNodeSets(ctx context.Context, pod *corev1.Pod) [
 			"Pod", klog.KObj(pod), "NodeSets", nsMatched)
 	}
 	return nsMatched
-}
-
-var _ handler.EventHandler = &nodeEventHandler{}
-
-type nodeEventHandler struct {
-	reader client.Reader
-}
-
-func (e *nodeEventHandler) Create(
-	ctx context.Context,
-	evt event.CreateEvent,
-	q workqueue.TypedRateLimitingInterface[reconcile.Request],
-) {
-	logger := log.FromContext(ctx)
-	nodesetList := &slinkyv1alpha1.NodeSetList{}
-	err := e.reader.List(context.TODO(), nodesetList)
-	if err != nil {
-		logger.V(1).Error(err, "Error enqueueing NodeSets")
-		return
-	}
-
-	node := evt.Object.(*corev1.Node)
-	for i := range nodesetList.Items {
-		nodeset := &nodesetList.Items[i]
-		if shouldSchedule, _ := nodeShouldRunNodeSetPod(node, nodeset); shouldSchedule {
-			q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
-				Name:      nodeset.GetName(),
-				Namespace: nodeset.GetNamespace(),
-			}})
-		}
-	}
-}
-
-func (e *nodeEventHandler) Update(
-	ctx context.Context,
-	evt event.UpdateEvent,
-	q workqueue.TypedRateLimitingInterface[reconcile.Request],
-) {
-	logger := log.FromContext(ctx)
-	oldNode := evt.ObjectOld.(*corev1.Node)
-	curNode := evt.ObjectNew.(*corev1.Node)
-	if shouldIgnoreNodeUpdate(*oldNode, *curNode) {
-		return
-	}
-
-	nodesetList := &slinkyv1alpha1.NodeSetList{}
-	err := e.reader.List(context.TODO(), nodesetList)
-	if err != nil {
-		logger.Error(err, "Error listing NodeSets")
-		return
-	}
-	// TODO: it'd be nice to pass a hint with these enqueues, so that each nodeset would only examine the added node (unless it has other work to do, too).
-	for i := range nodesetList.Items {
-		nodeset := &nodesetList.Items[i]
-		oldShouldRun, oldShouldContinueRunning := nodeShouldRunNodeSetPod(oldNode, nodeset)
-		currentShouldRun, currentShouldContinueRunning := nodeShouldRunNodeSetPod(curNode, nodeset)
-		if (oldShouldRun != currentShouldRun) || (oldShouldContinueRunning != currentShouldContinueRunning) {
-			logger.V(1).Info("Node update triggers NodeSet to reconcile.",
-				"Node", klog.KObj(curNode), "NodeSet", klog.KObj(nodeset))
-			q.Add(reconcile.Request{
-				NamespacedName: types.NamespacedName{
-					Name:      nodeset.GetName(),
-					Namespace: nodeset.GetNamespace(),
-				},
-			})
-		}
-	}
-}
-
-func (e *nodeEventHandler) Delete(
-	ctx context.Context,
-	evt event.DeleteEvent,
-	q workqueue.TypedRateLimitingInterface[reconcile.Request],
-) {
-	// Intentionally empty
-}
-
-func (e *nodeEventHandler) Generic(
-	ctx context.Context,
-	evt event.GenericEvent,
-	q workqueue.TypedRateLimitingInterface[reconcile.Request],
-) {
-	// Intentionally empty
-}
-
-func shouldIgnoreNodeUpdate(oldNode, curNode corev1.Node) bool {
-	if !nodeInSameCondition(oldNode.Status.Conditions, curNode.Status.Conditions) {
-		return false
-	}
-	oldNode.ResourceVersion = curNode.ResourceVersion
-	oldNode.Status.Conditions = curNode.Status.Conditions
-	return apiequality.Semantic.DeepEqual(oldNode, curNode)
 }
 
 // SetEventHandler is a helper function to make slurm node updates propagate to

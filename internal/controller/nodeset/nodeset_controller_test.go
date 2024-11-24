@@ -27,6 +27,7 @@ import (
 	slurmtypes "github.com/SlinkyProject/slurm-client/pkg/types"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
+	nodesetutils "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/utils"
 )
 
 func newFakeClientList(interceptorFuncs interceptor.Funcs, initObjLists ...object.ObjectList) slurmclient.Client {
@@ -67,7 +68,7 @@ var _ = Describe("Nodeset controller", func() {
 
 	const (
 		nodesetName      = "test-nodeset"
-		nodesetNamespace = "default"
+		nodesetNamespace = corev1.NamespaceDefault
 		clusterName      = "test-cluster"
 
 		timeout  = time.Second * 30
@@ -76,44 +77,12 @@ var _ = Describe("Nodeset controller", func() {
 	)
 
 	Context("When creating a NodeSet", func() {
-		It("Should successfully create create a pod for the node", func() {
-
-			ctx := context.Background()
-
-			// Create a slurmClient with cached nodes before
-			// creating the nodeset so the reconcile loop
-			// will create pods on the matching nodes.
-			slurmClusters.Add(types.NamespacedName{Name: clusterName, Namespace: nodesetNamespace},
-				newFakeClientList(interceptor.Funcs{}, &slurmtypes.V0041NodeList{
-					Items: []slurmtypes.V0041Node{
-						{V0041Node: v0041.V0041Node{Name: ptr.To("node-1"), State: ptr.To([]v0041.V0041NodeState{v0041.V0041NodeStateIDLE})}},
-						{V0041Node: v0041.V0041Node{Name: ptr.To("node-2"), State: ptr.To([]v0041.V0041NodeState{v0041.V0041NodeStateIDLE})}},
-					},
-				}))
-
-			// Initialize K8s nodes so the NodeSet Controller
-			// places pod(s) on the nodes that fit
-			nodes := []corev1.Node{
-				{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: "node-1",
-					},
-				},
-				{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: "node-2",
-					},
-				},
-			}
-			for _, node := range nodes {
-				Expect(k8sClient.Create(ctx, &node)).To(Succeed())
-			}
-
-			By("By creating a new Nodeset")
+		It("Should successfully create nodeset pods", func() {
+			By("Creating a new Nodeset")
 			nodeset := &slinkyv1alpha1.NodeSet{
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: "slinky.slurm.net/v1alpha1",
-					Kind:       "NodeSet",
+					APIVersion: slinkyv1alpha1.GroupVersion.String(),
+					Kind:       slinkyv1alpha1.NodeSetKind,
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:        nodesetName,
@@ -126,6 +95,7 @@ var _ = Describe("Nodeset controller", func() {
 					Selector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"foo": "bar"},
 					},
+					Replicas: ptr.To[int32](2),
 					Template: corev1.PodTemplateSpec{
 						ObjectMeta: metav1.ObjectMeta{
 							Name:        "pod",
@@ -164,34 +134,77 @@ var _ = Describe("Nodeset controller", func() {
 
 			Expect(createdNodeset.Spec.ClusterName).To(Equal("test-cluster"))
 
+			By("Creating Nodeset pods given replica count")
 			// Wait for two pods to be created by the NodeSet Controller
 			podList := &corev1.PodList{}
 			optsList := &k8sclient.ListOptions{
 				Namespace:     nodeset.Namespace,
 				LabelSelector: labels.Everything(),
 			}
+			replicas := int(ptr.Deref(nodeset.Spec.Replicas, 0))
 			Eventually(func(g Gomega) {
 				g.Expect(k8sClient.List(ctx, podList, optsList)).To(Succeed())
-				g.Expect(len(podList.Items)).To(Equal(len(nodes)))
+				g.Expect(len(podList.Items)).Should(Equal(replicas))
 			}, timeout, interval).Should(Succeed())
+
+			By("Simulating Slurm functionality")
+			// Simulate Kubernetes marking pods as healthy,
+			// and Slurm registering the pods that were just created.
+			slurmNodes := make([]slurmtypes.V0041Node, 0)
+			for _, pod := range podList.Items {
+				// Register Slurm node for pod
+				node := slurmtypes.V0041Node{
+					V0041Node: v0041.V0041Node{
+						Name:  ptr.To(nodesetutils.GetNodeName(&pod)),
+						State: ptr.To([]v0041.V0041NodeState{v0041.V0041NodeStateIDLE}),
+					},
+				}
+				slurmNodes = append(slurmNodes, node)
+			}
+
+			// Simulate the Cluster controller having added the a slurm-client for the NodeSet.
+			// NOTE: we need to do this after we know what the pod are, otherwise Slurm node
+			// names will not match.
+			slurmClusters.Add(types.NamespacedName{Name: clusterName, Namespace: nodesetNamespace},
+				newFakeClientList(interceptor.Funcs{}, &slurmtypes.V0041NodeList{
+					Items: slurmNodes,
+				}),
+			)
+
+			By("Simulating Kubernetes functionality")
+			for _, pod := range podList.Items {
+				// Mark pod as being healthy
+				pod.Status.Phase = corev1.PodRunning
+				podCond := corev1.PodCondition{
+					Type:   corev1.PodReady,
+					Status: corev1.ConditionTrue,
+				}
+				pod.Status.Conditions = append(pod.Status.Conditions, podCond)
+				Expect(k8sClient.Status().Update(ctx, &pod)).To(Succeed())
+			}
+
+			By("NodeSet scale down")
 
 			// Scale down a NodeSet to verify pods are deleted and
 			// Slurm nodes are drained and deleted
 			Eventually(func(g Gomega) {
 				g.Expect(k8sClient.Get(ctx, nodesetLookupKey, createdNodeset)).To(Succeed())
+				createdNodeset.Spec.Replicas = ptr.To[int32](0)
+				g.Expect(k8sClient.Update(ctx, createdNodeset)).To(Succeed())
 			}, timeout, interval).Should(Succeed())
-			createdNodeset.Spec.Replicas = ptr.To[int32](0)
-			Expect(k8sClient.Update(ctx, createdNodeset)).To(Succeed())
 
 			// Verify the Slurm nodes are marked as NodeStateDRAIN
+			clusterKey := types.NamespacedName{Namespace: nodesetNamespace, Name: clusterName}
+			slurmClient := slurmClusters.Get(clusterKey)
 			Eventually(func(g Gomega) {
 				slurmNodes := &slurmtypes.V0041NodeList{}
-				g.Expect(slurmClusters.Get(types.NamespacedName{Namespace: nodesetNamespace, Name: clusterName}).List(ctx, slurmNodes)).To(Succeed())
+				g.Expect(slurmClient.List(ctx, slurmNodes)).To(Succeed())
 				for _, node := range slurmNodes.Items {
 					g.Expect(node.GetStateAsSet().Has(v0041.V0041NodeStateDRAIN)).Should(BeTrue())
 				}
 			}, timeout, interval).Should(Succeed())
 
+			By("Deleting NodeSet")
 			Expect(k8sClient.Delete(ctx, createdNodeset)).To(Succeed())
 			Eventually(func(g Gomega) {
 				g.Expect(k8sClient.Get(ctx, nodesetLookupKey, createdNodeset)).ShouldNot(Succeed())

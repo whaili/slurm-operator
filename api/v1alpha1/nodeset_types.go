@@ -4,18 +4,30 @@
 package v1alpha1
 
 import (
-	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-const (
-	NodeSetRevisionLabel = appsv1.ControllerRevisionHashLabelKey
-)
-
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+
+const (
+	NodeSetKind = "NodeSet"
+)
+
+var (
+	NodeSetGVK        = GroupVersion.WithKind(NodeSetKind)
+	NodeSetAPIVersion = GroupVersion.String()
+)
+
+const (
+	// LabelNodeSetPodName indicates the pod name.
+	LabelNodeSetPodName = "nodeset.slinky.slurm.net/pod-name"
+
+	// LabelNodeSetPodIndex indicates the pod's ordinal.
+	LabelNodeSetPodIndex = "nodeset.slinky.slurm.net/pod-index"
+)
 
 // NodeSetSpec defines the desired state of NodeSet
 type NodeSetSpec struct {
@@ -29,8 +41,7 @@ type NodeSetSpec struct {
 	// replicas is the desired number of replicas of the given Template.
 	// These are replicas in the sense that they are instantiations of the
 	// same Template, but individual replicas also have a consistent identity.
-	// If unspecified, defaults to 0.
-	// TODO: Consider a rename of this field.
+	// If unspecified, defaults to 1.
 	// +optional
 	Replicas *int32 `json:"replicas,omitempty"`
 
@@ -72,9 +83,9 @@ type NodeSetSpec struct {
 	UpdateStrategy NodeSetUpdateStrategy `json:"updateStrategy,omitempty"`
 
 	// revisionHistoryLimit is the maximum number of revisions that will
-	// be maintained in the StatefulSet's revision history. The revision history
+	// be maintained in the NodeSet's revision history. The revision history
 	// consists of all revisions not represented by a currently applied
-	// StatefulSetSpec version. The default value is 10.
+	// NodeSetSpec version. The default value is 0.
 	// +optional
 	RevisionHistoryLimit *int32 `json:"revisionHistoryLimit,omitempty"`
 
@@ -118,6 +129,7 @@ const (
 	// PersistentVolumeClaims associated with NodeSet VolumeClaimTemplates
 	// will not be deleted.
 	RetainPersistentVolumeClaimRetentionPolicyType PersistentVolumeClaimRetentionPolicyType = "Retain"
+
 	// DeletePersistentVolumeClaimRetentionPolicyType specifies that
 	// PersistentVolumeClaims associated with NodeSet VolumeClaimTemplates
 	// will be deleted in the scenario specified in
@@ -133,6 +145,13 @@ type NodeSetPersistentVolumeClaimRetentionPolicy struct {
 	// of `Retain` causes PVCs to not be affected by NodeSet deletion. The
 	// `Delete` policy causes those PVCs to be deleted.
 	WhenDeleted PersistentVolumeClaimRetentionPolicyType `json:"whenDeleted,omitempty"`
+
+	// WhenScaled specifies what happens to PVCs created from NodeSet
+	// VolumeClaimTemplates when the NodeSet is scaled down. The default
+	// policy of `Retain` causes PVCs to not be affected by a scaledown. The
+	// `Delete` policy causes the associated PVCs for any excess pods to be
+	// deleted.
+	WhenScaled PersistentVolumeClaimRetentionPolicyType `json:"whenScaled,omitempty"`
 }
 
 // NodeSetUpdateStrategyType is a string enumeration type that enumerates
@@ -157,23 +176,9 @@ type RollingUpdateNodeSetStrategy struct {
 	// The maximum number of pods that can be unavailable during the update.
 	// Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).
 	// Absolute number is calculated from percentage by rounding up. This can not be 0.
-	// Defaults to 1. This field is alpha-level and is only honored by servers that enable the
-	// MaxUnavailableStatefulSet feature. The field applies to all pods in the range 0 to
-	// Replicas-1. That means if there is any unavailable pod in the range 0 to Replicas-1, it
-	// will be counted towards MaxUnavailable.
+	// Defaults to 1.
 	// +optional
 	MaxUnavailable *intstr.IntOrString `json:"maxUnavailable,omitempty"`
-
-	// The number of NodeSet pods remained to be old version.
-	// Maximum value is status.desiredNumberScheduled, which means no pod will be updated.
-	// Default value is 0.
-	// +optional
-	Partition *int32 `json:"partition,omitempty"`
-
-	// Indicates that the nodeset is paused and will not be processed by the
-	// nodeset controller.
-	// +optional
-	Paused *bool `json:"paused,omitempty"`
 }
 
 // NodeSetStatus defines the observed state of NodeSet
@@ -181,61 +186,50 @@ type NodeSetStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// The number of NodeSet pods that are running and are supposed to be
-	// running.
-	CurrentNumberScheduled int32 `json:"currentNumberScheduled"`
-
-	// The number of NodeSet pods that are running but are not supposed to be
-	// running.
-	NumberMisscheduled int32 `json:"numberMisscheduled"`
-
-	// The total number of NodeSet pods that should be running, including
-	// NodeSet pods that are correctly running.
-	DesiredNumberScheduled int32 `json:"desiredNumberScheduled"`
-
-	// The number of NodeSet pods that are running, supposed to be running, and
-	// have a Ready Condition.
-	NumberReady int32 `json:"numberReady"`
-
-	// The total number of NodeSet pods that are running, supposed to be
-	// running, and are running updated pods.
+	// Total number of non-terminated pods targeted by this NodeSet (their labels match the Selector).
 	// +optional
-	UpdatedNumberScheduled int32 `json:"updatedNumberScheduled,omitempty"`
+	Replicas int32 `json:"replicas,omitempty"`
 
-	// The number of nodes that should be running the
-	// daemon pod and have one or more of the daemon pod running and
-	// available (ready for at least spec.minReadySeconds)
+	// Total number of non-terminated pods targeted by this NodeSet that have the desired template spec.
 	// +optional
-	NumberAvailable int32 `json:"numberAvailable,omitempty"`
+	UpdatedReplicas int32 `json:"updatedReplicas,omitempty"`
 
-	// The number of nodes that should be running the
-	// daemon pod and have none of the daemon pod running and available
-	// (ready for at least spec.minReadySeconds)
+	// readyReplicas is the number of pods targeted by this NodeSet with a Ready Condition.
 	// +optional
-	NumberUnavailable int32 `json:"numberUnavailable,omitempty"`
+	ReadyReplicas int32 `json:"readyReplicas,omitempty"`
+
+	// Total number of available pods (ready for at least minReadySeconds) targeted by this NodeSet.
+	// +optional
+	AvailableReplicas int32 `json:"availableReplicas,omitempty"`
+
+	// Total number of unavailable pods targeted by this NodeSet. This is the total number of
+	// pods that are still required for the NodeSet to have 100% available capacity. They may
+	// either be pods that are running but not yet available or pods that still have not been created.
+	// +optional
+	UnavailableReplicas int32 `json:"unavailableReplicas,omitempty"`
 
 	// The number of NodeSet pods that are running and are in the Slurm IDLE
 	// state. IDLE means the Slurm nodes is not ALLOCATED or MIXED, hence is not
 	// allocated any Slurm jobs, nor doing work.
 	// +optional
-	NumberIdle int32 `json:"numberIdle,omitempty"`
+	SlurmIdle int32 `json:"slurmIdle,omitempty"`
 
 	// The number of NodeSet pods that are running and are in the Slurm
 	// ALLOCATED or MIXED state. ALLOCATED/MIXED means the Slurm node is
 	// allocated one or more Slurm jobs and is doing work.
 	// +optional
-	NumberAllocated int32 `json:"numberAllocated,omitempty"`
+	SlurmAllocated int32 `json:"slurmAllocated,omitempty"`
 
 	// The number of NodeSet pods that are running and are in the Slurm
 	// DOWN state. DOWN means the Slurm node is unavailable for use.
 	// +optional
-	NumberDown int32 `json:"numberDown,omitempty"`
+	SlurmDown int32 `json:"slurmDown,omitempty"`
 
 	// The number of NodeSet pods that are running and are in the Slurm DRAIN
 	// state. DRAIN means the Slurm node becomes unschedulable but allocated
 	// Slurm jobs will not be evicted and can continue running until completion.
 	// +optional
-	NumberDrain int32 `json:"numberDrain,omitempty"`
+	SlurmDrain int32 `json:"slurmDrain,omitempty"`
 
 	// observedGeneration is the most recent generation observed for this NodeSet. It corresponds to the
 	// NodeSet's generation, which is updated on mutation by the API Server.
@@ -268,14 +262,13 @@ type NodeSetStatus struct {
 //+kubebuilder:subresource:status
 //+kubebuilder:resource:shortName=nodesets;nss
 //+kubebuilder:subresource:scale:specpath=".spec.replicas",statuspath=".status.currentNumberScheduled",selectorpath=".status.selector"
-//+kubebuilder:printcolumn:name="DESIRED",type="integer",JSONPath=".status.desiredNumberScheduled",priority=0,description="The desired number of pods."
-//+kubebuilder:printcolumn:name="CURRENT",type="integer",JSONPath=".status.currentNumberScheduled",priority=0,description="The current number of pods."
-//+kubebuilder:printcolumn:name="UPDATED",type="integer",JSONPath=".status.updatedNumberScheduled",priority=0,description="The number of pods updated."
-//+kubebuilder:printcolumn:name="READY",type="integer",JSONPath=".status.numberAvailable",priority=0,description="The number of pods ready."
-//+kubebuilder:printcolumn:name="IDLE",type="integer",JSONPath=".status.numberIdle",priority=1,description="The number of IDLE slurm nodes."
-//+kubebuilder:printcolumn:name="ALLOCATED",type="integer",JSONPath=".status.numberAllocated",priority=1,description="The number of ALLOCATED/MIXED slurm nodes."
-//+kubebuilder:printcolumn:name="DOWN",type="integer",JSONPath=".status.numberDown",priority=1,description="The number of DOWN slurm nodes."
-//+kubebuilder:printcolumn:name="DRAIN",type="integer",JSONPath=".status.numberDrain",priority=1,description="The number of DRAIN slurm nodes."
+//+kubebuilder:printcolumn:name="REPLICAS",type="integer",JSONPath=".status.replicas",priority=0,description="The current number of pods."
+//+kubebuilder:printcolumn:name="UPDATED",type="integer",JSONPath=".status.updatedReplicas",priority=0,description="The number of pods updated."
+//+kubebuilder:printcolumn:name="READY",type="integer",JSONPath=".status.readyReplicas",priority=0,description="The number of pods ready."
+//+kubebuilder:printcolumn:name="IDLE",type="integer",JSONPath=".status.slurmIdle",priority=1,description="The number of IDLE slurm nodes."
+//+kubebuilder:printcolumn:name="ALLOCATED",type="integer",JSONPath=".status.slurmAllocated",priority=1,description="The number of ALLOCATED/MIXED slurm nodes."
+//+kubebuilder:printcolumn:name="DOWN",type="integer",JSONPath=".status.slurmDown",priority=1,description="The number of DOWN slurm nodes."
+//+kubebuilder:printcolumn:name="DRAIN",type="integer",JSONPath=".status.slurmDrain",priority=1,description="The number of DRAIN slurm nodes."
 //+kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp",priority=0,description="CreationTimestamp is a timestamp representing the server time when this object was created. It is not guaranteed to be set in happens-before order across separate operations. Clients may not set this value. It is represented in RFC3339 form and is in UTC."
 
 // NodeSet is the Schema for the nodesets API

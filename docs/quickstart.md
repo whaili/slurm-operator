@@ -85,7 +85,7 @@ Output should be similar to:
 ```sh
 NAME                              READY   STATUS    RESTARTS       AGE
 slurm-accounting-0                1/1     Running   0              5m00s
-slurm-compute-debug-l4bd2         1/1     Running   0              5m00s
+slurm-compute-debug-0             1/1     Running   0              5m00s
 slurm-controller-0                2/2     Running   0              5m00s
 slurm-exporter-7b44b6d856-d86q5   1/1     Running   0              5m00s
 slurm-mariadb-0                   1/1     Running   0              5m00s
