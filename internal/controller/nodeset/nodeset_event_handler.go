@@ -34,11 +34,11 @@ type podEventHandler struct {
 	client.Reader
 }
 
-func enqueueNodeSet(q workqueue.TypedRateLimitingInterface[reconcile.Request], set *slinkyv1alpha1.NodeSet) {
+func enqueueNodeSet(q workqueue.TypedRateLimitingInterface[reconcile.Request], nodeset *slinkyv1alpha1.NodeSet) {
 	q.Add(reconcile.Request{
 		NamespacedName: types.NamespacedName{
-			Name:      set.GetName(),
-			Namespace: set.GetNamespace(),
+			Name:      nodeset.GetName(),
+			Namespace: nodeset.GetNamespace(),
 		},
 	})
 }
@@ -59,12 +59,12 @@ func (e *podEventHandler) Create(
 
 	// If it has a ControllerRef, that's all that matters.
 	if controllerRef := metav1.GetControllerOf(pod); controllerRef != nil {
-		set := e.resolveControllerRef(pod.Namespace, controllerRef)
-		if set == nil {
+		nodeset := e.resolveControllerRef(pod.Namespace, controllerRef)
+		if nodeset == nil {
 			return
 		}
 		logger.V(1).Info("Pod added", "Pod", klog.KObj(pod))
-		enqueueNodeSet(q, set)
+		enqueueNodeSet(q, nodeset)
 		return
 	}
 
@@ -78,8 +78,8 @@ func (e *podEventHandler) Create(
 	}
 	logger.V(1).Info("Orphan Pod created, matched Node owners",
 		"Pod", klog.KObj(pod), "Nodes", nodesetList)
-	for _, set := range nodesetList {
-		enqueueNodeSet(q, set)
+	for _, nodeset := range nodesetList {
+		enqueueNodeSet(q, nodeset)
 	}
 }
 
@@ -102,15 +102,15 @@ func (e *podEventHandler) Update(
 	controllerRefChanged := !reflect.DeepEqual(curControllerRef, oldControllerRef)
 	if controllerRefChanged && oldControllerRef != nil {
 		// The ControllerRef was changed. Sync the old controller, if any.
-		if set := e.resolveControllerRef(oldPod.Namespace, oldControllerRef); set != nil {
-			enqueueNodeSet(q, set)
+		if nodeset := e.resolveControllerRef(oldPod.Namespace, oldControllerRef); nodeset != nil {
+			enqueueNodeSet(q, nodeset)
 		}
 	}
 
 	if curPod.DeletionTimestamp != nil {
 		// when a pod is deleted gracefully its deletion timestamp is first modified to reflect a grace period,
 		// and after such time has passed, the kubelet actually deletes it from the store. We receive an update
-		// for modification of the deletion timestamp and expect an set to create more replicas asap, not wait
+		// for modification of the deletion timestamp and expect a NodeSet to create more Pods asap, not wait
 		// until the kubelet actually deletes the pod.
 		e.deletePod(ctx, curPod, q, false)
 		return
@@ -118,13 +118,13 @@ func (e *podEventHandler) Update(
 
 	// If it has a ControllerRef, that's all that matters.
 	if curControllerRef != nil {
-		set := e.resolveControllerRef(curPod.Namespace, curControllerRef)
-		if set == nil {
+		nodeset := e.resolveControllerRef(curPod.Namespace, curControllerRef)
+		if nodeset == nil {
 			return
 		}
 		logger.V(1).Info("Pod updated with NodeSet owner",
-			"Pod", klog.KObj(curPod), "NodeSet", klog.KObj(set))
-		enqueueNodeSet(q, set)
+			"Pod", klog.KObj(curPod), "NodeSet", klog.KObj(nodeset))
+		enqueueNodeSet(q, nodeset)
 		return
 	}
 
@@ -138,8 +138,8 @@ func (e *podEventHandler) Update(
 		"Pod", klog.KObj(curPod), "Nodes", nodesetList)
 	labelChanged := !reflect.DeepEqual(curPod.Labels, oldPod.Labels)
 	if labelChanged || controllerRefChanged {
-		for _, set := range nodesetList {
-			enqueueNodeSet(q, set)
+		for _, nodeset := range nodesetList {
+			enqueueNodeSet(q, nodeset)
 		}
 	}
 }
@@ -172,18 +172,18 @@ func (e *podEventHandler) deletePod(
 		// No controller should care about orphans being deleted.
 		return
 	}
-	set := e.resolveControllerRef(pod.Namespace, controllerRef)
-	if set == nil {
+	nodeset := e.resolveControllerRef(pod.Namespace, controllerRef)
+	if nodeset == nil {
 		return
 	}
 	if isDeleted {
 		logger.V(1).Info("NodeSet Pod deleted",
-			"Pod", klog.KObj(pod), "NodeSet", klog.KObj(set))
+			"Pod", klog.KObj(pod), "NodeSet", klog.KObj(nodeset))
 	} else {
 		logger.V(1).Info("NodeSet Pod terminating",
-			"Pod", klog.KObj(pod), "NodeSet", klog.KObj(set))
+			"Pod", klog.KObj(pod), "NodeSet", klog.KObj(nodeset))
 	}
-	enqueueNodeSet(q, set)
+	enqueueNodeSet(q, nodeset)
 }
 
 func (e *podEventHandler) Generic(
@@ -201,11 +201,11 @@ func (e *podEventHandler) Generic(
 	}
 
 	nodesetList := e.getPodNodeSets(ctx, pod)
-	for _, set := range nodesetList {
-		if !isPodFromNodeSet(set, pod) {
+	for _, nodeset := range nodesetList {
+		if !isPodFromNodeSet(nodeset, pod) {
 			continue
 		}
-		enqueueNodeSet(q, set)
+		enqueueNodeSet(q, nodeset)
 	}
 }
 
@@ -217,16 +217,16 @@ func (e *podEventHandler) resolveControllerRef(
 		return nil
 	}
 
-	set := &slinkyv1alpha1.NodeSet{}
-	if err := e.Get(context.TODO(), types.NamespacedName{Namespace: namespace, Name: controllerRef.Name}, set); err != nil {
+	nodeset := &slinkyv1alpha1.NodeSet{}
+	if err := e.Get(context.TODO(), types.NamespacedName{Namespace: namespace, Name: controllerRef.Name}, nodeset); err != nil {
 		return nil
 	}
-	if set.UID != controllerRef.UID {
+	if nodeset.UID != controllerRef.UID {
 		// The controller we found with this Name is not the same one that the
 		// ControllerRef points to.
 		return nil
 	}
-	return set
+	return nodeset
 }
 
 func (e *podEventHandler) getPodNodeSets(ctx context.Context, pod *corev1.Pod) []*slinkyv1alpha1.NodeSet {
@@ -238,13 +238,13 @@ func (e *podEventHandler) getPodNodeSets(ctx context.Context, pod *corev1.Pod) [
 
 	var nsMatched []*slinkyv1alpha1.NodeSet
 	for i := range nodesetList.Items {
-		set := &nodesetList.Items[i]
-		selector, err := metav1.LabelSelectorAsSelector(set.Spec.Selector)
+		nodeset := &nodesetList.Items[i]
+		selector, err := metav1.LabelSelectorAsSelector(nodeset.Spec.Selector)
 		if err != nil || selector.Empty() || !selector.Matches(labels.Set(pod.Labels)) {
 			continue
 		}
 
-		nsMatched = append(nsMatched, set)
+		nsMatched = append(nsMatched, nodeset)
 	}
 
 	if len(nsMatched) > 1 {
@@ -277,11 +277,11 @@ func (e *nodeEventHandler) Create(
 
 	node := evt.Object.(*corev1.Node)
 	for i := range nodesetList.Items {
-		set := &nodesetList.Items[i]
-		if shouldSchedule, _ := nodeShouldRunNodeSetPod(node, set); shouldSchedule {
+		nodeset := &nodesetList.Items[i]
+		if shouldSchedule, _ := nodeShouldRunNodeSetPod(node, nodeset); shouldSchedule {
 			q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
-				Name:      set.GetName(),
-				Namespace: set.GetNamespace(),
+				Name:      nodeset.GetName(),
+				Namespace: nodeset.GetNamespace(),
 			}})
 		}
 	}
@@ -305,18 +305,18 @@ func (e *nodeEventHandler) Update(
 		logger.Error(err, "Error listing NodeSets")
 		return
 	}
-	// TODO: it'd be nice to pass a hint with these enqueues, so that each set would only examine the added node (unless it has other work to do, too).
+	// TODO: it'd be nice to pass a hint with these enqueues, so that each nodeset would only examine the added node (unless it has other work to do, too).
 	for i := range nodesetList.Items {
-		set := &nodesetList.Items[i]
-		oldShouldRun, oldShouldContinueRunning := nodeShouldRunNodeSetPod(oldNode, set)
-		currentShouldRun, currentShouldContinueRunning := nodeShouldRunNodeSetPod(curNode, set)
+		nodeset := &nodesetList.Items[i]
+		oldShouldRun, oldShouldContinueRunning := nodeShouldRunNodeSetPod(oldNode, nodeset)
+		currentShouldRun, currentShouldContinueRunning := nodeShouldRunNodeSetPod(curNode, nodeset)
 		if (oldShouldRun != currentShouldRun) || (oldShouldContinueRunning != currentShouldContinueRunning) {
 			logger.V(1).Info("Node update triggers NodeSet to reconcile.",
-				"Node", klog.KObj(curNode), "NodeSet", klog.KObj(set))
+				"Node", klog.KObj(curNode), "NodeSet", klog.KObj(nodeset))
 			q.Add(reconcile.Request{
 				NamespacedName: types.NamespacedName{
-					Name:      set.GetName(),
-					Namespace: set.GetNamespace(),
+					Name:      nodeset.GetName(),
+					Namespace: nodeset.GetNamespace(),
 				},
 			})
 		}

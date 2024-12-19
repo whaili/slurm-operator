@@ -41,8 +41,8 @@ type NodeSetSpec struct {
 	Selector *metav1.LabelSelector `json:"selector"`
 
 	// serviceName is the name of the service that governs this NodeSet.
-	// This service must exist before the NodeSet, and is responsible for
-	// the network identity of the set. Pods get DNS/hostnames that follow the
+	// This service must exist before the NodeSet, and is responsible for the
+	// network identity of the NodeSet. Pods get DNS/hostnames that follow the
 	// pattern: pod-specific-string.serviceName.default.svc.cluster.local
 	// where "pod-specific-string" is managed by the NodeSet controller.
 	ServiceName string `json:"serviceName"`

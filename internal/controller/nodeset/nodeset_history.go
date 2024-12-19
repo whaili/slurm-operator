@@ -223,18 +223,18 @@ func (rh *realHistory) ReleaseControllerRevision(
 	return clone, nil
 }
 
-// truncateHistory truncates any non-live ControllerRevisions in revisions from set's history. The UpdateRevision and
-// CurrentRevision in set's Status are considered to be live. Any revisions associated with the Pods in pods are also
+// truncateHistory truncates any non-live ControllerRevisions in revisions from nodeset's history. The UpdateRevision and
+// CurrentRevision in nodeset's Status are considered to be live. Any revisions associated with the Pods in pods are also
 // considered to be live. Non-live revisions are deleted, starting with the revision with the lowest Revision, until
 // only RevisionHistoryLimit revisions remain. If the returned error is nil the operation was successful. This method
 // expects that revisions is sorted when supplied.
 func (nsc *defaultNodeSetControl) truncateHistory(
 	ctx context.Context,
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	revisions []*appsv1.ControllerRevision,
 	current, update *appsv1.ControllerRevision,
 ) error {
-	pods, err := nsc.getNodeSetPods(ctx, set)
+	pods, err := nsc.getNodeSetPods(ctx, nodeset)
 	if err != nil {
 		return err
 	}
@@ -258,7 +258,7 @@ func (nsc *defaultNodeSetControl) truncateHistory(
 		}
 	}
 	historyLen := len(history)
-	historyLimit := int(ptr.Deref(set.Spec.RevisionHistoryLimit, 0))
+	historyLimit := int(ptr.Deref(nodeset.Spec.RevisionHistoryLimit, 0))
 	if historyLen <= historyLimit {
 		return nil
 	}
@@ -272,19 +272,19 @@ func (nsc *defaultNodeSetControl) truncateHistory(
 	return nil
 }
 
-// newRevision creates a new ControllerRevision containing a patch that reapplies the target state of set.
-// The Revision of the returned ControllerRevision is set to revision. If the returned error is nil, the returned
-// ControllerRevision is valid. StatefulSet revisions are stored as patches that re-apply the current state of set
+// newRevision creates a new ControllerRevision containing a patch that reapplies the target state of nodeset.
+// The Revision of the returned ControllerRevision is nodeset to revision. If the returned error is nil, the returned
+// ControllerRevision is valid. StatefulSet revisions are stored as patches that re-apply the current state of nodeset
 // to a new StatefulSet using a strategic merge patch to replace the saved state of the new StatefulSet.
-func newRevision(set *slinkyv1alpha1.NodeSet, revision int64, collisionCount *int32) (*appsv1.ControllerRevision, error) {
-	patch, err := getPatch(set)
+func newRevision(nodeset *slinkyv1alpha1.NodeSet, revision int64, collisionCount *int32) (*appsv1.ControllerRevision, error) {
+	patch, err := getPatch(nodeset)
 	if err != nil {
 		return nil, err
 	}
 	cr, err := history.NewControllerRevision(
-		set,
+		nodeset,
 		controllerKind,
-		set.Spec.Template.Labels,
+		nodeset.Spec.Template.Labels,
 		runtime.RawExtension{Raw: patch},
 		revision,
 		collisionCount)
@@ -294,7 +294,7 @@ func newRevision(set *slinkyv1alpha1.NodeSet, revision int64, collisionCount *in
 	if cr.ObjectMeta.Annotations == nil {
 		cr.ObjectMeta.Annotations = make(map[string]string)
 	}
-	for key, value := range set.Annotations {
+	for key, value := range nodeset.Annotations {
 		cr.ObjectMeta.Annotations[key] = value
 	}
 	return cr, nil
@@ -311,14 +311,14 @@ func nextRevision(revisions []*appsv1.ControllerRevision) int64 {
 	return revisions[count-1].Revision + 1
 }
 
-// getNodeSetRevisions returns the current and update ControllerRevisions for set. It also
-// returns a collision count that records the number of name collisions set saw when creating
+// getNodeSetRevisions returns the current and update ControllerRevisions for nodeset. It also
+// returns a collision count that records the number of name collisions nodeset saw when creating
 // new ControllerRevisions. This count is incremented on every name collision and is used in
 // building the ControllerRevision names for name collision avoidance. This method may create
-// a new revision, or modify the Revision of an existing revision if an update to set is detected.
+// a new revision, or modify the Revision of an existing revision if an update to nodeset is detected.
 // This method expects that revisions is sorted when supplied.
 func (nsc *defaultNodeSetControl) getNodeSetRevisions(
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	revisions []*appsv1.ControllerRevision,
 ) (*appsv1.ControllerRevision, *appsv1.ControllerRevision, int32, error) {
 	var currentRevision, updateRevision *appsv1.ControllerRevision
@@ -326,14 +326,14 @@ func (nsc *defaultNodeSetControl) getNodeSetRevisions(
 	revisionCount := len(revisions)
 	history.SortControllerRevisions(revisions)
 
-	// Use a local copy of set.Status.CollisionCount to avoid modifying set.Status directly.
+	// Use a local copy of nodeset.Status.CollisionCount to avoid modifying nodeset.Status directly.
 	var collisionCount int32
-	if set.Status.CollisionCount != nil {
-		collisionCount = *set.Status.CollisionCount
+	if nodeset.Status.CollisionCount != nil {
+		collisionCount = *nodeset.Status.CollisionCount
 	}
 
-	// create a new revision from the current set
-	updateRevision, err := newRevision(set, nextRevision(revisions), &collisionCount)
+	// create a new revision from the current nodeset
+	updateRevision, err := newRevision(nodeset, nextRevision(revisions), &collisionCount)
 	if err != nil {
 		return nil, nil, collisionCount, err
 	}
@@ -358,7 +358,7 @@ func (nsc *defaultNodeSetControl) getNodeSetRevisions(
 		}
 	} else {
 		// if there is no equivalent revision we create a new one
-		updateRevision, err = nsc.controllerHistory.CreateControllerRevision(set, updateRevision, &collisionCount)
+		updateRevision, err = nsc.controllerHistory.CreateControllerRevision(nodeset, updateRevision, &collisionCount)
 		if err != nil {
 			return nil, nil, collisionCount, err
 		}
@@ -366,7 +366,7 @@ func (nsc *defaultNodeSetControl) getNodeSetRevisions(
 
 	// attempt to find the revision that corresponds to the current revision
 	for i := range revisions {
-		if revisions[i].Name == set.Status.NodeSetHash {
+		if revisions[i].Name == nodeset.Status.NodeSetHash {
 			currentRevision = revisions[i]
 			break
 		}

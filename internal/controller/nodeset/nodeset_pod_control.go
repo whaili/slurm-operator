@@ -134,12 +134,12 @@ func (om *realNodeSetPodControlObjectManager) UpdateClaim(ctx context.Context, c
 
 func (spc *NodeSetPodControl) CreateNodeSetPod(
 	ctx context.Context,
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	pod *corev1.Pod,
 ) error {
 	// Create the Pod's PVCs prior to creating the Pod
-	if err := spc.createPersistentVolumeClaims(ctx, set, pod); err != nil {
-		spc.recordPodEvent("create", set, pod, err)
+	if err := spc.createPersistentVolumeClaims(ctx, nodeset, pod); err != nil {
+		spc.recordPodEvent("create", nodeset, pod, err)
 		return err
 	}
 	// If we created the PVCs, attempt to create the Pod
@@ -149,22 +149,22 @@ func (spc *NodeSetPodControl) CreateNodeSetPod(
 		return err
 	}
 	// Set PVC policy as much as is possible at this point.
-	if err := spc.UpdatePodClaimForRetentionPolicy(ctx, set, pod); err != nil {
-		spc.recordPodEvent("update", set, pod, err)
+	if err := spc.UpdatePodClaimForRetentionPolicy(ctx, nodeset, pod); err != nil {
+		spc.recordPodEvent("update", nodeset, pod, err)
 		return err
 	}
-	spc.recordPodEvent("create", set, pod, err)
+	spc.recordPodEvent("create", nodeset, pod, err)
 	return err
 }
 
 func (spc *NodeSetPodControl) isNodeSetPodDrain(
 	ctx context.Context,
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	pod *corev1.Pod,
 ) bool {
 	clusterName := types.NamespacedName{
-		Namespace: set.GetNamespace(),
-		Name:      set.Spec.ClusterName,
+		Namespace: nodeset.GetNamespace(),
+		Name:      nodeset.Spec.ClusterName,
 	}
 	slurmClient := spc.slurmClusters.Get(clusterName)
 	if slurmClient == nil {
@@ -183,7 +183,7 @@ func (spc *NodeSetPodControl) isNodeSetPodDrain(
 
 func (spc *NodeSetPodControl) updateSlurmNode(
 	ctx context.Context,
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	pod *corev1.Pod,
 ) error {
 	logger := log.FromContext(ctx)
@@ -192,14 +192,14 @@ func (spc *NodeSetPodControl) updateSlurmNode(
 		logger.Info("Uncordon Pod", "Pod", pod)
 		delete(pod.Annotations, annotations.PodCordon)
 		err := spc.Update(ctx, pod)
-		spc.recordPodEvent("uncordon", set, pod, err)
+		spc.recordPodEvent("uncordon", nodeset, pod, err)
 		return err
 	}
 
-	if spc.isNodeSetPodDrain(ctx, set, pod) {
+	if spc.isNodeSetPodDrain(ctx, nodeset, pod) {
 		clusterName := types.NamespacedName{
-			Namespace: set.GetNamespace(),
-			Name:      set.Spec.ClusterName,
+			Namespace: nodeset.GetNamespace(),
+			Name:      nodeset.Spec.ClusterName,
 		}
 		slurmClient := spc.slurmClusters.Get(clusterName)
 		if slurmClient != nil && !isNodeSetPodDelete(pod) {
@@ -230,10 +230,10 @@ func (spc *NodeSetPodControl) updateSlurmNode(
 
 func (spc *NodeSetPodControl) UpdateNodeSetPod(
 	ctx context.Context,
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	pod *corev1.Pod,
 ) error {
-	if err := spc.updateSlurmNode(ctx, set, pod); err != nil {
+	if err := spc.updateSlurmNode(ctx, nodeset, pod); err != nil {
 		return err
 	}
 
@@ -242,29 +242,29 @@ func (spc *NodeSetPodControl) UpdateNodeSetPod(
 		// assume the Pod is consistent
 		consistent := true
 		// if the Pod does not conform to its identity, update the identity and dirty the Pod
-		if !identityMatches(set, pod) {
-			updateIdentity(set, pod)
+		if !identityMatches(nodeset, pod) {
+			updateIdentity(nodeset, pod)
 			consistent = false
 		}
 		// if the Pod does not conform to the NodeSet's storage requirements, update the Pod's PVC's,
 		// dirty the Pod, and create any missing PVCs
-		if !storageMatches(set, pod) {
-			updateStorage(set, pod)
+		if !storageMatches(nodeset, pod) {
+			updateStorage(nodeset, pod)
 			consistent = false
-			if err := spc.createPersistentVolumeClaims(ctx, set, pod); err != nil {
-				spc.recordPodEvent("update", set, pod, err)
+			if err := spc.createPersistentVolumeClaims(ctx, nodeset, pod); err != nil {
+				spc.recordPodEvent("update", nodeset, pod, err)
 				return err
 			}
 		}
 		if utilfeature.DefaultFeatureGate.Enabled(features.StatefulSetAutoDeletePVC) {
 			// if the Pod's PVCs are not consistent with the NodeSet's PVC deletion policy, update the PVC
 			// and dirty the pod.
-			if match, err := spc.ClaimsMatchRetentionPolicy(ctx, set, pod); err != nil {
-				spc.recordPodEvent("update", set, pod, err)
+			if match, err := spc.ClaimsMatchRetentionPolicy(ctx, nodeset, pod); err != nil {
+				spc.recordPodEvent("update", nodeset, pod, err)
 				return err
 			} else if !match {
-				if err := spc.UpdatePodClaimForRetentionPolicy(ctx, set, pod); err != nil {
-					spc.recordPodEvent("update", set, pod, err)
+				if err := spc.UpdatePodClaimForRetentionPolicy(ctx, nodeset, pod); err != nil {
+					spc.recordPodEvent("update", nodeset, pod, err)
 					return err
 				}
 				consistent = false
@@ -284,29 +284,29 @@ func (spc *NodeSetPodControl) UpdateNodeSetPod(
 			return nil
 		}
 
-		if updated, err := spc.objectMgr.GetPod(ctx, set.Namespace, pod.Name); err == nil {
+		if updated, err := spc.objectMgr.GetPod(ctx, nodeset.Namespace, pod.Name); err == nil {
 			// make a copy so we do not mutate the shared cache
 			pod = updated.DeepCopy()
 		} else {
-			utilruntime.HandleError(fmt.Errorf("error getting updated Pod %s/%s: %w", set.Namespace, pod.Name, err))
+			utilruntime.HandleError(fmt.Errorf("error getting updated Pod %s/%s: %w", nodeset.Namespace, pod.Name, err))
 		}
 
 		return updateErr
 	})
 	if attemptedUpdate {
-		spc.recordPodEvent("update", set, pod, err)
+		spc.recordPodEvent("update", nodeset, pod, err)
 	}
 	return err
 }
 
 func (spc *NodeSetPodControl) isNodeSetPodDrained(
 	ctx context.Context,
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	pod *corev1.Pod,
 ) bool {
 	clusterName := types.NamespacedName{
-		Namespace: set.GetNamespace(),
-		Name:      set.Spec.ClusterName,
+		Namespace: nodeset.GetNamespace(),
+		Name:      nodeset.Spec.ClusterName,
 	}
 	slurmClient := spc.slurmClusters.Get(clusterName)
 	if slurmClient == nil {
@@ -329,27 +329,27 @@ func (spc *NodeSetPodControl) isNodeSetPodDrained(
 
 func (spc *NodeSetPodControl) deleteSlurmNode(
 	ctx context.Context,
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	pod *corev1.Pod,
 ) error {
 	logger := log.FromContext(ctx)
 
 	clusterName := types.NamespacedName{
-		Namespace: set.GetNamespace(),
-		Name:      set.Spec.ClusterName,
+		Namespace: nodeset.GetNamespace(),
+		Name:      nodeset.Spec.ClusterName,
 	}
 
 	if !isNodeSetPodCordon(pod) && !isNodeSetPodDelete(pod) {
 		logger.Info("Cordon Pod before deletion", "Pod", pod)
 		pod.Annotations[annotations.PodCordon] = "true"
 		err := spc.Update(ctx, pod)
-		spc.recordPodEvent("cordon", set, pod, err)
+		spc.recordPodEvent("cordon", nodeset, pod, err)
 		if err != nil {
 			return err
 		}
 	}
 
-	if !spc.isNodeSetPodDrained(ctx, set, pod) && !isNodeSetPodDelete(pod) {
+	if !spc.isNodeSetPodDrained(ctx, nodeset, pod) && !isNodeSetPodDelete(pod) {
 		slurmClient := spc.slurmClusters.Get(clusterName)
 		if slurmClient != nil && !isNodeSetPodDelete(pod) {
 			objectKey := object.ObjectKey(pod.Spec.Hostname)
@@ -361,7 +361,7 @@ func (spc *NodeSetPodControl) deleteSlurmNode(
 				return err
 			}
 
-			if !spc.isNodeSetPodDrain(ctx, set, pod) {
+			if !spc.isNodeSetPodDrain(ctx, nodeset, pod) {
 				logger.Info("Drain Slurm Node before Pod deletion", "slurmNode", slurmNode, "Pod", pod)
 				slurmNode = slurmNode.DeepCopy()
 				slurmNode.State.Insert(slurmtypes.NodeStateDRAIN)
@@ -384,38 +384,38 @@ func (spc *NodeSetPodControl) deleteSlurmNode(
 
 func (spc *NodeSetPodControl) DeleteNodeSetPod(
 	ctx context.Context,
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	pod *corev1.Pod,
 ) error {
-	if err := spc.deleteSlurmNode(ctx, set, pod); err != nil {
+	if err := spc.deleteSlurmNode(ctx, nodeset, pod); err != nil {
 		return err
 	}
 
 	err := spc.objectMgr.DeletePod(ctx, pod)
-	spc.recordPodEvent("delete", set, pod, err)
+	spc.recordPodEvent("delete", nodeset, pod, err)
 	return err
 }
 
-// ClaimsMatchRetentionPolicy returns false if the PVCs for pod are not consistent with set's PVC deletion policy.
+// ClaimsMatchRetentionPolicy returns false if the PVCs for pod are not consistent with nodeset's PVC deletion policy.
 // An error is returned if something is not consistent. This is expected if the pod is being otherwise updated,
 // but a problem otherwise (see usage of this method in UpdateNodeSetPod).
 func (spc *NodeSetPodControl) ClaimsMatchRetentionPolicy(
 	ctx context.Context,
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	pod *corev1.Pod,
 ) (bool, error) {
 	logger := log.FromContext(ctx)
-	templates := set.Spec.VolumeClaimTemplates
+	templates := nodeset.Spec.VolumeClaimTemplates
 	for i := range templates {
-		claimName := getPersistentVolumeClaimName(set, &templates[i], pod.Spec.Hostname)
-		claim, err := spc.objectMgr.GetClaim(ctx, set.Namespace, claimName)
+		claimName := getPersistentVolumeClaimName(nodeset, &templates[i], pod.Spec.Hostname)
+		claim, err := spc.objectMgr.GetClaim(ctx, nodeset.Namespace, claimName)
 		switch {
 		case apierrors.IsNotFound(err):
 			logger.V(1).Info("Expected claim missing, continuing to pick up in next iteration", "PVC", claim)
 		case err != nil:
 			return false, fmt.Errorf("could not retrieve claim %s for %s when checking PVC deletion policy", claimName, pod.Name)
 		default:
-			if !claimOwnerMatchesSetAndPod(logger, claim, set, pod) {
+			if !claimOwnerMatchesSetAndPod(logger, claim, nodeset, pod) {
 				return false, nil
 			}
 		}
@@ -423,22 +423,22 @@ func (spc *NodeSetPodControl) ClaimsMatchRetentionPolicy(
 	return true, nil
 }
 
-// UpdatePodClaimForRetentionPolicy updates the PVCs used by pod to match the PVC deletion policy of set.
-func (spc *NodeSetPodControl) UpdatePodClaimForRetentionPolicy(ctx context.Context, set *slinkyv1alpha1.NodeSet, pod *corev1.Pod) error {
+// UpdatePodClaimForRetentionPolicy updates the PVCs used by pod to match the PVC deletion policy of the NodeSet.
+func (spc *NodeSetPodControl) UpdatePodClaimForRetentionPolicy(ctx context.Context, nodeset *slinkyv1alpha1.NodeSet, pod *corev1.Pod) error {
 	logger := log.FromContext(ctx)
-	templates := set.Spec.VolumeClaimTemplates
+	templates := nodeset.Spec.VolumeClaimTemplates
 	for i := range templates {
-		claimName := getPersistentVolumeClaimName(set, &templates[i], pod.Spec.Hostname)
-		claim, err := spc.objectMgr.GetClaim(ctx, set.Namespace, claimName)
+		claimName := getPersistentVolumeClaimName(nodeset, &templates[i], pod.Spec.Hostname)
+		claim, err := spc.objectMgr.GetClaim(ctx, nodeset.Namespace, claimName)
 		switch {
 		case apierrors.IsNotFound(err):
 			logger.V(1).Info("Expected claim missing, continuing to pick up in next iteration", "PVC", claim)
 		case err != nil:
 			return fmt.Errorf("could not retrieve claim %s not found for %s when checking PVC deletion policy: %w", claimName, pod.Name, err)
 		default:
-			if !claimOwnerMatchesSetAndPod(logger, claim, set, pod) {
+			if !claimOwnerMatchesSetAndPod(logger, claim, nodeset, pod) {
 				claim = claim.DeepCopy() // Make a copy so we do not mutate the shared cache.
-				needsUpdate := updateClaimOwnerRefForSetAndPod(logger, claim, set, pod)
+				needsUpdate := updateClaimOwnerRefForSetAndPod(logger, claim, nodeset, pod)
 				if needsUpdate {
 					err := spc.objectMgr.UpdateClaim(ctx, claim)
 					if err != nil {
@@ -456,10 +456,10 @@ func (spc *NodeSetPodControl) UpdatePodClaimForRetentionPolicy(ctx context.Conte
 // includes pods whose UID has not been created.
 func (spc *NodeSetPodControl) PodClaimIsStale(
 	ctx context.Context,
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	pod *corev1.Pod,
 ) (bool, error) {
-	for _, claim := range getPersistentVolumeClaims(set, pod) {
+	for _, claim := range getPersistentVolumeClaims(nodeset, pod) {
 		pvc, err := spc.objectMgr.GetClaim(ctx, claim.Namespace, claim.Name)
 		switch {
 		case apierrors.IsNotFound(err):
@@ -481,49 +481,49 @@ func (spc *NodeSetPodControl) PodClaimIsStale(
 // have a reason of corev1.EventTypeNormal. If err is not nil the generated event will have a reason of corev1.EventTypeWarning.
 func (spc *NodeSetPodControl) recordPodEvent(
 	verb string,
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	pod *corev1.Pod,
 	err error,
 ) {
 	if err == nil {
 		reason := fmt.Sprintf("Successful%s", strings.ToTitle(verb))
 		message := fmt.Sprintf("%s Pod %s in NodeSet %s successful",
-			strings.ToLower(verb), pod.Name, set.Name)
-		spc.recorder.Event(set, corev1.EventTypeNormal, reason, message)
+			strings.ToLower(verb), pod.Name, nodeset.Name)
+		spc.recorder.Event(nodeset, corev1.EventTypeNormal, reason, message)
 	} else {
 		reason := fmt.Sprintf("Failed%s", strings.ToTitle(verb))
 		message := fmt.Sprintf("%s Pod %s in NodeSet %s failed error: %s",
-			strings.ToLower(verb), pod.Name, set.Name, err)
-		spc.recorder.Event(set, corev1.EventTypeWarning, reason, message)
+			strings.ToLower(verb), pod.Name, nodeset.Name, err)
+		spc.recorder.Event(nodeset, corev1.EventTypeWarning, reason, message)
 	}
 }
 
 // recordClaimEvent records an event for verb applied to the PersistentVolumeClaim of a Pod in a NodeSet. If err is
 // nil the generated event will have a reason of corev1.EventTypeNormal. If err is not nil the generated event will have a
 // reason of corev1.EventTypeWarning.
-func (spc *NodeSetPodControl) recordClaimEvent(verb string, set *slinkyv1alpha1.NodeSet, pod *corev1.Pod, claim *corev1.PersistentVolumeClaim, err error) {
+func (spc *NodeSetPodControl) recordClaimEvent(verb string, nodeset *slinkyv1alpha1.NodeSet, pod *corev1.Pod, claim *corev1.PersistentVolumeClaim, err error) {
 	if err == nil {
 		reason := fmt.Sprintf("Successful%s", strings.ToTitle(verb))
 		message := fmt.Sprintf("%s Claim %s Pod %s in NodeSet %s success",
-			strings.ToLower(verb), claim.Name, pod.Name, set.Name)
-		spc.recorder.Event(set, corev1.EventTypeNormal, reason, message)
+			strings.ToLower(verb), claim.Name, pod.Name, nodeset.Name)
+		spc.recorder.Event(nodeset, corev1.EventTypeNormal, reason, message)
 	} else {
 		reason := fmt.Sprintf("Failed%s", strings.ToTitle(verb))
 		message := fmt.Sprintf("%s Claim %s for Pod %s in NodeSet %s failed error: %s",
-			strings.ToLower(verb), claim.Name, pod.Name, set.Name, err)
-		spc.recorder.Event(set, corev1.EventTypeWarning, reason, message)
+			strings.ToLower(verb), claim.Name, pod.Name, nodeset.Name, err)
+		spc.recorder.Event(nodeset, corev1.EventTypeWarning, reason, message)
 	}
 }
 
 // createMissingPersistentVolumeClaims creates all of the required PersistentVolumeClaims for pod, and updates its retention policy
-func (spc *NodeSetPodControl) createMissingPersistentVolumeClaims(ctx context.Context, set *slinkyv1alpha1.NodeSet, pod *corev1.Pod) error {
-	if err := spc.createPersistentVolumeClaims(ctx, set, pod); err != nil {
+func (spc *NodeSetPodControl) createMissingPersistentVolumeClaims(ctx context.Context, nodeset *slinkyv1alpha1.NodeSet, pod *corev1.Pod) error {
+	if err := spc.createPersistentVolumeClaims(ctx, nodeset, pod); err != nil {
 		return err
 	}
 
 	// Set PVC policy as much as is possible at this point.
-	if err := spc.UpdatePodClaimForRetentionPolicy(ctx, set, pod); err != nil {
-		spc.recordPodEvent("update", set, pod, err)
+	if err := spc.UpdatePodClaimForRetentionPolicy(ctx, nodeset, pod); err != nil {
+		spc.recordPodEvent("update", nodeset, pod, err)
 		return err
 	}
 
@@ -531,12 +531,12 @@ func (spc *NodeSetPodControl) createMissingPersistentVolumeClaims(ctx context.Co
 }
 
 // createPersistentVolumeClaims creates all of the required PersistentVolumeClaims for pod, which must be a member of
-// set. If all of the claims for Pod are successfully created, the returned error is nil. If creation fails, this method
+// nodeset. If all of the claims for Pod are successfully created, the returned error is nil. If creation fails, this method
 // may be called again until no error is returned, indicating the PersistentVolumeClaims for pod are consistent with
-// set's Spec.
-func (spc *NodeSetPodControl) createPersistentVolumeClaims(ctx context.Context, set *slinkyv1alpha1.NodeSet, pod *corev1.Pod) error {
+// nodeset's Spec.
+func (spc *NodeSetPodControl) createPersistentVolumeClaims(ctx context.Context, nodeset *slinkyv1alpha1.NodeSet, pod *corev1.Pod) error {
 	var errs []error
-	for _, claim := range getPersistentVolumeClaims(set, pod) {
+	for _, claim := range getPersistentVolumeClaims(nodeset, pod) {
 		pvc, err := spc.objectMgr.GetClaim(ctx, claim.Namespace, claim.Name)
 		switch {
 		case apierrors.IsNotFound(err):
@@ -545,11 +545,11 @@ func (spc *NodeSetPodControl) createPersistentVolumeClaims(ctx context.Context, 
 				errs = append(errs, fmt.Errorf("failed to create PVC %s: %s", claim.Name, err))
 			}
 			if err == nil || !apierrors.IsAlreadyExists(err) {
-				spc.recordClaimEvent("create", set, pod, &claim, err)
+				spc.recordClaimEvent("create", nodeset, pod, &claim, err)
 			}
 		case err != nil:
 			errs = append(errs, fmt.Errorf("failed to retrieve PVC %s: %s", claim.Name, err))
-			spc.recordClaimEvent("create", set, pod, &claim, err)
+			spc.recordClaimEvent("create", nodeset, pod, &claim, err)
 		default:
 			if pvc.DeletionTimestamp != nil {
 				errs = append(errs, fmt.Errorf("pvc %s is being deleted", claim.Name))

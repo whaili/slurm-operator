@@ -36,14 +36,14 @@ import (
 // updates the nodeToNodeSetPods array to include an empty array for every node that is not scheduled.
 func (nsc *defaultNodeSetControl) updatedDesiredNodeCounts(
 	logger klog.Logger,
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	nodes []*corev1.Node,
 	nodeToNodeSetPods map[*corev1.Node][]*corev1.Pod,
 ) (int, int, error) {
 	var desiredNumberScheduled int
 	for i := range nodes {
 		node := nodes[i]
-		wantToRun, _ := nodeShouldRunNodeSetPod(node, set)
+		wantToRun, _ := nodeShouldRunNodeSetPod(node, nodeset)
 		if !wantToRun {
 			continue
 		}
@@ -54,11 +54,11 @@ func (nsc *defaultNodeSetControl) updatedDesiredNodeCounts(
 		}
 	}
 
-	if set.Spec.Replicas != nil {
-		desiredNumberScheduled = int(ptr.Deref(set.Spec.Replicas, 0))
+	if nodeset.Spec.Replicas != nil {
+		desiredNumberScheduled = int(ptr.Deref(nodeset.Spec.Replicas, 0))
 	}
 
-	maxUnavailable, err := unavailableCount(set, desiredNumberScheduled)
+	maxUnavailable, err := unavailableCount(nodeset, desiredNumberScheduled)
 	if err != nil {
 		return -1, -1, fmt.Errorf("invalid value for MaxUnavailable: %v", err)
 	}
@@ -67,14 +67,14 @@ func (nsc *defaultNodeSetControl) updatedDesiredNodeCounts(
 	// event the apiserver returns 0 for both surge and unavailability)
 	if desiredNumberScheduled > 0 && maxUnavailable == 0 {
 		logger.Info("NodeSet is not configured for unavailability, defaulting to accepting unavailability",
-			"NodeSet", klog.KObj(set))
+			"NodeSet", klog.KObj(nodeset))
 		maxUnavailable = 1
 	}
 	return maxUnavailable, desiredNumberScheduled, nil
 }
 
-func GetTemplateGeneration(set *slinkyv1alpha1.NodeSet) (*int64, error) {
-	annotation, found := set.Annotations[appsv1.DeprecatedTemplateGeneration]
+func GetTemplateGeneration(nodeset *slinkyv1alpha1.NodeSet) (*int64, error) {
+	annotation, found := nodeset.Annotations[appsv1.DeprecatedTemplateGeneration]
 	if !found {
 		return nil, nil
 	}
@@ -86,7 +86,7 @@ func GetTemplateGeneration(set *slinkyv1alpha1.NodeSet) (*int64, error) {
 }
 
 func (nsc *defaultNodeSetControl) filterNodeSetPodsToUpdate(
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	nodes []*corev1.Node,
 	hash string,
 	nodeToNodeSetPods map[*corev1.Node][]*corev1.Pod,
@@ -101,7 +101,7 @@ func (nsc *defaultNodeSetControl) filterNodeSetPodsToUpdate(
 		}
 	}
 
-	nodeNames, err := nsc.filterNodeSetPodsNodeToUpdate(set, hash, nodeToNodeSetPods)
+	nodeNames, err := nsc.filterNodeSetPodsNodeToUpdate(nodeset, hash, nodeToNodeSetPods)
 	if err != nil {
 		return nil, err
 	}
@@ -114,13 +114,13 @@ func (nsc *defaultNodeSetControl) filterNodeSetPodsToUpdate(
 }
 
 func (nsc *defaultNodeSetControl) filterNodeSetPodsNodeToUpdate(
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	hash string,
 	nodeToNodeSetPods map[*corev1.Node][]*corev1.Pod,
 ) ([]*corev1.Node, error) {
 	var partition int32
-	if set.Spec.UpdateStrategy.RollingUpdate != nil {
-		partition = ptr.Deref(set.Spec.UpdateStrategy.RollingUpdate.Partition, 0)
+	if nodeset.Spec.UpdateStrategy.RollingUpdate != nil {
+		partition = ptr.Deref(nodeset.Spec.UpdateStrategy.RollingUpdate.Partition, 0)
 	}
 	var allNodes []*corev1.Node
 	for node := range nodeToNodeSetPods {
@@ -132,7 +132,7 @@ func (nsc *defaultNodeSetControl) filterNodeSetPodsNodeToUpdate(
 	var updating []*corev1.Node
 	var rest []*corev1.Node
 	for node := range nodeToNodeSetPods {
-		newPod, oldPod, ok := findUpdatedPodsOnNode(set, nodeToNodeSetPods[node], hash)
+		newPod, oldPod, ok := findUpdatedPodsOnNode(nodeset, nodeToNodeSetPods[node], hash)
 		if !ok || newPod != nil || oldPod != nil {
 			updated = append(updated, node)
 			continue
@@ -150,24 +150,24 @@ func (nsc *defaultNodeSetControl) filterNodeSetPodsNodeToUpdate(
 	return sorted, nil
 }
 
-// syncNodeSetRollingUpdate identifies the set of old pods to in-place update, delete, or additional pods to create on nodes,
+// syncNodeSetRollingUpdate identifies the nodeset of old pods to in-place update, delete, or additional pods to create on nodes,
 // remaining within the constraints imposed by the update strategy.
 func (nsc *defaultNodeSetControl) syncNodeSetRollingUpdate(
 	ctx context.Context,
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	nodes []*corev1.Node,
 	nodeToNodeSetPods map[*corev1.Node][]*corev1.Pod,
 	hash string,
 ) error {
 	logger := log.FromContext(ctx)
 
-	maxUnavailable, _, err := nsc.updatedDesiredNodeCounts(logger, set, nodes, nodeToNodeSetPods)
+	maxUnavailable, _, err := nsc.updatedDesiredNodeCounts(logger, nodeset, nodes, nodeToNodeSetPods)
 	if err != nil {
 		return fmt.Errorf("could not get unavailable numbers: %v", err)
 	}
 
 	// Advanced: filter the pods updated, updating and can update, according to partition and selector
-	nodeToNodeSetPods, err = nsc.filterNodeSetPodsToUpdate(set, nodes, hash, nodeToNodeSetPods)
+	nodeToNodeSetPods, err = nsc.filterNodeSetPodsToUpdate(nodeset, nodes, hash, nodeToNodeSetPods)
 	if err != nil {
 		return fmt.Errorf("failed to filterNodeSetPodsToUpdate: %v", err)
 	}
@@ -190,11 +190,11 @@ func (nsc *defaultNodeSetControl) syncNodeSetRollingUpdate(
 	var allowedReplacementPods []*corev1.Pod
 	var candidatePodsToDelete []*corev1.Pod
 	for node, pods := range nodeToNodeSetPods {
-		newPod, oldPod, ok := findUpdatedPodsOnNode(set, pods, hash)
+		newPod, oldPod, ok := findUpdatedPodsOnNode(nodeset, pods, hash)
 		if !ok {
 			// let the syncNodeSet clean up this node, and treat it as an unavailable node
 			logger.V(1).Info("NodeSet has excess pods on Node, skipping to allow the core loop to process",
-				"NodeSet", klog.KObj(set), "Node", klog.KObj(node))
+				"NodeSet", klog.KObj(nodeset), "Node", klog.KObj(node))
 			numUnavailable++
 			continue
 		}
@@ -203,19 +203,19 @@ func (nsc *defaultNodeSetControl) syncNodeSetRollingUpdate(
 			// syncNodeSet will handle creating or deleting the appropriate pod
 		case newPod != nil:
 			// this pod is up to date, check its availability
-			if !podutil.IsPodAvailable(newPod, set.Spec.MinReadySeconds, metav1.Time{Time: now}) {
+			if !podutil.IsPodAvailable(newPod, nodeset.Spec.MinReadySeconds, metav1.Time{Time: now}) {
 				// an unavailable new pod is counted against maxUnavailable
 				numUnavailable++
 				logger.V(1).Info("NodeSet Pod on Node is new and unavailable",
-					"NodeSet", klog.KObj(set), "Pod", klog.KObj(newPod), "Node", klog.KObj(node))
+					"NodeSet", klog.KObj(nodeset), "Pod", klog.KObj(newPod), "Node", klog.KObj(node))
 			}
 		default:
 			// this pod is old, it is an update candidate
 			switch {
-			case !podutil.IsPodAvailable(oldPod, set.Spec.MinReadySeconds, metav1.Time{Time: now}), isNodeSetPodDelete(oldPod):
+			case !podutil.IsPodAvailable(oldPod, nodeset.Spec.MinReadySeconds, metav1.Time{Time: now}), isNodeSetPodDelete(oldPod):
 				// the old pod is not available, so it needs to be replaced
 				logger.V(1).Info("NodeSet Pod on Node is out of date and not available, allowing replacement",
-					"NodeSet", klog.KObj(set), "Pod", klog.KObj(oldPod), "Node", klog.KObj(node))
+					"NodeSet", klog.KObj(nodeset), "Pod", klog.KObj(oldPod), "Node", klog.KObj(node))
 				// record the replacement
 				if allowedReplacementPods == nil {
 					allowedReplacementPods = make([]*corev1.Pod, 0, len(nodeToNodeSetPods))
@@ -226,7 +226,7 @@ func (nsc *defaultNodeSetControl) syncNodeSetRollingUpdate(
 				continue
 			default:
 				logger.V(1).Info("NodeSet Pod on Node is out of date, this is a candidate to replace",
-					"NodeSet", klog.KObj(set), "Pod", klog.KObj(oldPod), "Node", klog.KObj(node))
+					"NodeSet", klog.KObj(nodeset), "Pod", klog.KObj(oldPod), "Node", klog.KObj(node))
 				// record the candidate
 				if candidatePodsToDelete == nil {
 					candidatePodsToDelete = make([]*corev1.Pod, 0, maxUnavailable)
@@ -238,7 +238,7 @@ func (nsc *defaultNodeSetControl) syncNodeSetRollingUpdate(
 
 	// use any of the candidates we can, including the allowedReplacementPods
 	logger.V(1).Info("NodeSet allowing replacements",
-		"NodeSet", klog.KObj(set),
+		"NodeSet", klog.KObj(nodeset),
 		"allowedReplacementPods", len(allowedReplacementPods),
 		"maxUnavailable", maxUnavailable,
 		"numUnavailable", numUnavailable,
@@ -252,14 +252,14 @@ func (nsc *defaultNodeSetControl) syncNodeSetRollingUpdate(
 	}
 	oldPodsToDelete := append(allowedReplacementPods, candidatePodsToDelete[:remainingUnavailable]...)
 
-	return nsc.syncNodeSetPods(ctx, set, oldPodsToDelete, nil)
+	return nsc.syncNodeSetPods(ctx, nodeset, oldPodsToDelete, nil)
 }
 
 // updateSlurmNodeWithPodInfo updated the corresponding Slurm node with info of
 // the Pod that backs it.
 func (nsc *defaultNodeSetControl) updateSlurmNodeWithPodInfo(
 	ctx context.Context,
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	pod *corev1.Pod,
 ) error {
 	logger := log.FromContext(ctx)
@@ -274,8 +274,8 @@ func (nsc *defaultNodeSetControl) updateSlurmNodeWithPodInfo(
 	}
 
 	clusterName := types.NamespacedName{
-		Namespace: set.GetNamespace(),
-		Name:      set.Spec.ClusterName,
+		Namespace: nodeset.GetNamespace(),
+		Name:      nodeset.Spec.ClusterName,
 	}
 	slurmClient := nsc.slurmClusters.Get(clusterName)
 	if slurmClient != nil && !isNodeSetPodDelete(pod) {
@@ -324,15 +324,15 @@ func tolerateError(err error) bool {
 // syncSlurm processes Slurm Nodes to align them with Kubernetes, and vice versa.
 func (nsc *defaultNodeSetControl) syncSlurm(
 	ctx context.Context,
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	nodes []*corev1.Node,
 	nodeToNodeSetPods map[*corev1.Node][]*corev1.Pod,
 ) error {
 	logger := log.FromContext(ctx)
 
 	clusterName := types.NamespacedName{
-		Namespace: set.GetNamespace(),
-		Name:      set.Spec.ClusterName,
+		Namespace: nodeset.GetNamespace(),
+		Name:      nodeset.Spec.ClusterName,
 	}
 	slurmClient := nsc.slurmClusters.Get(clusterName)
 	if slurmClient == nil {
@@ -355,7 +355,7 @@ func (nsc *defaultNodeSetControl) syncSlurm(
 			if !utils.IsHealthy(pod) {
 				continue
 			}
-			if err := nsc.updateSlurmNodeWithPodInfo(ctx, set, pod); !tolerateError(err) {
+			if err := nsc.updateSlurmNodeWithPodInfo(ctx, nodeset, pod); !tolerateError(err) {
 				return err
 			}
 		}
@@ -399,40 +399,40 @@ func (nsc *defaultNodeSetControl) syncSlurm(
 	return nil
 }
 
-// inconsistentStatus returns true if the ObservedGeneration of status is greater than set's
-// Generation or if any of the status's fields do not match those of set's status.
-func inconsistentStatus(set *slinkyv1alpha1.NodeSet, status *slinkyv1alpha1.NodeSetStatus) bool {
-	return status.ObservedGeneration > set.Status.ObservedGeneration ||
-		status.DesiredNumberScheduled != set.Status.DesiredNumberScheduled ||
-		status.CurrentNumberScheduled != set.Status.CurrentNumberScheduled ||
-		status.NumberMisscheduled != set.Status.NumberMisscheduled ||
-		status.NumberReady != set.Status.NumberReady ||
-		status.UpdatedNumberScheduled != set.Status.UpdatedNumberScheduled ||
-		status.NumberAvailable != set.Status.NumberAvailable ||
-		status.NumberUnavailable != set.Status.NumberUnavailable ||
-		status.NumberIdle != set.Status.NumberIdle ||
-		status.NumberAllocated != set.Status.NumberAllocated ||
-		status.NumberDrain != set.Status.NumberDrain ||
-		status.NodeSetHash != set.Status.NodeSetHash
+// inconsistentStatus returns true if the ObservedGeneration of status is greater than nodeset's
+// Generation or if any of the status's fields do not match those of nodeset's status.
+func inconsistentStatus(nodeset *slinkyv1alpha1.NodeSet, status *slinkyv1alpha1.NodeSetStatus) bool {
+	return status.ObservedGeneration > nodeset.Status.ObservedGeneration ||
+		status.DesiredNumberScheduled != nodeset.Status.DesiredNumberScheduled ||
+		status.CurrentNumberScheduled != nodeset.Status.CurrentNumberScheduled ||
+		status.NumberMisscheduled != nodeset.Status.NumberMisscheduled ||
+		status.NumberReady != nodeset.Status.NumberReady ||
+		status.UpdatedNumberScheduled != nodeset.Status.UpdatedNumberScheduled ||
+		status.NumberAvailable != nodeset.Status.NumberAvailable ||
+		status.NumberUnavailable != nodeset.Status.NumberUnavailable ||
+		status.NumberIdle != nodeset.Status.NumberIdle ||
+		status.NumberAllocated != nodeset.Status.NumberAllocated ||
+		status.NumberDrain != nodeset.Status.NumberDrain ||
+		status.NodeSetHash != nodeset.Status.NodeSetHash
 }
 
 func (nsc *defaultNodeSetControl) updateStatus(
 	ctx context.Context,
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	status *slinkyv1alpha1.NodeSetStatus,
 ) error {
 	logger := log.FromContext(ctx)
 
 	// do not perform an update when the status is consistant
-	if !inconsistentStatus(set, status) {
+	if !inconsistentStatus(nodeset, status) {
 		return nil
 	}
 
 	logger.V(1).Info("NodeSet status update", "NodeSetStatus", status)
 
-	// copy set and update its status
-	set = set.DeepCopy()
-	if err := nsc.statusUpdater.UpdateNodeSetStatus(ctx, set, status); err != nil {
+	// copy nodeset and update its status
+	nodeset = nodeset.DeepCopy()
+	if err := nsc.statusUpdater.UpdateNodeSetStatus(ctx, nodeset, status); err != nil {
 		return err
 	}
 
@@ -441,32 +441,32 @@ func (nsc *defaultNodeSetControl) updateStatus(
 
 func (nsc *defaultNodeSetControl) syncNodeSetStatus(
 	ctx context.Context,
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	nodes []*corev1.Node,
 	nodeToNodeSetPods map[*corev1.Node][]*corev1.Pod,
 	collisionCount int32,
 	hash string,
 	updateObservedGen bool,
 ) error {
-	setKey := utils.KeyFunc(set)
-	status := set.Status.DeepCopy()
+	setKey := utils.KeyFunc(nodeset)
+	status := nodeset.Status.DeepCopy()
 
 	clusterName := types.NamespacedName{
-		Namespace: set.GetNamespace(),
-		Name:      set.Spec.ClusterName,
+		Namespace: nodeset.GetNamespace(),
+		Name:      nodeset.Spec.ClusterName,
 	}
 	slurmClient := nsc.slurmClusters.Get(clusterName)
 
-	selector, err := metav1.LabelSelectorAsSelector(set.Spec.Selector)
+	selector, err := metav1.LabelSelectorAsSelector(nodeset.Spec.Selector)
 	if err != nil {
-		return fmt.Errorf("could not get label selector for NodeSet(%s): %v", klog.KObj(set), err)
+		return fmt.Errorf("could not get label selector for NodeSet(%s): %v", klog.KObj(nodeset), err)
 	}
 
 	var numberIdle, numberAllocated, numberDown, numberDrain int32
 	var desiredNumberScheduled, currentNumberScheduled, numberMisscheduled, numberReady, updatedNumberScheduled, numberAvailable int32
 	now := failedPodsBackoff.Clock.Now()
 	for _, node := range nodes {
-		shouldRun, _ := nodeShouldRunNodeSetPod(node, set)
+		shouldRun, _ := nodeShouldRunNodeSetPod(node, nodeset)
 		scheduled := len(nodeToNodeSetPods[node]) > 0
 
 		if shouldRun {
@@ -479,13 +479,13 @@ func (nsc *defaultNodeSetControl) syncNodeSetStatus(
 				pod := nodeSetPods[0]
 				if podutil.IsPodReady(pod) {
 					numberReady++
-					if isNodeSetPodAvailable(pod, set.Spec.MinReadySeconds, metav1.Time{Time: now}) {
+					if isNodeSetPodAvailable(pod, nodeset.Spec.MinReadySeconds, metav1.Time{Time: now}) {
 						numberAvailable++
 					}
 				}
 				// If the returned error is not nil we have a parse error.
 				// The controller handles this via the hash.
-				generation, err := GetTemplateGeneration(set)
+				generation, err := GetTemplateGeneration(nodeset)
 				if err != nil {
 					generation = nil
 				}
@@ -517,12 +517,12 @@ func (nsc *defaultNodeSetControl) syncNodeSetStatus(
 					Name:      nodeInfo.PodName,
 				},
 			}
-			if !isPodFromNodeSet(set, pod) {
+			if !isPodFromNodeSet(nodeset, pod) {
 				continue
 			}
 
 			if utils.IsHealthy(pod) {
-				if err := nsc.updateSlurmNodeWithPodInfo(ctx, set, pod); err != nil {
+				if err := nsc.updateSlurmNodeWithPodInfo(ctx, nodeset, pod); err != nil {
 					if err.Error() != http.StatusText(http.StatusNotFound) {
 						return err
 					}
@@ -544,13 +544,13 @@ func (nsc *defaultNodeSetControl) syncNodeSetStatus(
 			}
 		}
 	}
-	if set.Spec.Replicas != nil {
-		desiredNumberScheduled = ptr.Deref(set.Spec.Replicas, 0)
+	if nodeset.Spec.Replicas != nil {
+		desiredNumberScheduled = ptr.Deref(nodeset.Spec.Replicas, 0)
 	}
 	numberUnavailable := desiredNumberScheduled - numberAvailable
 
 	if updateObservedGen {
-		status.ObservedGeneration = set.Generation
+		status.ObservedGeneration = nodeset.Generation
 	}
 	status.DesiredNumberScheduled = desiredNumberScheduled
 	status.CurrentNumberScheduled = currentNumberScheduled
@@ -567,13 +567,13 @@ func (nsc *defaultNodeSetControl) syncNodeSetStatus(
 	status.CollisionCount = &collisionCount
 	status.Selector = selector.String()
 
-	if err := nsc.updateStatus(ctx, set, status); err != nil {
+	if err := nsc.updateStatus(ctx, nodeset, status); err != nil {
 		return fmt.Errorf("error updating NodeSet(%s) status: %v", setKey, err)
 	}
 
-	if set.Spec.MinReadySeconds >= 0 && numberReady != numberAvailable {
+	if nodeset.Spec.MinReadySeconds >= 0 && numberReady != numberAvailable {
 		// Resync the NodeSet after MinReadySeconds as a last line of defense to guard against clock-skew.
-		durationStore.Push(setKey, time.Duration(set.Spec.MinReadySeconds)*time.Second)
+		durationStore.Push(setKey, time.Duration(nodeset.Spec.MinReadySeconds)*time.Second)
 	} else if (numberIdle + numberAllocated) != desiredNumberScheduled {
 		// Resync the NodeSet until the Slurm state is correct
 		durationStore.Push(setKey, 5*time.Second)

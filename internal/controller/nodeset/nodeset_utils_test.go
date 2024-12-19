@@ -20,8 +20,8 @@ import (
 
 func Test_isPodFromNodeSet(t *testing.T) {
 	type args struct {
-		set *slinkyv1alpha1.NodeSet
-		pod *corev1.Pod
+		nodeset *slinkyv1alpha1.NodeSet
+		pod     *corev1.Pod
 	}
 	tests := []struct {
 		name string
@@ -31,23 +31,23 @@ func Test_isPodFromNodeSet(t *testing.T) {
 		{
 			name: "Names match",
 			args: args{
-				set: &slinkyv1alpha1.NodeSet{ObjectMeta: metav1.ObjectMeta{Name: "foo"}},
-				pod: &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "foo-"}},
+				nodeset: &slinkyv1alpha1.NodeSet{ObjectMeta: metav1.ObjectMeta{Name: "foo"}},
+				pod:     &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "foo-"}},
 			},
 			want: true,
 		},
 		{
 			name: "Names don't match",
 			args: args{
-				set: &slinkyv1alpha1.NodeSet{ObjectMeta: metav1.ObjectMeta{Name: "foo"}},
-				pod: &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "bar-"}},
+				nodeset: &slinkyv1alpha1.NodeSet{ObjectMeta: metav1.ObjectMeta{Name: "foo"}},
+				pod:     &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "bar-"}},
 			},
 			want: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := isPodFromNodeSet(tt.args.set, tt.args.pod); got != tt.want {
+			if got := isPodFromNodeSet(tt.args.nodeset, tt.args.pod); got != tt.want {
 				t.Errorf("isPodFromNodeSet() = %v, want %v", got, tt.want)
 			}
 		})
@@ -56,8 +56,8 @@ func Test_isPodFromNodeSet(t *testing.T) {
 
 func Test_identityMatches(t *testing.T) {
 	type args struct {
-		set *slinkyv1alpha1.NodeSet
-		pod *corev1.Pod
+		nodeset *slinkyv1alpha1.NodeSet
+		pod     *corev1.Pod
 	}
 	tests := []struct {
 		name string
@@ -67,7 +67,7 @@ func Test_identityMatches(t *testing.T) {
 		{
 			name: "Names match",
 			args: args{
-				set: &slinkyv1alpha1.NodeSet{
+				nodeset: &slinkyv1alpha1.NodeSet{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "foo",
 						Namespace: "default",
@@ -85,7 +85,7 @@ func Test_identityMatches(t *testing.T) {
 		{
 			name: "Names don't match",
 			args: args{
-				set: &slinkyv1alpha1.NodeSet{
+				nodeset: &slinkyv1alpha1.NodeSet{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "foo",
 						Namespace: "default",
@@ -103,7 +103,7 @@ func Test_identityMatches(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := identityMatches(tt.args.set, tt.args.pod); got != tt.want {
+			if got := identityMatches(tt.args.nodeset, tt.args.pod); got != tt.want {
 				t.Errorf("identityMatches() = %v, want %v", got, tt.want)
 			}
 		})
@@ -112,8 +112,8 @@ func Test_identityMatches(t *testing.T) {
 
 func Test_storageMatches(t *testing.T) {
 	type args struct {
-		set *slinkyv1alpha1.NodeSet
-		pod *corev1.Pod
+		nodeset *slinkyv1alpha1.NodeSet
+		pod     *corev1.Pod
 	}
 	tests := []struct {
 		name string
@@ -123,7 +123,7 @@ func Test_storageMatches(t *testing.T) {
 		{
 			name: "Storage matches",
 			args: args{
-				set: &slinkyv1alpha1.NodeSet{
+				nodeset: &slinkyv1alpha1.NodeSet{
 					ObjectMeta: metav1.ObjectMeta{Name: "nodeset"},
 					Spec: slinkyv1alpha1.NodeSetSpec{
 						VolumeClaimTemplates: []corev1.PersistentVolumeClaim{
@@ -156,7 +156,7 @@ func Test_storageMatches(t *testing.T) {
 		{
 			name: "Storage doesn't match",
 			args: args{
-				set: &slinkyv1alpha1.NodeSet{
+				nodeset: &slinkyv1alpha1.NodeSet{
 					ObjectMeta: metav1.ObjectMeta{Name: "nodeset"},
 					Spec: slinkyv1alpha1.NodeSetSpec{
 						VolumeClaimTemplates: []corev1.PersistentVolumeClaim{
@@ -189,7 +189,7 @@ func Test_storageMatches(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := storageMatches(tt.args.set, tt.args.pod); got != tt.want {
+			if got := storageMatches(tt.args.nodeset, tt.args.pod); got != tt.want {
 				t.Errorf("storageMatches() = %v, want %v", got, tt.want)
 			}
 		})
@@ -198,7 +198,7 @@ func Test_storageMatches(t *testing.T) {
 
 func Test_getPersistentVolumeClaimRetentionPolicy(t *testing.T) {
 	type args struct {
-		set *slinkyv1alpha1.NodeSet
+		nodeset *slinkyv1alpha1.NodeSet
 	}
 	tests := []struct {
 		name string
@@ -208,7 +208,7 @@ func Test_getPersistentVolumeClaimRetentionPolicy(t *testing.T) {
 		{
 			name: "Return PersistentVolumeClaimRetentionPolicy",
 			args: args{
-				set: &slinkyv1alpha1.NodeSet{
+				nodeset: &slinkyv1alpha1.NodeSet{
 					Spec: slinkyv1alpha1.NodeSetSpec{
 						PersistentVolumeClaimRetentionPolicy: &slinkyv1alpha1.NodeSetPersistentVolumeClaimRetentionPolicy{
 							WhenDeleted: slinkyv1alpha1.DeletePersistentVolumeClaimRetentionPolicyType,
@@ -223,7 +223,7 @@ func Test_getPersistentVolumeClaimRetentionPolicy(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getPersistentVolumeClaimRetentionPolicy(tt.args.set); !reflect.DeepEqual(got, tt.want) {
+			if got := getPersistentVolumeClaimRetentionPolicy(tt.args.nodeset); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("getPersistentVolumeClaimRetentionPolicy() = %v, want %v", got, tt.want)
 			}
 		})
@@ -232,9 +232,9 @@ func Test_getPersistentVolumeClaimRetentionPolicy(t *testing.T) {
 
 func Test_claimOwnerMatchesSetAndPod(t *testing.T) {
 	type args struct {
-		claim *corev1.PersistentVolumeClaim
-		set   *slinkyv1alpha1.NodeSet
-		pod   *corev1.Pod
+		claim   *corev1.PersistentVolumeClaim
+		nodeset *slinkyv1alpha1.NodeSet
+		pod     *corev1.Pod
 	}
 	tests := []struct {
 		name string
@@ -251,7 +251,7 @@ func Test_claimOwnerMatchesSetAndPod(t *testing.T) {
 						},
 					},
 				},
-				set: &slinkyv1alpha1.NodeSet{
+				nodeset: &slinkyv1alpha1.NodeSet{
 					Spec: slinkyv1alpha1.NodeSetSpec{
 						PersistentVolumeClaimRetentionPolicy: &slinkyv1alpha1.NodeSetPersistentVolumeClaimRetentionPolicy{
 							WhenDeleted: "",
@@ -281,7 +281,7 @@ func Test_claimOwnerMatchesSetAndPod(t *testing.T) {
 						},
 					},
 				},
-				set: &slinkyv1alpha1.NodeSet{
+				nodeset: &slinkyv1alpha1.NodeSet{
 					Spec: slinkyv1alpha1.NodeSetSpec{
 						PersistentVolumeClaimRetentionPolicy: &slinkyv1alpha1.NodeSetPersistentVolumeClaimRetentionPolicy{
 							WhenDeleted: slinkyv1alpha1.DeletePersistentVolumeClaimRetentionPolicyType,
@@ -311,7 +311,7 @@ func Test_claimOwnerMatchesSetAndPod(t *testing.T) {
 						},
 					},
 				},
-				set: &slinkyv1alpha1.NodeSet{
+				nodeset: &slinkyv1alpha1.NodeSet{
 					Spec: slinkyv1alpha1.NodeSetSpec{
 						PersistentVolumeClaimRetentionPolicy: &slinkyv1alpha1.NodeSetPersistentVolumeClaimRetentionPolicy{
 							WhenDeleted: slinkyv1alpha1.RetainPersistentVolumeClaimRetentionPolicyType,
@@ -334,7 +334,7 @@ func Test_claimOwnerMatchesSetAndPod(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := claimOwnerMatchesSetAndPod(klog.Logger{}, tt.args.claim, tt.args.set, tt.args.pod); got != tt.want {
+			if got := claimOwnerMatchesSetAndPod(klog.Logger{}, tt.args.claim, tt.args.nodeset, tt.args.pod); got != tt.want {
 				t.Errorf("claimOwnerMatchesSetAndPod() = %v, want %v", got, tt.want)
 			}
 		})
@@ -343,9 +343,9 @@ func Test_claimOwnerMatchesSetAndPod(t *testing.T) {
 
 func Test_updateClaimOwnerRefForSetAndPod(t *testing.T) {
 	type args struct {
-		claim *corev1.PersistentVolumeClaim
-		set   *slinkyv1alpha1.NodeSet
-		pod   *corev1.Pod
+		claim   *corev1.PersistentVolumeClaim
+		nodeset *slinkyv1alpha1.NodeSet
+		pod     *corev1.Pod
 	}
 	tests := []struct {
 		name string
@@ -356,7 +356,7 @@ func Test_updateClaimOwnerRefForSetAndPod(t *testing.T) {
 			name: "Delete PVC Retention Policy",
 			args: args{
 				claim: &corev1.PersistentVolumeClaim{},
-				set: &slinkyv1alpha1.NodeSet{
+				nodeset: &slinkyv1alpha1.NodeSet{
 					Spec: slinkyv1alpha1.NodeSetSpec{
 						PersistentVolumeClaimRetentionPolicy: &slinkyv1alpha1.NodeSetPersistentVolumeClaimRetentionPolicy{
 							WhenDeleted: slinkyv1alpha1.DeletePersistentVolumeClaimRetentionPolicyType,
@@ -371,7 +371,7 @@ func Test_updateClaimOwnerRefForSetAndPod(t *testing.T) {
 			name: "Retain PVC Retention Policy",
 			args: args{
 				claim: &corev1.PersistentVolumeClaim{},
-				set: &slinkyv1alpha1.NodeSet{
+				nodeset: &slinkyv1alpha1.NodeSet{
 					Spec: slinkyv1alpha1.NodeSetSpec{
 						PersistentVolumeClaimRetentionPolicy: &slinkyv1alpha1.NodeSetPersistentVolumeClaimRetentionPolicy{
 							WhenDeleted: slinkyv1alpha1.RetainPersistentVolumeClaimRetentionPolicyType,
@@ -386,7 +386,7 @@ func Test_updateClaimOwnerRefForSetAndPod(t *testing.T) {
 			name: "Unknown PVC Retention Policy",
 			args: args{
 				claim: &corev1.PersistentVolumeClaim{},
-				set: &slinkyv1alpha1.NodeSet{
+				nodeset: &slinkyv1alpha1.NodeSet{
 					Spec: slinkyv1alpha1.NodeSetSpec{
 						PersistentVolumeClaimRetentionPolicy: &slinkyv1alpha1.NodeSetPersistentVolumeClaimRetentionPolicy{
 							WhenDeleted: "",
@@ -400,7 +400,7 @@ func Test_updateClaimOwnerRefForSetAndPod(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := updateClaimOwnerRefForSetAndPod(klog.Logger{}, tt.args.claim, tt.args.set, tt.args.pod); got != tt.want {
+			if got := updateClaimOwnerRefForSetAndPod(klog.Logger{}, tt.args.claim, tt.args.nodeset, tt.args.pod); got != tt.want {
 				t.Errorf("updateClaimOwnerRefForSetAndPod() = %v, want %v", got, tt.want)
 			}
 		})
@@ -578,9 +578,9 @@ func Test_removeOwnerRef(t *testing.T) {
 
 func Test_getPersistentVolumeClaimName(t *testing.T) {
 	type args struct {
-		set   *slinkyv1alpha1.NodeSet
-		claim *corev1.PersistentVolumeClaim
-		host  string
+		nodeset *slinkyv1alpha1.NodeSet
+		claim   *corev1.PersistentVolumeClaim
+		host    string
 	}
 	tests := []struct {
 		name string
@@ -590,16 +590,16 @@ func Test_getPersistentVolumeClaimName(t *testing.T) {
 		{
 			name: "Test getPersistentVolumeClaimName",
 			args: args{
-				set:   &slinkyv1alpha1.NodeSet{ObjectMeta: metav1.ObjectMeta{Name: "foo"}},
-				claim: &corev1.PersistentVolumeClaim{ObjectMeta: metav1.ObjectMeta{Name: "bar"}},
-				host:  "baz",
+				nodeset: &slinkyv1alpha1.NodeSet{ObjectMeta: metav1.ObjectMeta{Name: "foo"}},
+				claim:   &corev1.PersistentVolumeClaim{ObjectMeta: metav1.ObjectMeta{Name: "bar"}},
+				host:    "baz",
 			},
 			want: "bar-foo-baz",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getPersistentVolumeClaimName(tt.args.set, tt.args.claim, tt.args.host); got != tt.want {
+			if got := getPersistentVolumeClaimName(tt.args.nodeset, tt.args.claim, tt.args.host); got != tt.want {
 				t.Errorf("getPersistentVolumeClaimName() = %v, want %v", got, tt.want)
 			}
 		})
@@ -608,8 +608,8 @@ func Test_getPersistentVolumeClaimName(t *testing.T) {
 
 func Test_getPersistentVolumeClaims(t *testing.T) {
 	type args struct {
-		set *slinkyv1alpha1.NodeSet
-		pod *corev1.Pod
+		nodeset *slinkyv1alpha1.NodeSet
+		pod     *corev1.Pod
 	}
 	tests := []struct {
 		name string
@@ -619,7 +619,7 @@ func Test_getPersistentVolumeClaims(t *testing.T) {
 		{
 			name: "Test getPersistentVolumeClaimName",
 			args: args{
-				set: &slinkyv1alpha1.NodeSet{
+				nodeset: &slinkyv1alpha1.NodeSet{
 					ObjectMeta: metav1.ObjectMeta{Name: "nodeset", Namespace: "default"},
 					Spec: slinkyv1alpha1.NodeSetSpec{
 						VolumeClaimTemplates: []corev1.PersistentVolumeClaim{
@@ -649,7 +649,7 @@ func Test_getPersistentVolumeClaims(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getPersistentVolumeClaims(tt.args.set, tt.args.pod); !reflect.DeepEqual(got, tt.want) {
+			if got := getPersistentVolumeClaims(tt.args.nodeset, tt.args.pod); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("getPersistentVolumeClaims() = %v, want %v", got, tt.want)
 			}
 		})
@@ -658,8 +658,8 @@ func Test_getPersistentVolumeClaims(t *testing.T) {
 
 func Test_updateStorage(t *testing.T) {
 	type args struct {
-		set *slinkyv1alpha1.NodeSet
-		pod *corev1.Pod
+		nodeset *slinkyv1alpha1.NodeSet
+		pod     *corev1.Pod
 	}
 	tests := []struct {
 		name string
@@ -668,7 +668,7 @@ func Test_updateStorage(t *testing.T) {
 		{
 			name: "Test updateStorage",
 			args: args{
-				set: &slinkyv1alpha1.NodeSet{
+				nodeset: &slinkyv1alpha1.NodeSet{
 					ObjectMeta: metav1.ObjectMeta{Name: "nodeset", Namespace: "default"},
 					Spec: slinkyv1alpha1.NodeSetSpec{
 						VolumeClaimTemplates: []corev1.PersistentVolumeClaim{
@@ -694,15 +694,15 @@ func Test_updateStorage(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			updateStorage(tt.args.set, tt.args.pod)
+			updateStorage(tt.args.nodeset, tt.args.pod)
 		})
 	}
 }
 
 func Test_initIdentity(t *testing.T) {
 	type args struct {
-		set *slinkyv1alpha1.NodeSet
-		pod *corev1.Pod
+		nodeset *slinkyv1alpha1.NodeSet
+		pod     *corev1.Pod
 	}
 	tests := []struct {
 		name string
@@ -712,15 +712,15 @@ func Test_initIdentity(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			initIdentity(tt.args.set, tt.args.pod)
+			initIdentity(tt.args.nodeset, tt.args.pod)
 		})
 	}
 }
 
 func Test_updateIdentity(t *testing.T) {
 	type args struct {
-		set *slinkyv1alpha1.NodeSet
-		pod *corev1.Pod
+		nodeset *slinkyv1alpha1.NodeSet
+		pod     *corev1.Pod
 	}
 	tests := []struct {
 		name string
@@ -730,7 +730,7 @@ func Test_updateIdentity(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			updateIdentity(tt.args.set, tt.args.pod)
+			updateIdentity(tt.args.nodeset, tt.args.pod)
 		})
 	}
 }
@@ -834,7 +834,7 @@ func Test_updateNodeSetPodAntiAffinity(t *testing.T) {
 
 func Test_newNodeSetPod(t *testing.T) {
 	type args struct {
-		set      *slinkyv1alpha1.NodeSet
+		nodeset  *slinkyv1alpha1.NodeSet
 		nodeName string
 		hash     string
 	}
@@ -847,7 +847,7 @@ func Test_newNodeSetPod(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := newNodeSetPod(tt.args.set, tt.args.nodeName, tt.args.hash); !reflect.DeepEqual(got, tt.want) {
+			if got := newNodeSetPod(tt.args.nodeset, tt.args.nodeName, tt.args.hash); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("newNodeSetPod() = %v, want %v", got, tt.want)
 			}
 		})
@@ -856,7 +856,7 @@ func Test_newNodeSetPod(t *testing.T) {
 
 func Test_getPatch(t *testing.T) {
 	type args struct {
-		set *slinkyv1alpha1.NodeSet
+		nodeset *slinkyv1alpha1.NodeSet
 	}
 	tests := []struct {
 		name    string
@@ -868,7 +868,7 @@ func Test_getPatch(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getPatch(tt.args.set)
+			got, err := getPatch(tt.args.nodeset)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getPatch() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -882,7 +882,7 @@ func Test_getPatch(t *testing.T) {
 
 func TestMatch(t *testing.T) {
 	type args struct {
-		set     *slinkyv1alpha1.NodeSet
+		nodeset *slinkyv1alpha1.NodeSet
 		history *appsv1.ControllerRevision
 	}
 	tests := []struct {
@@ -895,7 +895,7 @@ func TestMatch(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := Match(tt.args.set, tt.args.history)
+			got, err := Match(tt.args.nodeset, tt.args.history)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Match() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -909,7 +909,7 @@ func TestMatch(t *testing.T) {
 
 func TestApplyRevision(t *testing.T) {
 	type args struct {
-		set      *slinkyv1alpha1.NodeSet
+		nodeset  *slinkyv1alpha1.NodeSet
 		revision *appsv1.ControllerRevision
 	}
 	tests := []struct {
@@ -922,7 +922,7 @@ func TestApplyRevision(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ApplyRevision(tt.args.set, tt.args.revision)
+			got, err := ApplyRevision(tt.args.nodeset, tt.args.revision)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ApplyRevision() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -957,7 +957,7 @@ func Test_nodeInSameCondition(t *testing.T) {
 
 func Test_failedPodsBackoffKey(t *testing.T) {
 	type args struct {
-		set      *slinkyv1alpha1.NodeSet
+		nodeset  *slinkyv1alpha1.NodeSet
 		nodeName string
 	}
 	tests := []struct {
@@ -968,7 +968,7 @@ func Test_failedPodsBackoffKey(t *testing.T) {
 		{
 			name: "Test failedPodsBackoffKey",
 			args: args{
-				set: &slinkyv1alpha1.NodeSet{
+				nodeset: &slinkyv1alpha1.NodeSet{
 					ObjectMeta: metav1.ObjectMeta{
 						UID: types.UID("1234"),
 					},
@@ -983,7 +983,7 @@ func Test_failedPodsBackoffKey(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := failedPodsBackoffKey(tt.args.set, tt.args.nodeName); got != tt.want {
+			if got := failedPodsBackoffKey(tt.args.nodeset, tt.args.nodeName); got != tt.want {
 				t.Errorf("failedPodsBackoffKey() = %v, want %v", got, tt.want)
 			}
 		})
@@ -1023,8 +1023,8 @@ func Test_predicates(t *testing.T) {
 
 func Test_nodeShouldRunNodeSetPod(t *testing.T) {
 	type args struct {
-		node *corev1.Node
-		set  *slinkyv1alpha1.NodeSet
+		node    *corev1.Node
+		nodeset *slinkyv1alpha1.NodeSet
 	}
 	tests := []struct {
 		name  string
@@ -1036,7 +1036,7 @@ func Test_nodeShouldRunNodeSetPod(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1 := nodeShouldRunNodeSetPod(tt.args.node, tt.args.set)
+			got, got1 := nodeShouldRunNodeSetPod(tt.args.node, tt.args.nodeset)
 			if got != tt.want {
 				t.Errorf("nodeShouldRunNodeSetPod() got = %v, want %v", got, tt.want)
 			}
@@ -1071,7 +1071,7 @@ func Test_isNodeSetPodAvailable(t *testing.T) {
 
 func Test_isNodeSetCreationProgressively(t *testing.T) {
 	type args struct {
-		set *slinkyv1alpha1.NodeSet
+		nodeset *slinkyv1alpha1.NodeSet
 	}
 	tests := []struct {
 		name string
@@ -1082,7 +1082,7 @@ func Test_isNodeSetCreationProgressively(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := isNodeSetCreationProgressively(tt.args.set); got != tt.want {
+			if got := isNodeSetCreationProgressively(tt.args.nodeset); got != tt.want {
 				t.Errorf("isNodeSetCreationProgressively() = %v, want %v", got, tt.want)
 			}
 		})
@@ -1303,7 +1303,7 @@ func Test_getNodesNeedingPods(t *testing.T) {
 
 func Test_isNodeSetPaused(t *testing.T) {
 	type args struct {
-		set *slinkyv1alpha1.NodeSet
+		nodeset *slinkyv1alpha1.NodeSet
 	}
 	tests := []struct {
 		name string
@@ -1314,7 +1314,7 @@ func Test_isNodeSetPaused(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := isNodeSetPaused(tt.args.set); got != tt.want {
+			if got := isNodeSetPaused(tt.args.nodeset); got != tt.want {
 				t.Errorf("isNodeSetPaused() = %v, want %v", got, tt.want)
 			}
 		})
@@ -1323,7 +1323,7 @@ func Test_isNodeSetPaused(t *testing.T) {
 
 func Test_unavailableCount(t *testing.T) {
 	type args struct {
-		set              *slinkyv1alpha1.NodeSet
+		nodeset          *slinkyv1alpha1.NodeSet
 		numberToSchedule int
 	}
 	tests := []struct {
@@ -1335,7 +1335,7 @@ func Test_unavailableCount(t *testing.T) {
 		{
 			name: "Mismatch UpdateStrategy",
 			args: args{
-				set: &slinkyv1alpha1.NodeSet{
+				nodeset: &slinkyv1alpha1.NodeSet{
 					Spec: slinkyv1alpha1.NodeSetSpec{
 						UpdateStrategy: slinkyv1alpha1.NodeSetUpdateStrategy{
 							Type: slinkyv1alpha1.OnDeleteNodeSetStrategyType,
@@ -1349,7 +1349,7 @@ func Test_unavailableCount(t *testing.T) {
 		{
 			name: "Mismatch UpdateStrategy (RollingUpdate)",
 			args: args{
-				set: &slinkyv1alpha1.NodeSet{
+				nodeset: &slinkyv1alpha1.NodeSet{
 					Spec: slinkyv1alpha1.NodeSetSpec{
 						UpdateStrategy: slinkyv1alpha1.NodeSetUpdateStrategy{
 							Type: slinkyv1alpha1.RollingUpdateNodeSetStrategyType,
@@ -1363,7 +1363,7 @@ func Test_unavailableCount(t *testing.T) {
 		{
 			name: "Mismatch UpdateStrategy (MaxUnavailable == nil)",
 			args: args{
-				set: &slinkyv1alpha1.NodeSet{
+				nodeset: &slinkyv1alpha1.NodeSet{
 					Spec: slinkyv1alpha1.NodeSetSpec{
 						UpdateStrategy: slinkyv1alpha1.NodeSetUpdateStrategy{
 							Type:          slinkyv1alpha1.RollingUpdateNodeSetStrategyType,
@@ -1379,7 +1379,7 @@ func Test_unavailableCount(t *testing.T) {
 		{
 			name: "Mismatch UpdateStrategy (error)",
 			args: args{
-				set: &slinkyv1alpha1.NodeSet{
+				nodeset: &slinkyv1alpha1.NodeSet{
 					Spec: slinkyv1alpha1.NodeSetSpec{
 						UpdateStrategy: slinkyv1alpha1.NodeSetUpdateStrategy{
 							Type: slinkyv1alpha1.RollingUpdateNodeSetStrategyType,
@@ -1398,7 +1398,7 @@ func Test_unavailableCount(t *testing.T) {
 		{
 			name: "Mismatch UpdateStrategy (MaxUnavailable == 1)",
 			args: args{
-				set: &slinkyv1alpha1.NodeSet{
+				nodeset: &slinkyv1alpha1.NodeSet{
 					Spec: slinkyv1alpha1.NodeSetSpec{
 						UpdateStrategy: slinkyv1alpha1.NodeSetUpdateStrategy{
 							Type: slinkyv1alpha1.RollingUpdateNodeSetStrategyType,
@@ -1418,7 +1418,7 @@ func Test_unavailableCount(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := unavailableCount(tt.args.set, tt.args.numberToSchedule)
+			got, err := unavailableCount(tt.args.nodeset, tt.args.numberToSchedule)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("unavailableCount() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1453,7 +1453,7 @@ func Test_getUnscheduledPodsWithoutNode(t *testing.T) {
 
 func Test_findUpdatedPodsOnNode(t *testing.T) {
 	type args struct {
-		set        *slinkyv1alpha1.NodeSet
+		nodeset    *slinkyv1alpha1.NodeSet
 		podsOnNode []*corev1.Pod
 		hash       string
 	}
@@ -1467,7 +1467,7 @@ func Test_findUpdatedPodsOnNode(t *testing.T) {
 		{
 			name: "test",
 			args: args{
-				set: &slinkyv1alpha1.NodeSet{
+				nodeset: &slinkyv1alpha1.NodeSet{
 					ObjectMeta: metav1.ObjectMeta{
 						Annotations: map[string]string{
 							appsv1.DeprecatedTemplateGeneration: "1234",
@@ -1484,7 +1484,7 @@ func Test_findUpdatedPodsOnNode(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotNewPod, gotOldPod, gotOk := findUpdatedPodsOnNode(tt.args.set, tt.args.podsOnNode, tt.args.hash)
+			gotNewPod, gotOldPod, gotOk := findUpdatedPodsOnNode(tt.args.nodeset, tt.args.podsOnNode, tt.args.hash)
 			if !reflect.DeepEqual(gotNewPod, tt.wantNewPod) {
 				t.Errorf("findUpdatedPodsOnNode() gotNewPod = %v, want %v", gotNewPod, tt.wantNewPod)
 			}

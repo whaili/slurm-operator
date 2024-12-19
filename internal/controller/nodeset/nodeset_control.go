@@ -83,15 +83,15 @@ type defaultNodeSetControl struct {
 	slurmClusters     *resources.Clusters
 }
 
-// getNodeSetPods returns nodeset pods owned by the given set.
+// getNodeSetPods returns nodeset pods owned by the given NodeSet.
 // This also reconciles ControllerRef by adopting/orphaning.
 // Note that returned histories are pointers to objects in the cache.
 // If you want to modify one, you need to deep-copy it first.
 func (nsc *defaultNodeSetControl) getNodeSetPods(
 	ctx context.Context,
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 ) ([]*corev1.Pod, error) {
-	selector, err := metav1.LabelSelectorAsSelector(set.Spec.Selector)
+	selector, err := metav1.LabelSelectorAsSelector(nodeset.Spec.Selector)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (nsc *defaultNodeSetControl) getNodeSetPods(
 	// List all pods to include those that do not match the selector anymore but
 	// have a ControllerRef pointing to this controller.
 	optsList := &client.ListOptions{
-		Namespace:     set.Namespace,
+		Namespace:     nodeset.Namespace,
 		LabelSelector: labels.Everything(),
 	}
 	podList := &corev1.PodList{}
@@ -115,11 +115,11 @@ func (nsc *defaultNodeSetControl) getNodeSetPods(
 
 	filter := func(pod *corev1.Pod) bool {
 		// Only claim if it matches our NodeSet name schema. Otherwise release/ignore.
-		return isPodFromNodeSet(set, pod)
+		return isPodFromNodeSet(nodeset, pod)
 	}
 
 	// Use ControllerRefManager to adopt/orphan as needed.
-	cm := kubecontroller.NewPodControllerRefManager(podControl, set, selector, controllerKind, nsc.canAdoptFunc(set))
+	cm := kubecontroller.NewPodControllerRefManager(podControl, nodeset, selector, controllerKind, nsc.canAdoptFunc(nodeset))
 	return cm.ClaimPods(ctx, pods, filter)
 }
 
@@ -129,7 +129,7 @@ func (nsc *defaultNodeSetControl) getNodeSetPods(
 // If you want to modify one, you need to deep-copy it first.
 func (nsc *defaultNodeSetControl) getNodesToNodeSetPods(
 	ctx context.Context,
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 ) ([]*corev1.Node, map[*corev1.Node][]*corev1.Pod, error) {
 	logger := log.FromContext(ctx)
 
@@ -143,7 +143,7 @@ func (nsc *defaultNodeSetControl) getNodesToNodeSetPods(
 	nodes := utils.ReferenceList(nodeList.Items)
 	sort.Sort(utils.NodeByWeight(nodes))
 
-	claimedPods, err := nsc.getNodeSetPods(ctx, set)
+	claimedPods, err := nsc.getNodeSetPods(ctx, nodeset)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -158,7 +158,7 @@ func (nsc *defaultNodeSetControl) getNodesToNodeSetPods(
 		nodeName, err := util.GetTargetNodeName(pod)
 		if err != nil {
 			logger.Error(err, "Failed to get target Node name of the NodeSet Pod",
-				"NodeSet", klog.KObj(set), "Pod", klog.KObj(pod))
+				"NodeSet", klog.KObj(nodeset), "Pod", klog.KObj(pod))
 			continue
 		}
 		if node, ok := nodeNameToNode[nodeName]; ok {
@@ -168,22 +168,22 @@ func (nsc *defaultNodeSetControl) getNodesToNodeSetPods(
 	return nodes, nodeToNodeSetPods, nil
 }
 
-// listRevisions returns a array of the ControllerRevisions that represent the revisions of set. If the returned
+// listRevisions returns a array of the ControllerRevisions that represent the revisions of NodeSet. If the returned
 // error is nil, the returns slice of ControllerRevisions is valid.
-func (nsc *defaultNodeSetControl) listRevisions(set *slinkyv1alpha1.NodeSet) ([]*appsv1.ControllerRevision, error) {
-	selector, err := metav1.LabelSelectorAsSelector(set.Spec.Selector)
+func (nsc *defaultNodeSetControl) listRevisions(nodeset *slinkyv1alpha1.NodeSet) ([]*appsv1.ControllerRevision, error) {
+	selector, err := metav1.LabelSelectorAsSelector(nodeset.Spec.Selector)
 	if err != nil {
 		return nil, err
 	}
-	return nsc.controllerHistory.ListControllerRevisions(set, selector)
+	return nsc.controllerHistory.ListControllerRevisions(nodeset, selector)
 }
 
 func (nsc *defaultNodeSetControl) doAdoptOrphanRevisions(
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	revisions []*appsv1.ControllerRevision,
 ) error {
 	for i := range revisions {
-		adopted, err := nsc.controllerHistory.AdoptControllerRevision(set, controllerKind, revisions[i])
+		adopted, err := nsc.controllerHistory.AdoptControllerRevision(nodeset, controllerKind, revisions[i])
 		if err != nil {
 			return err
 		}
@@ -194,19 +194,19 @@ func (nsc *defaultNodeSetControl) doAdoptOrphanRevisions(
 
 // If any adoptions are attempted, we should first recheck for deletion with
 // an uncached quorum read sometime after listing Pods/ControllerRevisions (see #42639).
-func (nsc *defaultNodeSetControl) canAdoptFunc(set *slinkyv1alpha1.NodeSet) func(ctx context.Context) error {
+func (nsc *defaultNodeSetControl) canAdoptFunc(nodeset *slinkyv1alpha1.NodeSet) func(ctx context.Context) error {
 	return kubecontroller.RecheckDeletionTimestamp(func(ctx context.Context) (metav1.Object, error) {
 		namespacedName := types.NamespacedName{
-			Namespace: set.Namespace,
-			Name:      set.Name,
+			Namespace: nodeset.Namespace,
+			Name:      nodeset.Name,
 		}
 		fresh := &slinkyv1alpha1.NodeSet{}
 		if err := nsc.Get(ctx, namespacedName, fresh); err != nil {
 			return nil, err
 		}
-		if fresh.UID != set.UID {
+		if fresh.UID != nodeset.UID {
 			return nil, fmt.Errorf("original NodeSet(%s) is gone: got UID(%v), wanted UID(%v)",
-				klog.KObj(set), fresh.UID, set.UID)
+				klog.KObj(nodeset), fresh.UID, nodeset.UID)
 		}
 		return fresh, nil
 	})
@@ -214,8 +214,8 @@ func (nsc *defaultNodeSetControl) canAdoptFunc(set *slinkyv1alpha1.NodeSet) func
 
 // adoptOrphanRevisions adopts any orphaned ControllerRevisions that match set's Selector. If all adoptions are
 // successful the returned error is nil.
-func (nsc *defaultNodeSetControl) adoptOrphanRevisions(ctx context.Context, set *slinkyv1alpha1.NodeSet) error {
-	revisions, err := nsc.listRevisions(set)
+func (nsc *defaultNodeSetControl) adoptOrphanRevisions(ctx context.Context, nodeset *slinkyv1alpha1.NodeSet) error {
+	revisions, err := nsc.listRevisions(nodeset)
 	if err != nil {
 		return err
 	}
@@ -236,11 +236,11 @@ func (nsc *defaultNodeSetControl) adoptOrphanRevisions(ctx context.Context, set 
 		}
 	}
 	if len(orphanRevisions) > 0 {
-		canAdoptErr := nsc.canAdoptFunc(set)(ctx)
+		canAdoptErr := nsc.canAdoptFunc(nodeset)(ctx)
 		if canAdoptErr != nil {
 			return fmt.Errorf("cannot adopt ControllerRevisions: %v", canAdoptErr)
 		}
-		return nsc.doAdoptOrphanRevisions(set, orphanRevisions)
+		return nsc.doAdoptOrphanRevisions(nodeset, orphanRevisions)
 	}
 	return nil
 }
@@ -252,8 +252,8 @@ func (nsc *defaultNodeSetControl) SyncNodeSet(
 ) error {
 	logger := log.FromContext(ctx)
 
-	set := &slinkyv1alpha1.NodeSet{}
-	if err := nsc.Get(ctx, req.NamespacedName, set); err != nil {
+	nodeset := &slinkyv1alpha1.NodeSet{}
+	if err := nsc.Get(ctx, req.NamespacedName, nodeset); err != nil {
 		if apierrors.IsNotFound(err) {
 			logger.Info("NodeSet has been deleted.", "request", req)
 			return nil
@@ -262,26 +262,26 @@ func (nsc *defaultNodeSetControl) SyncNodeSet(
 	}
 
 	everything := metav1.LabelSelector{}
-	if reflect.DeepEqual(set.Spec.Selector, &everything) {
-		nsc.eventRecorder.Eventf(set, corev1.EventTypeWarning, SelectingAllReason,
+	if reflect.DeepEqual(nodeset.Spec.Selector, &everything) {
+		nsc.eventRecorder.Eventf(nodeset, corev1.EventTypeWarning, SelectingAllReason,
 			"This NodeSet is selecting all pods. A non-empty selector is required.")
 		return nil
 	}
 
 	// Make a copy now to avoid mutation errors.
-	set = set.DeepCopy()
+	nodeset = nodeset.DeepCopy()
 
-	if err := nsc.adoptOrphanRevisions(ctx, set); err != nil {
+	if err := nsc.adoptOrphanRevisions(ctx, nodeset); err != nil {
 		return err
 	}
 
-	revisions, err := nsc.listRevisions(set)
+	revisions, err := nsc.listRevisions(nodeset)
 	if err != nil {
 		return err
 	}
 	history.SortControllerRevisions(revisions)
 
-	currentRevision, updateRevision, collisionCount, err := nsc.getNodeSetRevisions(set, revisions)
+	currentRevision, updateRevision, collisionCount, err := nsc.getNodeSetRevisions(nodeset, revisions)
 	if err != nil {
 		return err
 	}
@@ -289,37 +289,37 @@ func (nsc *defaultNodeSetControl) SyncNodeSet(
 	currentHash := getNodeSetRevisionLabel(currentRevision)
 	updateHash := getNodeSetRevisionLabel(updateRevision)
 
-	nodes, nodeToNodeSetPods, err := nsc.getNodesToNodeSetPods(ctx, set)
+	nodes, nodeToNodeSetPods, err := nsc.getNodesToNodeSetPods(ctx, nodeset)
 	if err != nil {
-		return fmt.Errorf("could not get node to nodeset pod mapping for NodeSet(%s): %v", klog.KObj(set), err)
+		return fmt.Errorf("could not get node to nodeset pod mapping for NodeSet(%s): %v", klog.KObj(nodeset), err)
 	}
 
-	if err := nsc.syncSlurm(ctx, set, nodes, nodeToNodeSetPods); err != nil {
+	if err := nsc.syncSlurm(ctx, nodeset, nodes, nodeToNodeSetPods); err != nil {
 		errors := []error{err}
-		if err := nsc.syncNodeSetStatus(ctx, set, nodes, nodeToNodeSetPods, collisionCount, currentHash, false); err != nil {
+		if err := nsc.syncNodeSetStatus(ctx, nodeset, nodes, nodeToNodeSetPods, collisionCount, currentHash, false); err != nil {
 			errors = append(errors, err)
 		}
 		return utilerrors.NewAggregate(errors)
 	}
 
-	if err := nsc.syncNodeSet(ctx, set, nodes, nodeToNodeSetPods, currentHash); err != nil {
+	if err := nsc.syncNodeSet(ctx, nodeset, nodes, nodeToNodeSetPods, currentHash); err != nil {
 		errors := []error{err}
-		if err := nsc.syncNodeSetStatus(ctx, set, nodes, nodeToNodeSetPods, collisionCount, currentHash, false); err != nil {
+		if err := nsc.syncNodeSetStatus(ctx, nodeset, nodes, nodeToNodeSetPods, collisionCount, currentHash, false); err != nil {
 			errors = append(errors, err)
 		}
 		return utilerrors.NewAggregate(errors)
 	}
 
 	// Handle UpdateStrategy
-	if !isNodeSetPaused(set) {
-		switch set.Spec.UpdateStrategy.Type {
+	if !isNodeSetPaused(nodeset) {
+		switch nodeset.Spec.UpdateStrategy.Type {
 		case slinkyv1alpha1.OnDeleteNodeSetStrategyType:
 			// nsc.syncNodeSet() will have handled it
 			break
 		case slinkyv1alpha1.RollingUpdateNodeSetStrategyType:
-			if err := nsc.syncNodeSetRollingUpdate(ctx, set, nodes, nodeToNodeSetPods, updateHash); err != nil {
+			if err := nsc.syncNodeSetRollingUpdate(ctx, nodeset, nodes, nodeToNodeSetPods, updateHash); err != nil {
 				errors := []error{err}
-				if err := nsc.syncNodeSetStatus(ctx, set, nodes, nodeToNodeSetPods, collisionCount, updateHash, false); err != nil {
+				if err := nsc.syncNodeSetStatus(ctx, nodeset, nodes, nodeToNodeSetPods, collisionCount, updateHash, false); err != nil {
 					errors = append(errors, err)
 				}
 				return utilerrors.NewAggregate(errors)
@@ -327,24 +327,24 @@ func (nsc *defaultNodeSetControl) SyncNodeSet(
 		}
 	}
 
-	err = nsc.truncateHistory(ctx, set, revisions, currentRevision, updateRevision)
+	err = nsc.truncateHistory(ctx, nodeset, revisions, currentRevision, updateRevision)
 	if err != nil {
-		err = fmt.Errorf("failed to clean up revisions of NodeSet(%s): %v", klog.KObj(set), err)
+		err = fmt.Errorf("failed to clean up revisions of NodeSet(%s): %v", klog.KObj(nodeset), err)
 		errors := []error{err}
-		if err := nsc.syncNodeSetStatus(ctx, set, nodes, nodeToNodeSetPods, collisionCount, currentHash, false); err != nil {
+		if err := nsc.syncNodeSetStatus(ctx, nodeset, nodes, nodeToNodeSetPods, collisionCount, currentHash, false); err != nil {
 			errors = append(errors, err)
 		}
 		return utilerrors.NewAggregate(errors)
 	}
 
-	return nsc.syncNodeSetStatus(ctx, set, nodes, nodeToNodeSetPods, collisionCount, currentHash, true)
+	return nsc.syncNodeSetStatus(ctx, nodeset, nodes, nodeToNodeSetPods, collisionCount, currentHash, true)
 }
 
 // processNodeSetPod handles reconciling the NodeSet Pod state.
 // Pods will be created, deleted, or updated depending on their current state.
 func (nsc *defaultNodeSetControl) processNodeSetPod(
 	ctx context.Context,
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	pods []*corev1.Pod,
 	i int,
 ) error {
@@ -357,7 +357,7 @@ func (nsc *defaultNodeSetControl) processNodeSetPod(
 	// regardless of the exit code.
 	if utils.IsFailed(pods[i]) || utils.IsSucceeded(pods[i]) || isNodeSetPodDelete(pods[i]) {
 		if !utils.IsTerminating(pods[i]) {
-			if err := nsc.processCondemned(ctx, set, pods, i); err != nil {
+			if err := nsc.processCondemned(ctx, nodeset, pods, i); err != nil {
 				return err
 			}
 		}
@@ -368,14 +368,14 @@ func (nsc *defaultNodeSetControl) processNodeSetPod(
 	// If we find a Pod that has not been created we create the Pod
 	if !utils.IsCreated(pods[i]) {
 		if utilfeature.DefaultFeatureGate.Enabled(features.StatefulSetAutoDeletePVC) {
-			if isStale, err := nsc.podControl.PodClaimIsStale(ctx, set, pods[i]); err != nil {
+			if isStale, err := nsc.podControl.PodClaimIsStale(ctx, nodeset, pods[i]); err != nil {
 				return err
 			} else if isStale {
 				// If a pod has a stale PVC, no more work can be done this round.
 				return err
 			}
 		}
-		if err := nsc.podControl.CreateNodeSetPod(ctx, set, pods[i]); err != nil {
+		if err := nsc.podControl.CreateNodeSetPod(ctx, nodeset, pods[i]); err != nil {
 			return err
 		}
 	}
@@ -383,8 +383,8 @@ func (nsc *defaultNodeSetControl) processNodeSetPod(
 	// If the Pod is in pending state then trigger PVC creation to create missing PVCs
 	if utils.IsPending(pods[i]) {
 		logger.V(1).Info("NodeSet is triggering PVC creation for pending Pod",
-			"NodeSet", klog.KObj(set), "Pod", klog.KObj(pods[i]))
-		if err := nsc.podControl.createMissingPersistentVolumeClaims(ctx, set, pods[i]); err != nil {
+			"NodeSet", klog.KObj(nodeset), "Pod", klog.KObj(pods[i]))
+		if err := nsc.podControl.createMissingPersistentVolumeClaims(ctx, nodeset, pods[i]); err != nil {
 			return err
 		}
 	}
@@ -393,7 +393,7 @@ func (nsc *defaultNodeSetControl) processNodeSetPod(
 	// completes before we continue to make progress.
 	if utils.IsTerminating(pods[i]) {
 		logger.V(1).Info("NodeSet is waiting for Pod to Terminate",
-			"NodeSet", klog.KObj(set), "Pod", klog.KObj(pods[i]))
+			"NodeSet", klog.KObj(nodeset), "Pod", klog.KObj(pods[i]))
 		return nil
 	}
 
@@ -402,16 +402,16 @@ func (nsc *defaultNodeSetControl) processNodeSetPod(
 	// ordinal, are Running and Ready.
 	if !utils.IsRunningAndReady(pods[i]) {
 		logger.V(1).Info("NodeSet is waiting for Pod to be Running and Ready",
-			"NodeSet", klog.KObj(set), "Pod", klog.KObj(pods[i]))
+			"NodeSet", klog.KObj(nodeset), "Pod", klog.KObj(pods[i]))
 		return nil
 	}
 
 	// If we have a Pod that has been created but is not available we can not make progress.
 	// We must ensure that all for each Pod, when we create it, all of its predecessors, with respect to its
 	// ordinal, are Available.
-	if !utils.IsRunningAndAvailable(pods[i], set.Spec.MinReadySeconds) {
+	if !utils.IsRunningAndAvailable(pods[i], nodeset.Spec.MinReadySeconds) {
 		logger.V(1).Info("NodeSet is waiting for Pod to be Available",
-			"NodeSet", klog.KObj(set), "Pod", klog.KObj(pods[i]))
+			"NodeSet", klog.KObj(nodeset), "Pod", klog.KObj(pods[i]))
 		return nil
 	}
 
@@ -419,7 +419,7 @@ func (nsc *defaultNodeSetControl) processNodeSetPod(
 	retentionMatch := true
 	if utilfeature.DefaultFeatureGate.Enabled(features.StatefulSetAutoDeletePVC) {
 		var err error
-		retentionMatch, err = nsc.podControl.ClaimsMatchRetentionPolicy(ctx, set, pods[i])
+		retentionMatch, err = nsc.podControl.ClaimsMatchRetentionPolicy(ctx, nodeset, pods[i])
 		// An error is expected if the pod is not yet fully updated, and so return is treated as matching.
 		if err != nil {
 			retentionMatch = true
@@ -427,17 +427,17 @@ func (nsc *defaultNodeSetControl) processNodeSetPod(
 	}
 
 	stateMatch := true
-	if isNodeSetPodCordon(pods[i]) || nsc.podControl.isNodeSetPodDrain(ctx, set, pods[i]) {
+	if isNodeSetPodCordon(pods[i]) || nsc.podControl.isNodeSetPodDrain(ctx, nodeset, pods[i]) {
 		stateMatch = false
 	}
 
-	if identityMatches(set, pods[i]) && storageMatches(set, pods[i]) && retentionMatch && stateMatch {
+	if identityMatches(nodeset, pods[i]) && storageMatches(nodeset, pods[i]) && retentionMatch && stateMatch {
 		return nil
 	}
 
 	// Make a deep copy so we do not mutate the shared cache
 	pod := pods[i].DeepCopy()
-	if err := nsc.podControl.UpdateNodeSetPod(ctx, set, pod); err != nil {
+	if err := nsc.podControl.UpdateNodeSetPod(ctx, nodeset, pod); err != nil {
 		return err
 	}
 
@@ -447,7 +447,7 @@ func (nsc *defaultNodeSetControl) processNodeSetPod(
 // processCondemned handles deleting NodeSet Pods.
 func (nsc *defaultNodeSetControl) processCondemned(
 	ctx context.Context,
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	pods []*corev1.Pod,
 	i int,
 ) error {
@@ -458,13 +458,13 @@ func (nsc *defaultNodeSetControl) processCondemned(
 	}
 
 	logger.V(1).Info("NodeSet Pod is terminating for scale down",
-		"NodeSet", klog.KObj(set), "Pod", klog.KObj(pods[i]))
+		"NodeSet", klog.KObj(nodeset), "Pod", klog.KObj(pods[i]))
 
-	err := nsc.podControl.DeleteNodeSetPod(ctx, set, pods[i])
+	err := nsc.podControl.DeleteNodeSetPod(ctx, nodeset, pods[i])
 	if errors.IsNodeNotDrained(err) {
 		// Not a failure case, try again later
 		err = nil
-		durationStore.Push(utils.KeyFunc(set), 30*time.Second)
+		durationStore.Push(utils.KeyFunc(nodeset), 30*time.Second)
 	}
 
 	return err
@@ -478,9 +478,9 @@ func (nsc *defaultNodeSetControl) podsShouldBeOnNode(
 	logger klog.Logger,
 	node *corev1.Node,
 	nodeToNodeSetPods map[*corev1.Node][]*corev1.Pod,
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 ) (nodesNeedingNodeSetPods []*corev1.Node, podsToDelete []*corev1.Pod) {
-	shouldRun, shouldContinueRunning := nodeShouldRunNodeSetPod(node, set)
+	shouldRun, shouldContinueRunning := nodeShouldRunNodeSetPod(node, nodeset)
 	nodeSetPods, exists := nodeToNodeSetPods[node]
 
 	switch {
@@ -502,7 +502,7 @@ func (nsc *defaultNodeSetControl) podsShouldBeOnNode(
 			if utils.IsFailed(pod) {
 				// This is a critical place where NS is often fighting with kubelet that rejects pods.
 				// We need to avoid hot looping and backoff.
-				backoffKey := failedPodsBackoffKey(set, node.Name)
+				backoffKey := failedPodsBackoffKey(nodeset, node.Name)
 
 				now := failedPodsBackoff.Clock.Now()
 				inBackoff := failedPodsBackoff.IsInBackOffSinceUpdate(backoffKey, now)
@@ -510,7 +510,7 @@ func (nsc *defaultNodeSetControl) podsShouldBeOnNode(
 					delay := failedPodsBackoff.Get(backoffKey)
 					logger.V(1).Info("Deleting failed Pod on Node has been limited by backoff",
 						"Pod", klog.KObj(pod), "Node", klog.KObj(node), "delay", delay)
-					durationStore.Push(utils.KeyFunc(set), delay)
+					durationStore.Push(utils.KeyFunc(nodeset), delay)
 					continue
 				}
 
@@ -521,7 +521,7 @@ func (nsc *defaultNodeSetControl) podsShouldBeOnNode(
 				msg := fmt.Sprintf("Found failed NodeSet Pod(%s) on Node(%s), will try to kill it",
 					klog.KObj(pod), klog.KObj(node))
 				// Emit an event so that it's discoverable to users.
-				nsc.eventRecorder.Eventf(set, corev1.EventTypeWarning, FailedNodeSetPodReason, msg)
+				nsc.eventRecorder.Eventf(nodeset, corev1.EventTypeWarning, FailedNodeSetPodReason, msg)
 				podsToDelete = append(podsToDelete, pod)
 			} else {
 				nodeSetPodsRunning = append(nodeSetPodsRunning, pod)
@@ -558,11 +558,11 @@ func (nsc *defaultNodeSetControl) podsShouldBeOnNode(
 	return nodesNeedingNodeSetPods, podsToDelete
 }
 
-// syncNodeSetPods deletes given pods and creates new nodeset set pods on the given nodes
+// syncNodeSetPods deletes given pods and creates new NodeSet pods on the given nodes
 // returns slice with errors if any
 func (nsc *defaultNodeSetControl) syncNodeSetPods(
 	ctx context.Context,
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	podsToDelete, podsToProcess []*corev1.Pod,
 ) error {
 	createDiff := len(podsToProcess)
@@ -572,7 +572,7 @@ func (nsc *defaultNodeSetControl) syncNodeSetPods(
 	sort.Sort(utils.PodByCost(podsToProcess))
 
 	processPodFn := func(i int) error {
-		return nsc.processNodeSetPod(ctx, set, podsToProcess, i)
+		return nsc.processNodeSetPod(ctx, nodeset, podsToProcess, i)
 	}
 	if _, err := utils.SlowStartBatch(createDiff, kubecontroller.SlowStartInitialBatchSize, processPodFn); err != nil {
 		return err
@@ -581,10 +581,10 @@ func (nsc *defaultNodeSetControl) syncNodeSetPods(
 	// Fix pod claims, if necessary.
 	if utilfeature.DefaultFeatureGate.Enabled(features.StatefulSetAutoDeletePVC) {
 		fixPodClaim := func(i int) error {
-			if matchPolicy, err := nsc.podControl.ClaimsMatchRetentionPolicy(ctx, set, podsToDelete[i]); err != nil {
+			if matchPolicy, err := nsc.podControl.ClaimsMatchRetentionPolicy(ctx, nodeset, podsToDelete[i]); err != nil {
 				return err
 			} else if !matchPolicy {
-				if err := nsc.podControl.UpdatePodClaimForRetentionPolicy(ctx, set, podsToDelete[i]); err != nil {
+				if err := nsc.podControl.UpdatePodClaimForRetentionPolicy(ctx, nodeset, podsToDelete[i]); err != nil {
 					return err
 				}
 			}
@@ -596,7 +596,7 @@ func (nsc *defaultNodeSetControl) syncNodeSetPods(
 	}
 
 	processCondemnedFn := func(i int) error {
-		return nsc.processCondemned(ctx, set, podsToDelete, i)
+		return nsc.processCondemned(ctx, nodeset, podsToDelete, i)
 	}
 	if _, err := utils.SlowStartBatch(deleteDiff, kubecontroller.SlowStartInitialBatchSize, processCondemnedFn); err != nil {
 		return err
@@ -608,14 +608,14 @@ func (nsc *defaultNodeSetControl) syncNodeSetPods(
 // syncNodeSet performs the main calculations for syncNodeSetPods.
 func (nsc *defaultNodeSetControl) syncNodeSet(
 	ctx context.Context,
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	nodes []*corev1.Node,
 	nodeToNodeSetPods map[*corev1.Node][]*corev1.Pod,
 	hash string,
 ) error {
 	logger := log.FromContext(ctx)
 
-	if set.DeletionTimestamp != nil {
+	if nodeset.DeletionTimestamp != nil {
 		return nil
 	}
 
@@ -626,15 +626,15 @@ func (nsc *defaultNodeSetControl) syncNodeSet(
 	podsToProcess := make([]*corev1.Pod, 0)
 	var nodesDesireScheduled, newPodCount int
 	for _, node := range nodes {
-		nodesNeedingNodeSetPodsOnNode, podsToDeleteOnNode := nsc.podsShouldBeOnNode(logger, node, nodeToNodeSetPods, set)
+		nodesNeedingNodeSetPodsOnNode, podsToDeleteOnNode := nsc.podsShouldBeOnNode(logger, node, nodeToNodeSetPods, nodeset)
 
 		nodesNeedingNodeSetPods = append(nodesNeedingNodeSetPods, nodesNeedingNodeSetPodsOnNode...)
 		podsToDelete = append(podsToDelete, podsToDeleteOnNode...)
 
-		if shouldRun, _ := nodeShouldRunNodeSetPod(node, set); shouldRun {
+		if shouldRun, _ := nodeShouldRunNodeSetPod(node, nodeset); shouldRun {
 			nodesDesireScheduled++
 		}
-		if newPod, _, ok := findUpdatedPodsOnNode(set, nodeToNodeSetPods[node], hash); ok && newPod != nil {
+		if newPod, _, ok := findUpdatedPodsOnNode(nodeset, nodeToNodeSetPods[node], hash); ok && newPod != nil {
 			newPodCount++
 			podsToProcess = append(podsToProcess, newPod)
 		}
@@ -646,8 +646,8 @@ func (nsc *defaultNodeSetControl) syncNodeSet(
 
 	// Prune down to replicas, otherwise deploy as DaemonSet
 	replicas := nodesDesireScheduled
-	if set.Spec.Replicas != nil {
-		replicas = int(ptr.Deref(set.Spec.Replicas, 0))
+	if nodeset.Spec.Replicas != nil {
+		replicas = int(ptr.Deref(nodeset.Spec.Replicas, 0))
 		nodesDesireScheduled = len(podsToProcess)
 		if len(podsToProcess) > replicas {
 			podsToDelete = append(podsToDelete, podsToProcess[replicas:]...)
@@ -656,10 +656,10 @@ func (nsc *defaultNodeSetControl) syncNodeSet(
 	}
 
 	// This is the first deploy process.
-	if set.Spec.UpdateStrategy.Type == slinkyv1alpha1.RollingUpdateNodeSetStrategyType &&
-		set.Spec.UpdateStrategy.RollingUpdate != nil {
-		partition := ptr.Deref(set.Spec.UpdateStrategy.RollingUpdate.Partition, 0)
-		if set.Spec.UpdateStrategy.RollingUpdate.Partition != nil && partition != 0 {
+	if nodeset.Spec.UpdateStrategy.Type == slinkyv1alpha1.RollingUpdateNodeSetStrategyType &&
+		nodeset.Spec.UpdateStrategy.RollingUpdate != nil {
+		partition := ptr.Deref(nodeset.Spec.UpdateStrategy.RollingUpdate.Partition, 0)
+		if nodeset.Spec.UpdateStrategy.RollingUpdate.Partition != nil && partition != 0 {
 			// Creates pods on nodes that needing nodeset pod. If progressive annotation is true, the creation will controlled
 			// by partition and only some of nodeset pods will be created. Otherwise nodeset pods will be created on every
 			// node that need to start a nodeset pod.
@@ -667,7 +667,7 @@ func (nsc *defaultNodeSetControl) syncNodeSet(
 				newPodCount,
 				nodesDesireScheduled,
 				int(partition),
-				isNodeSetCreationProgressively(set),
+				isNodeSetCreationProgressively(nodeset),
 				nodesNeedingNodeSetPods)
 		}
 	}
@@ -678,7 +678,7 @@ func (nsc *defaultNodeSetControl) syncNodeSet(
 		if len(podsToProcess)+len(podsToCreate) >= replicas {
 			break
 		}
-		pod := newNodeSetPod(set, node.Name, hash)
+		pod := newNodeSetPod(nodeset, node.Name, hash)
 		podsToCreate = append(podsToCreate, pod)
 	}
 
@@ -690,13 +690,13 @@ func (nsc *defaultNodeSetControl) syncNodeSet(
 	}
 	if unhealthy > 0 {
 		logger.Info("NodeSet has unhealthy Pods",
-			"NodeSet", klog.KObj(set),
+			"NodeSet", klog.KObj(nodeset),
 			"unhealthyReplicas", unhealthy)
 	}
 
 	podsToProcess = append(podsToProcess, podsToCreate...)
 
-	return nsc.syncNodeSetPods(ctx, set, podsToDelete, podsToProcess)
+	return nsc.syncNodeSetPods(ctx, nodeset, podsToDelete, podsToProcess)
 }
 
 var _ NodeSetControlInterface = &defaultNodeSetControl{}

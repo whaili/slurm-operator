@@ -20,9 +20,9 @@ import (
 // NodeSetStatusUpdaterInterface is an interface used to update the NodeSetStatus associated with a StatefulSet.
 // For any use other than testing, clients should create an instance using NewRealNodeSetStatusUpdater.
 type NodeSetStatusUpdaterInterface interface {
-	// UpdateNodeSetStatus sets the set's Status to status. Implementations are required to retry on conflicts,
-	// but fail on other errors. If the returned error is nil set's Status has been successfully set to status.
-	UpdateNodeSetStatus(ctx context.Context, set *slinkyv1alpha1.NodeSet, status *slinkyv1alpha1.NodeSetStatus) error
+	// UpdateNodeSetStatus sets the NodeSet's Status to status. Implementations are required to retry on conflicts,
+	// but fail on other errors. If the returned error is nil NodeSet's Status has been successfully NodeSet to status.
+	UpdateNodeSetStatus(ctx context.Context, nodeset *slinkyv1alpha1.NodeSet, status *slinkyv1alpha1.NodeSetStatus) error
 }
 
 // NewRealNodeSetStatusUpdater returns a NodeSetStatusUpdaterInterface that updates the Status of a StatefulSet,
@@ -37,7 +37,7 @@ type realNodeSetStatusUpdater struct {
 
 func (nsu *realNodeSetStatusUpdater) UpdateNodeSetStatus(
 	ctx context.Context,
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	status *slinkyv1alpha1.NodeSetStatus,
 ) error {
 	logger := log.FromContext(ctx)
@@ -48,11 +48,11 @@ func (nsu *realNodeSetStatusUpdater) UpdateNodeSetStatus(
 	// do not wait due to limited number of clients, but backoff after the default number of steps
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		namespacedName := types.NamespacedName{
-			Namespace: set.Namespace,
-			Name:      set.Name,
+			Namespace: nodeset.Namespace,
+			Name:      nodeset.Name,
 		}
-		set.Status = *status
-		updateErr := nsu.Status().Update(ctx, set)
+		nodeset.Status = *status
+		updateErr := nsu.Status().Update(ctx, nodeset)
 		if updateErr == nil {
 			// Done
 			return nil
@@ -61,9 +61,9 @@ func (nsu *realNodeSetStatusUpdater) UpdateNodeSetStatus(
 		updated := slinkyv1alpha1.NodeSet{}
 		if err := nsu.Get(ctx, namespacedName, &updated); err == nil {
 			// make a copy so we don't mutate the shared cache
-			set = updated.DeepCopy()
+			nodeset = updated.DeepCopy()
 		} else {
-			utilruntime.HandleError(fmt.Errorf("error getting updated NodeSet(%s): %v", utils.KeyFunc(set), err))
+			utilruntime.HandleError(fmt.Errorf("error getting updated NodeSet(%s): %v", utils.KeyFunc(nodeset), err))
 		}
 		return updateErr
 	})

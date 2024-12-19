@@ -37,65 +37,65 @@ import (
 var patchCodec = unstructured.UnstructuredJSONScheme
 
 // isPodFromNodeSet returns if the name schema matches
-func isPodFromNodeSet(set *slinkyv1alpha1.NodeSet, pod *corev1.Pod) bool {
-	found, err := regexp.MatchString(fmt.Sprintf("^%s-", set.Name), pod.Name)
+func isPodFromNodeSet(nodeset *slinkyv1alpha1.NodeSet, pod *corev1.Pod) bool {
+	found, err := regexp.MatchString(fmt.Sprintf("^%s-", nodeset.Name), pod.Name)
 	if err != nil {
 		return false
 	}
 	return found
 }
 
-// identityMatches returns true if pod has a valid identity and network identity for a member of set.
-func identityMatches(set *slinkyv1alpha1.NodeSet, pod *corev1.Pod) bool {
-	return isPodFromNodeSet(set, pod) &&
-		pod.Namespace == set.Namespace
+// identityMatches returns true if pod has a valid identity and network identity for a member of NodeSet.
+func identityMatches(nodeset *slinkyv1alpha1.NodeSet, pod *corev1.Pod) bool {
+	return isPodFromNodeSet(nodeset, pod) &&
+		pod.Namespace == nodeset.Namespace
 }
 
-// storageMatches returns true if pod's Volumes cover the set of PersistentVolumeClaims
-func storageMatches(set *slinkyv1alpha1.NodeSet, pod *corev1.Pod) bool {
+// storageMatches returns true if pod's Volumes cover the nodeset of PersistentVolumeClaims
+func storageMatches(nodeset *slinkyv1alpha1.NodeSet, pod *corev1.Pod) bool {
 	volumes := make(map[string]corev1.Volume, len(pod.Spec.Volumes))
 	for _, volume := range pod.Spec.Volumes {
 		volumes[volume.Name] = volume
 	}
-	for _, claim := range set.Spec.VolumeClaimTemplates {
+	for _, claim := range nodeset.Spec.VolumeClaimTemplates {
 		volume, found := volumes[claim.Name]
 		if !found ||
 			volume.VolumeSource.PersistentVolumeClaim == nil ||
-			volume.VolumeSource.PersistentVolumeClaim.ClaimName != getPersistentVolumeClaimName(set, &claim, pod.Spec.Hostname) {
+			volume.VolumeSource.PersistentVolumeClaim.ClaimName != getPersistentVolumeClaimName(nodeset, &claim, pod.Spec.Hostname) {
 			return false
 		}
 	}
 	return true
 }
 
-// getPersistentVolumeClaimPolicy returns the PVC policy for a NodeSet, returning a retain policy if the set policy is nil.
-func getPersistentVolumeClaimRetentionPolicy(set *slinkyv1alpha1.NodeSet) slinkyv1alpha1.NodeSetPersistentVolumeClaimRetentionPolicy {
+// getPersistentVolumeClaimPolicy returns the PVC policy for a NodeSet, returning a retain policy if the NodeSet policy is nil.
+func getPersistentVolumeClaimRetentionPolicy(nodeset *slinkyv1alpha1.NodeSet) slinkyv1alpha1.NodeSetPersistentVolumeClaimRetentionPolicy {
 	policy := slinkyv1alpha1.NodeSetPersistentVolumeClaimRetentionPolicy{
 		WhenDeleted: slinkyv1alpha1.RetainPersistentVolumeClaimRetentionPolicyType,
 	}
-	if set.Spec.PersistentVolumeClaimRetentionPolicy != nil {
-		policy = ptr.Deref(set.Spec.PersistentVolumeClaimRetentionPolicy, slinkyv1alpha1.NodeSetPersistentVolumeClaimRetentionPolicy{})
+	if nodeset.Spec.PersistentVolumeClaimRetentionPolicy != nil {
+		policy = ptr.Deref(nodeset.Spec.PersistentVolumeClaimRetentionPolicy, slinkyv1alpha1.NodeSetPersistentVolumeClaimRetentionPolicy{})
 	}
 	return policy
 }
 
-// claimOwnerMatchesSetAndPod returns false if the ownerRefs of the claim are not set consistently with the
+// claimOwnerMatchesSetAndPod returns false if the ownerRefs of the claim are not nodeset consistently with the
 // PVC deletion policy for the NodeSet.
-func claimOwnerMatchesSetAndPod(logger klog.Logger, claim *corev1.PersistentVolumeClaim, set *slinkyv1alpha1.NodeSet, pod *corev1.Pod) bool {
-	policy := getPersistentVolumeClaimRetentionPolicy(set)
+func claimOwnerMatchesSetAndPod(logger klog.Logger, claim *corev1.PersistentVolumeClaim, nodeset *slinkyv1alpha1.NodeSet, pod *corev1.Pod) bool {
+	policy := getPersistentVolumeClaimRetentionPolicy(nodeset)
 	const retain = slinkyv1alpha1.RetainPersistentVolumeClaimRetentionPolicyType
 	const delete = slinkyv1alpha1.DeletePersistentVolumeClaimRetentionPolicyType
 	switch {
 	default:
 		logger.Error(nil, "Unknown policy, treating as Retain",
-			"policy", set.Spec.PersistentVolumeClaimRetentionPolicy)
+			"policy", nodeset.Spec.PersistentVolumeClaimRetentionPolicy)
 		fallthrough
 	case policy.WhenDeleted == retain:
-		if !hasOwnerRef(claim, set) || hasOwnerRef(claim, pod) {
+		if !hasOwnerRef(claim, nodeset) || hasOwnerRef(claim, pod) {
 			return false
 		}
 	case policy.WhenDeleted == delete:
-		if hasOwnerRef(claim, set) || !hasOwnerRef(claim, pod) {
+		if hasOwnerRef(claim, nodeset) || !hasOwnerRef(claim, pod) {
 			return false
 		}
 	}
@@ -107,11 +107,11 @@ func claimOwnerMatchesSetAndPod(logger klog.Logger, claim *corev1.PersistentVolu
 func updateClaimOwnerRefForSetAndPod(
 	logger klog.Logger,
 	claim *corev1.PersistentVolumeClaim,
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	pod *corev1.Pod,
 ) bool {
 	needsUpdate := false
-	// Sometimes the version and kind are not set {pod,set}.TypeMeta. These are necessary for the ownerRef.
+	// Sometimes the version and kind are not set {pod,nodeset}.TypeMeta. These are necessary for the ownerRef.
 	// This is the case both in real clusters and the unittests.
 	// TODO: there must be a better way to do this other than hardcoding the pod version?
 	updateMeta := func(tm *metav1.TypeMeta, kind string) {
@@ -128,21 +128,21 @@ func updateClaimOwnerRefForSetAndPod(
 	}
 	podMeta := pod.TypeMeta
 	updateMeta(&podMeta, "Pod")
-	setMeta := set.TypeMeta
+	setMeta := nodeset.TypeMeta
 	updateMeta(&setMeta, "NodeSet")
-	policy := getPersistentVolumeClaimRetentionPolicy(set)
+	policy := getPersistentVolumeClaimRetentionPolicy(nodeset)
 	const retain = slinkyv1alpha1.RetainPersistentVolumeClaimRetentionPolicyType
 	const delete = slinkyv1alpha1.DeletePersistentVolumeClaimRetentionPolicyType
 	switch {
 	default:
 		logger.Error(nil, "Unknown policy, treating as Retain", "policy",
-			set.Spec.PersistentVolumeClaimRetentionPolicy)
+			nodeset.Spec.PersistentVolumeClaimRetentionPolicy)
 		fallthrough
 	case policy.WhenDeleted == retain:
-		needsUpdate = setOwnerRef(claim, set, &setMeta) || needsUpdate
+		needsUpdate = setOwnerRef(claim, nodeset, &setMeta) || needsUpdate
 		needsUpdate = removeOwnerRef(claim, pod) || needsUpdate
 	case policy.WhenDeleted == delete:
-		needsUpdate = removeOwnerRef(claim, set) || needsUpdate
+		needsUpdate = removeOwnerRef(claim, nodeset) || needsUpdate
 		needsUpdate = setOwnerRef(claim, pod, &setMeta) || needsUpdate
 	}
 	return needsUpdate
@@ -209,32 +209,32 @@ func removeOwnerRef(target, owner metav1.Object) bool {
 }
 
 // getPersistentVolumeClaimName gets the name of PersistentVolumeClaim for a Pod with the host.
-// Claim must be a PersistentVolumeClaim from set's VolumeClaimTemplates.
-func getPersistentVolumeClaimName(set *slinkyv1alpha1.NodeSet, claim *corev1.PersistentVolumeClaim, host string) string {
-	return fmt.Sprintf("%s-%s-%s", claim.Name, set.Name, host)
+// Claim must be a PersistentVolumeClaim from NodeSet's VolumeClaimTemplates.
+func getPersistentVolumeClaimName(nodeset *slinkyv1alpha1.NodeSet, claim *corev1.PersistentVolumeClaim, host string) string {
+	return fmt.Sprintf("%s-%s-%s", claim.Name, nodeset.Name, host)
 }
 
-// getPersistentVolumeClaims gets a map of PersistentVolumeClaims to their template names, as defined in set. The
+// getPersistentVolumeClaims gets a map of PersistentVolumeClaims to their template names, as defined in NodeSet. The
 // returned PersistentVolumeClaims are each constructed with a the name specific to the Pod. This name is determined
 // by getPersistentVolumeClaimName.
-func getPersistentVolumeClaims(set *slinkyv1alpha1.NodeSet, pod *corev1.Pod) map[string]corev1.PersistentVolumeClaim {
-	templates := set.Spec.VolumeClaimTemplates
+func getPersistentVolumeClaims(nodeset *slinkyv1alpha1.NodeSet, pod *corev1.Pod) map[string]corev1.PersistentVolumeClaim {
+	templates := nodeset.Spec.VolumeClaimTemplates
 	claims := make(map[string]corev1.PersistentVolumeClaim, len(templates))
 	for i := range templates {
 		claim := templates[i]
-		claim.Name = getPersistentVolumeClaimName(set, &claim, pod.Spec.Hostname)
-		claim.Namespace = set.Namespace
-		claim.Labels = set.Spec.Selector.MatchLabels
+		claim.Name = getPersistentVolumeClaimName(nodeset, &claim, pod.Spec.Hostname)
+		claim.Namespace = nodeset.Namespace
+		claim.Labels = nodeset.Spec.Selector.MatchLabels
 		claims[templates[i].Name] = claim
 	}
 	return claims
 }
 
-// updateStorage updates pod's Volumes to conform with the PersistentVolumeClaim of set's templates. If pod has
-// conflicting local Volumes these are replaced with Volumes that conform to the set's templates.
-func updateStorage(set *slinkyv1alpha1.NodeSet, pod *corev1.Pod) {
+// updateStorage updates pod's Volumes to conform with the PersistentVolumeClaim of NodeSet's templates. If pod has
+// conflicting local Volumes these are replaced with Volumes that conform to the NodeSet's templates.
+func updateStorage(nodeset *slinkyv1alpha1.NodeSet, pod *corev1.Pod) {
 	currentVolumes := pod.Spec.Volumes
-	claims := getPersistentVolumeClaims(set, pod)
+	claims := getPersistentVolumeClaims(nodeset, pod)
 	newVolumes := make([]corev1.Volume, 0, len(claims))
 	for name, claim := range claims {
 		newVolumes = append(newVolumes, corev1.Volume{
@@ -242,7 +242,7 @@ func updateStorage(set *slinkyv1alpha1.NodeSet, pod *corev1.Pod) {
 			VolumeSource: corev1.VolumeSource{
 				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
 					ClaimName: claim.Name,
-					// TODO: Use source definition to set this value when we have one.
+					// TODO: Use source definition to nodeset this value when we have one.
 					ReadOnly: false,
 				},
 			},
@@ -257,17 +257,17 @@ func updateStorage(set *slinkyv1alpha1.NodeSet, pod *corev1.Pod) {
 }
 
 // initIdentity initializes the pod's identity on the network.
-func initIdentity(set *slinkyv1alpha1.NodeSet, pod *corev1.Pod) {
-	updateIdentity(set, pod)
+func initIdentity(nodeset *slinkyv1alpha1.NodeSet, pod *corev1.Pod) {
+	updateIdentity(nodeset, pod)
 	// Set these immutable fields only on initial Pod creation, not updates.
 	pod.Spec.Hostname = pod.Name
-	pod.Spec.Subdomain = set.Spec.ServiceName
+	pod.Spec.Subdomain = nodeset.Spec.ServiceName
 }
 
-// updateIdentity updates pod's name, hostname, and subdomain to conform to set's name
+// updateIdentity updates pod's name, hostname, and subdomain to conform to NodeSet's name
 // and headless service.
-func updateIdentity(set *slinkyv1alpha1.NodeSet, pod *corev1.Pod) {
-	pod.Namespace = set.Namespace
+func updateIdentity(nodeset *slinkyv1alpha1.NodeSet, pod *corev1.Pod) {
+	pod.Namespace = nodeset.Namespace
 	if pod.Labels == nil {
 		pod.Labels = make(map[string]string)
 	}
@@ -346,16 +346,16 @@ func updateNodeSetPodAntiAffinity(affinity *corev1.Affinity) *corev1.Affinity {
 	return affinity
 }
 
-// newNodeSetPod returns a new Pod conforming to the set's Spec with an identity generated from ordinal.
-func newNodeSetPod(set *slinkyv1alpha1.NodeSet, nodeName, hash string) *corev1.Pod {
-	pod, err := controller.GetPodFromTemplate(&set.Spec.Template, set, metav1.NewControllerRef(set, controllerKind))
+// newNodeSetPod returns a new Pod conforming to the NodeSet's Spec with an identity generated from ordinal.
+func newNodeSetPod(nodeset *slinkyv1alpha1.NodeSet, nodeName, hash string) *corev1.Pod {
+	pod, err := controller.GetPodFromTemplate(&nodeset.Spec.Template, nodeset, metav1.NewControllerRef(nodeset, controllerKind))
 	if err != nil {
 		panic(err)
 	}
 
-	initIdentity(set, pod)
+	initIdentity(nodeset, pod)
 
-	// Do not set nodeName field otherwise Pod scheduler will be avoided
+	// Do not nodeset nodeName field otherwise Pod scheduler will be avoided
 	// and priorityClass will not be honored.
 	// newPod.Spec.NodeName = nodeName
 
@@ -376,8 +376,8 @@ func newNodeSetPod(set *slinkyv1alpha1.NodeSet, nodeName, hash string) *corev1.P
 	pod.Spec.Hostname = nodeName
 
 	setPodRevision(pod, hash)
-	updateIdentity(set, pod)
-	updateStorage(set, pod)
+	updateIdentity(nodeset, pod)
+	updateStorage(nodeset, pod)
 	return pod
 }
 
@@ -385,9 +385,9 @@ func newNodeSetPod(set *slinkyv1alpha1.NodeSet, nodeName, hash string) *corev1.P
 // previous version. If the returned error is nil the patch is valid. The current state that we save is just the
 // PodSpecTemplate. We can modify this later to encompass more state (or less) and remain compatible with previously
 // recorded patches.
-func getPatch(set *slinkyv1alpha1.NodeSet) ([]byte, error) {
-	setBytes, err := runtime.Encode(patchCodec, set)
-	// setBytes, err := json.Marshal(set)
+func getPatch(nodeset *slinkyv1alpha1.NodeSet) ([]byte, error) {
+	setBytes, err := runtime.Encode(patchCodec, nodeset)
+	// setBytes, err := json.Marshal(nodeset)
 	if err != nil {
 		return nil, err
 	}
@@ -410,18 +410,18 @@ func getPatch(set *slinkyv1alpha1.NodeSet) ([]byte, error) {
 }
 
 // Match check if the given NodeSet's template matches the template stored in the given history.
-func Match(set *slinkyv1alpha1.NodeSet, history *appsv1.ControllerRevision) (bool, error) {
-	patch, err := getPatch(set)
+func Match(nodeset *slinkyv1alpha1.NodeSet, history *appsv1.ControllerRevision) (bool, error) {
+	patch, err := getPatch(nodeset)
 	if err != nil {
 		return false, err
 	}
 	return bytes.Equal(patch, history.Data.Raw), nil
 }
 
-// ApplyRevision returns a new NodeSet constructed by restoring the state in revision to set. If the returned error
+// ApplyRevision returns a new NodeSet constructed by restoring the state in revision to nodeset. If the returned error
 // is nil, the returned NodeSet is valid.
-func ApplyRevision(set *slinkyv1alpha1.NodeSet, revision *appsv1.ControllerRevision) (*slinkyv1alpha1.NodeSet, error) {
-	clone := set.DeepCopy()
+func ApplyRevision(nodeset *slinkyv1alpha1.NodeSet, revision *appsv1.ControllerRevision) (*slinkyv1alpha1.NodeSet, error) {
+	clone := nodeset.DeepCopy()
 	patched, err := strategicpatch.StrategicMergePatch([]byte(runtime.EncodeOrDie(patchCodec, clone)), revision.Data.Raw, clone)
 	if err != nil {
 		return nil, err
@@ -463,8 +463,8 @@ func nodeInSameCondition(old []corev1.NodeCondition, cur []corev1.NodeCondition)
 	return len(c1map) == 0
 }
 
-func failedPodsBackoffKey(set *slinkyv1alpha1.NodeSet, nodeName string) string {
-	return fmt.Sprintf("%s/%d/%s", set.UID, set.Status.ObservedGeneration, nodeName)
+func failedPodsBackoffKey(nodeset *slinkyv1alpha1.NodeSet, nodeName string) string {
+	return fmt.Sprintf("%s/%d/%s", nodeset.UID, nodeset.Status.ObservedGeneration, nodeName)
 }
 
 // Predicates checks if a NodeSet's pod can run on a node.
@@ -479,7 +479,7 @@ func predicates(pod *corev1.Pod, node *corev1.Node, taints []corev1.Taint) (fits
 	return
 }
 
-// nodeShouldRunNodeSetPod checks a set of preconditions against a (node,nodeset) and returns a
+// nodeShouldRunNodeSetPod checks a NodeSet of preconditions against a (node,nodeset) and returns a
 // summary. Returned booleans are:
 //   - shouldRun:
 //     Returns true when a nodeset should run on the node if a nodeset pod is not already
@@ -487,11 +487,11 @@ func predicates(pod *corev1.Pod, node *corev1.Node, taints []corev1.Taint) (fits
 //   - shouldContinueRunning:
 //     Returns true when a nodeset should continue running on a node if a nodeset pod is already
 //     running on that node.
-func nodeShouldRunNodeSetPod(node *corev1.Node, set *slinkyv1alpha1.NodeSet) (bool, bool) {
-	pod := newNodeSetPod(set, node.Name, "")
+func nodeShouldRunNodeSetPod(node *corev1.Node, nodeset *slinkyv1alpha1.NodeSet) (bool, bool) {
+	pod := newNodeSetPod(nodeset, node.Name, "")
 
 	// If the nodeset specifies a node name, check that it matches with node.Name.
-	if !(set.Spec.Template.Spec.NodeName == "" || set.Spec.Template.Spec.NodeName == node.Name) {
+	if !(nodeset.Spec.Template.Spec.NodeName == "" || nodeset.Spec.Template.Spec.NodeName == node.Name) {
 		return false, false
 	}
 
@@ -518,8 +518,8 @@ func isNodeSetPodAvailable(pod *corev1.Pod, minReadySeconds int32, now metav1.Ti
 }
 
 // isNodeSetCreationProgressively returns true if and only if the progressive annotation is set to true.
-func isNodeSetCreationProgressively(set *slinkyv1alpha1.NodeSet) bool {
-	return set.Annotations[annotations.PodProgressiveCreate] == "true"
+func isNodeSetCreationProgressively(nodeset *slinkyv1alpha1.NodeSet) bool {
+	return nodeset.Annotations[annotations.PodProgressiveCreate] == "true"
 }
 
 // isNodeSetPodCordon returns true if and only if the cordon annotation is set to true.
@@ -561,19 +561,19 @@ func getNodesNeedingPods(
 	return nodesNeedingPods
 }
 
-func isNodeSetPaused(set *slinkyv1alpha1.NodeSet) bool {
-	return set.Spec.UpdateStrategy.RollingUpdate != nil &&
-		ptr.Deref(set.Spec.UpdateStrategy.RollingUpdate.Paused, false)
+func isNodeSetPaused(nodeset *slinkyv1alpha1.NodeSet) bool {
+	return nodeset.Spec.UpdateStrategy.RollingUpdate != nil &&
+		ptr.Deref(nodeset.Spec.UpdateStrategy.RollingUpdate.Paused, false)
 }
 
 // unavailableCount returns 0 if unavailability is not requested, the expected
 // unavailability number to allow out of numberToSchedule if requested, or an error if
 // the unavailability percentage requested is invalid.
-func unavailableCount(set *slinkyv1alpha1.NodeSet, numberToSchedule int) (int, error) {
-	if set.Spec.UpdateStrategy.Type != slinkyv1alpha1.RollingUpdateNodeSetStrategyType {
+func unavailableCount(nodeset *slinkyv1alpha1.NodeSet, numberToSchedule int) (int, error) {
+	if nodeset.Spec.UpdateStrategy.Type != slinkyv1alpha1.RollingUpdateNodeSetStrategyType {
 		return 0, nil
 	}
-	r := set.Spec.UpdateStrategy.RollingUpdate
+	r := nodeset.Spec.UpdateStrategy.RollingUpdate
 	if r == nil {
 		return 0, nil
 	}
@@ -611,7 +611,7 @@ func getUnscheduledPodsWithoutNode(
 // processing the particular node in those scenarios and let the manage loop prune the
 // excess pods for our next time around.
 func findUpdatedPodsOnNode(
-	set *slinkyv1alpha1.NodeSet,
+	nodeset *slinkyv1alpha1.NodeSet,
 	podsOnNode []*corev1.Pod,
 	hash string,
 ) (newPod, oldPod *corev1.Pod, ok bool) {
@@ -619,7 +619,7 @@ func findUpdatedPodsOnNode(
 		if utils.IsTerminating(pod) {
 			continue
 		}
-		generation, err := GetTemplateGeneration(set)
+		generation, err := GetTemplateGeneration(nodeset)
 		if err != nil {
 			generation = nil
 		}

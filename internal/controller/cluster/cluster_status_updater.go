@@ -20,8 +20,8 @@ import (
 // ClusterStatusUpdaterInterface is an interface used to update the ClusterStatus associated with a StatefulSet.
 // For any use other than testing, clients should create an instance using NewRealClusterStatusUpdater.
 type ClusterStatusUpdaterInterface interface {
-	// UpdateClusterStatus sets the set's Status to status. Implementations are required to retry on conflicts,
-	// but fail on other errors. If the returned error is nil set's Status has been successfully set to status.
+	// UpdateClusterStatus sets the Nodeset's Status to status. Implementations are required to retry on conflicts,
+	// but fail on other errors. If the returned error is nil Nodeset's Status has been successfully set to status.
 	UpdateClusterStatus(ctx context.Context, cluster *slinkyv1alpha1.Cluster, status *slinkyv1alpha1.ClusterStatus) error
 }
 
