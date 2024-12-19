@@ -26,6 +26,7 @@ import (
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/resources"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/durationstore"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/historycontrol"
 )
 
 const (
@@ -73,7 +74,8 @@ type NodeSetReconciler struct {
 	SlurmClusters *resources.Clusters
 	EventCh       chan event.GenericEvent
 
-	control NodeSetControlInterface
+	control        NodeSetControlInterface
+	historyControl historycontrol.HistoryControlInterface
 }
 
 //+kubebuilder:rbac:groups=slinky.slurm.net,resources=nodesets,verbs=get;list;watch;create;update;patch;delete
@@ -122,13 +124,14 @@ func (r *NodeSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (re
 // SetupWithManager sets up the controller with the Manager.
 func (r *NodeSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	eventRecorder := record.NewBroadcaster().NewRecorder(r.Scheme, corev1.EventSource{Component: "nodeset-controller"})
+	r.historyControl = historycontrol.NewHistoryControl(r.Client)
 	r.control = NewDefaultNodeSetControl(
 		r.Client,
 		r.KubeClient,
 		eventRecorder,
 		NewNodeSetPodControl(r.Client, eventRecorder, r.SlurmClusters),
 		NewRealNodeSetStatusUpdater(r.Client),
-		NewHistory(r.Client),
+		r.historyControl,
 		r.SlurmClusters,
 	)
 	podEventHandler := podEventHandler{

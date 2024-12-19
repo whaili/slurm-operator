@@ -35,6 +35,7 @@ import (
 	"github.com/SlinkyProject/slurm-operator/internal/errors"
 	"github.com/SlinkyProject/slurm-operator/internal/resources"
 	"github.com/SlinkyProject/slurm-operator/internal/utils"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/historycontrol"
 )
 
 // NodeSetControl implements the control logic for synchronizing NodeSets and their children Pods. It is implemented
@@ -59,28 +60,28 @@ func NewDefaultNodeSetControl(
 	eventRecorder record.EventRecorder,
 	podControl *NodeSetPodControl,
 	statusUpdater NodeSetStatusUpdaterInterface,
-	controllerHistory history.Interface,
+	historyControl historycontrol.HistoryControlInterface,
 	slurmClusters *resources.Clusters,
 ) NodeSetControlInterface {
 	return &defaultNodeSetControl{
-		Client:            client,
-		KubeClient:        kubeClient,
-		eventRecorder:     eventRecorder,
-		podControl:        podControl,
-		statusUpdater:     statusUpdater,
-		controllerHistory: controllerHistory,
-		slurmClusters:     slurmClusters,
+		Client:         client,
+		KubeClient:     kubeClient,
+		eventRecorder:  eventRecorder,
+		podControl:     podControl,
+		statusUpdater:  statusUpdater,
+		historyControl: historyControl,
+		slurmClusters:  slurmClusters,
 	}
 }
 
 type defaultNodeSetControl struct {
 	client.Client
-	KubeClient        *kubernetes.Clientset
-	eventRecorder     record.EventRecorder
-	podControl        *NodeSetPodControl
-	statusUpdater     NodeSetStatusUpdaterInterface
-	controllerHistory history.Interface
-	slurmClusters     *resources.Clusters
+	KubeClient     *kubernetes.Clientset
+	eventRecorder  record.EventRecorder
+	podControl     *NodeSetPodControl
+	statusUpdater  NodeSetStatusUpdaterInterface
+	historyControl historycontrol.HistoryControlInterface
+	slurmClusters  *resources.Clusters
 }
 
 // getNodeSetPods returns nodeset pods owned by the given NodeSet.
@@ -175,7 +176,7 @@ func (nsc *defaultNodeSetControl) listRevisions(nodeset *slinkyv1alpha1.NodeSet)
 	if err != nil {
 		return nil, err
 	}
-	return nsc.controllerHistory.ListControllerRevisions(nodeset, selector)
+	return nsc.historyControl.ListControllerRevisions(nodeset, selector)
 }
 
 func (nsc *defaultNodeSetControl) doAdoptOrphanRevisions(
@@ -183,7 +184,7 @@ func (nsc *defaultNodeSetControl) doAdoptOrphanRevisions(
 	revisions []*appsv1.ControllerRevision,
 ) error {
 	for i := range revisions {
-		adopted, err := nsc.controllerHistory.AdoptControllerRevision(nodeset, controllerKind, revisions[i])
+		adopted, err := nsc.historyControl.AdoptControllerRevision(nodeset, controllerKind, revisions[i])
 		if err != nil {
 			return err
 		}
