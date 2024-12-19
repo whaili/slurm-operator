@@ -272,45 +272,6 @@ func (nsc *defaultNodeSetControl) truncateHistory(
 	return nil
 }
 
-// newRevision creates a new ControllerRevision containing a patch that reapplies the target state of nodeset.
-// The Revision of the returned ControllerRevision is nodeset to revision. If the returned error is nil, the returned
-// ControllerRevision is valid. StatefulSet revisions are stored as patches that re-apply the current state of nodeset
-// to a new StatefulSet using a strategic merge patch to replace the saved state of the new StatefulSet.
-func newRevision(nodeset *slinkyv1alpha1.NodeSet, revision int64, collisionCount *int32) (*appsv1.ControllerRevision, error) {
-	patch, err := getPatch(nodeset)
-	if err != nil {
-		return nil, err
-	}
-	cr, err := history.NewControllerRevision(
-		nodeset,
-		controllerKind,
-		nodeset.Spec.Template.Labels,
-		runtime.RawExtension{Raw: patch},
-		revision,
-		collisionCount)
-	if err != nil {
-		return nil, err
-	}
-	if cr.ObjectMeta.Annotations == nil {
-		cr.ObjectMeta.Annotations = make(map[string]string)
-	}
-	for key, value := range nodeset.Annotations {
-		cr.ObjectMeta.Annotations[key] = value
-	}
-	return cr, nil
-}
-
-// nextRevision finds the next valid revision number based on revisions. If the length of revisions
-// is 0 this is 1. Otherwise, it is 1 greater than the largest revision's Revision. This method
-// assumes that revisions has been sorted by Revision.
-func nextRevision(revisions []*appsv1.ControllerRevision) int64 {
-	count := len(revisions)
-	if count <= 0 {
-		return 1
-	}
-	return revisions[count-1].Revision + 1
-}
-
 // getNodeSetRevisions returns the current and update ControllerRevisions for nodeset. It also
 // returns a collision count that records the number of name collisions nodeset saw when creating
 // new ControllerRevisions. This count is incremented on every name collision and is used in
@@ -378,4 +339,43 @@ func (nsc *defaultNodeSetControl) getNodeSetRevisions(
 	}
 
 	return currentRevision, updateRevision, collisionCount, nil
+}
+
+// nextRevision finds the next valid revision number based on revisions. If the length of revisions
+// is 0 this is 1. Otherwise, it is 1 greater than the largest revision's Revision. This method
+// assumes that revisions has been sorted by Revision.
+func nextRevision(revisions []*appsv1.ControllerRevision) int64 {
+	count := len(revisions)
+	if count <= 0 {
+		return 1
+	}
+	return revisions[count-1].Revision + 1
+}
+
+// newRevision creates a new ControllerRevision containing a patch that reapplies the target state of nodeset.
+// The Revision of the returned ControllerRevision is nodeset to revision. If the returned error is nil, the returned
+// ControllerRevision is valid. StatefulSet revisions are stored as patches that re-apply the current state of nodeset
+// to a new StatefulSet using a strategic merge patch to replace the saved state of the new StatefulSet.
+func newRevision(nodeset *slinkyv1alpha1.NodeSet, revision int64, collisionCount *int32) (*appsv1.ControllerRevision, error) {
+	patch, err := getPatch(nodeset)
+	if err != nil {
+		return nil, err
+	}
+	cr, err := history.NewControllerRevision(
+		nodeset,
+		controllerKind,
+		nodeset.Spec.Template.Labels,
+		runtime.RawExtension{Raw: patch},
+		revision,
+		collisionCount)
+	if err != nil {
+		return nil, err
+	}
+	if cr.ObjectMeta.Annotations == nil {
+		cr.ObjectMeta.Annotations = make(map[string]string)
+	}
+	for key, value := range nodeset.Annotations {
+		cr.ObjectMeta.Annotations[key] = value
+	}
+	return cr, nil
 }
