@@ -373,7 +373,7 @@ Define jwt hs256 key path
 Define Slurm config name
 */}}
 {{- define "slurm.configMapName" -}}
-{{- printf "%s" (.Release.Name) -}}
+{{- printf "%s-config" (.Release.Name) -}}
 {{- end }}
 
 {{/*
