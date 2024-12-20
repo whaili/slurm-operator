@@ -24,12 +24,14 @@ import (
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	v0041 "github.com/SlinkyProject/slurm-client/api/v0041"
 	"github.com/SlinkyProject/slurm-client/pkg/object"
 	slurmtypes "github.com/SlinkyProject/slurm-client/pkg/types"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/annotations"
 	"github.com/SlinkyProject/slurm-operator/internal/utils"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/podinfo"
 )
 
 // updatedDesiredNodeCounts calculates the true number of allowed unavailable or surge pods and
@@ -280,28 +282,30 @@ func (nsc *defaultNodeSetControl) updateSlurmNodeWithPodInfo(
 	slurmClient := nsc.slurmClusters.Get(clusterName)
 	if slurmClient != nil && !isNodeSetPodDelete(pod) {
 		objectKey := object.ObjectKey(pod.Spec.Hostname)
-		slurmNode := &slurmtypes.Node{}
+		slurmNode := &slurmtypes.V0041Node{}
 		if err := slurmClient.Get(ctx, objectKey, slurmNode); err != nil {
 			return err
 		}
 
-		oldNodeInfo := slurmtypes.NodeInfo{}
-		_ = slurmtypes.NodeInfoParse(slurmNode.Comment, &oldNodeInfo)
-		nodeInfo := slurmtypes.NodeInfo{
+		oldPodInfo := podinfo.PodInfo{}
+		_ = podinfo.ParseIntoPodInfo(slurmNode.Comment, &oldPodInfo)
+		podInfo := podinfo.PodInfo{
 			Namespace: pod.Namespace,
 			PodName:   pod.Name,
 		}
 
-		if oldNodeInfo.Equal(nodeInfo) {
+		if oldPodInfo.Equal(podInfo) {
 			// Avoid needless update request
 			return nil
 		}
 
 		logger.Info("Update Slurm Node with Kubernetes Pod info",
-			"Node", slurmNode.Name, "NodeInfo", nodeInfo)
+			"Node", slurmNode.Name, "PodInfo", podInfo)
 
-		slurmNode.Comment = nodeInfo.ToString()
-		if err := slurmClient.Update(ctx, slurmNode); err != nil {
+		req := v0041.V0041UpdateNodeMsg{
+			Comment: ptr.To(podInfo.ToString()),
+		}
+		if err := slurmClient.Update(ctx, slurmNode, req); err != nil {
 			return err
 		}
 	}
@@ -339,7 +343,7 @@ func (nsc *defaultNodeSetControl) syncSlurm(
 		return nil
 	}
 
-	nodeList := &slurmtypes.NodeList{}
+	nodeList := &slurmtypes.V0041NodeList{}
 	if err := slurmClient.List(ctx, nodeList); !tolerateError(err) {
 		return err
 	}
@@ -363,12 +367,12 @@ func (nsc *defaultNodeSetControl) syncSlurm(
 
 	slurmNodes := sets.NewString()
 	for _, node := range nodeList.Items {
-		hasCommunicationFailure := node.State.HasAll(slurmtypes.NodeStateDOWN, slurmtypes.NodeStateNOTRESPONDING)
-		nodeInfo := slurmtypes.NodeInfo{}
-		_ = slurmtypes.NodeInfoParse(node.Comment, &nodeInfo)
-		noPodInfo := nodeInfo.Equal(slurmtypes.NodeInfo{})
-		if kubeNodes.Has(node.Name) || !hasCommunicationFailure || noPodInfo {
-			slurmNodes.Insert(node.Name)
+		hasCommunicationFailure := node.GetStateAsSet().HasAll(v0041.V0041NodeStateDOWN, v0041.V0041NodeStateNOTRESPONDING)
+		podInfo := podinfo.PodInfo{}
+		_ = podinfo.ParseIntoPodInfo(node.Comment, &podInfo)
+		noPodInfo := podInfo.Equal(podinfo.PodInfo{})
+		if kubeNodes.Has(*node.Name) || !hasCommunicationFailure || noPodInfo {
+			slurmNodes.Insert(*node.Name)
 			continue
 		}
 		logger.Info("Deleting Slurm Node without a corresponding Pod", "Node", node.Name, "Pod", node.Comment)
@@ -500,7 +504,7 @@ func (nsc *defaultNodeSetControl) syncNodeSetStatus(
 		}
 
 		if slurmClient != nil {
-			slurmNode := &slurmtypes.Node{}
+			slurmNode := &slurmtypes.V0041Node{}
 			key := object.ObjectKey(node.Name)
 			if err := slurmClient.Get(ctx, key, slurmNode); err != nil {
 				if err.Error() != http.StatusText(http.StatusNotFound) {
@@ -508,13 +512,13 @@ func (nsc *defaultNodeSetControl) syncNodeSetStatus(
 				}
 			}
 
-			nodeInfo := slurmtypes.NodeInfo{}
-			_ = slurmtypes.NodeInfoParse(slurmNode.Comment, &nodeInfo)
+			podInfo := podinfo.PodInfo{}
+			_ = podinfo.ParseIntoPodInfo(slurmNode.Comment, &podInfo)
 
 			pod := &corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
-					Namespace: nodeInfo.Namespace,
-					Name:      nodeInfo.PodName,
+					Namespace: podInfo.Namespace,
+					Name:      podInfo.PodName,
 				},
 			}
 			if !isPodFromNodeSet(nodeset, pod) {
@@ -531,15 +535,15 @@ func (nsc *defaultNodeSetControl) syncNodeSetStatus(
 
 			// Base Slurm Node States
 			switch {
-			case slurmNode.State.Has(slurmtypes.NodeStateIDLE):
+			case slurmNode.GetStateAsSet().Has(v0041.V0041NodeStateIDLE):
 				numberIdle++
-			case slurmNode.State.HasAny(slurmtypes.NodeStateALLOCATED, slurmtypes.NodeStateMIXED):
+			case slurmNode.GetStateAsSet().HasAny(v0041.V0041NodeStateALLOCATED, v0041.V0041NodeStateMIXED):
 				numberAllocated++
-			case slurmNode.State.Has(slurmtypes.NodeStateDOWN):
+			case slurmNode.GetStateAsSet().Has(v0041.V0041NodeStateDOWN):
 				numberDown++
 			}
 			// Flag Slurm Node State
-			if slurmNode.State.Has(slurmtypes.NodeStateDRAIN) {
+			if slurmNode.GetStateAsSet().Has(v0041.V0041NodeStateDRAIN) {
 				numberDrain++
 			}
 		}

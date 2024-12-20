@@ -19,9 +19,11 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/retry"
 	"k8s.io/kubernetes/pkg/features"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	v0041 "github.com/SlinkyProject/slurm-client/api/v0041"
 	slurmclient "github.com/SlinkyProject/slurm-client/pkg/client"
 	"github.com/SlinkyProject/slurm-client/pkg/object"
 	slurmtypes "github.com/SlinkyProject/slurm-client/pkg/types"
@@ -172,13 +174,13 @@ func (spc *NodeSetPodControl) isNodeSetPodDrain(
 	}
 
 	objectKey := object.ObjectKey(pod.Spec.Hostname)
-	slurmNode := &slurmtypes.Node{}
+	slurmNode := &slurmtypes.V0041Node{}
 	err := slurmClient.Get(ctx, objectKey, slurmNode)
 	if err != nil {
 		return false
 	}
 
-	return slurmNode.State.Has(slurmtypes.NodeStateDRAIN)
+	return slurmNode.GetStateAsSet().Has(v0041.V0041NodeStateDRAIN)
 }
 
 func (spc *NodeSetPodControl) updateSlurmNode(
@@ -204,7 +206,7 @@ func (spc *NodeSetPodControl) updateSlurmNode(
 		slurmClient := spc.slurmClusters.Get(clusterName)
 		if slurmClient != nil && !isNodeSetPodDelete(pod) {
 			objectKey := object.ObjectKey(pod.Spec.Hostname)
-			slurmNode := &slurmtypes.Node{}
+			slurmNode := &slurmtypes.V0041Node{}
 			if err := slurmClient.Get(ctx, objectKey, slurmNode); err != nil {
 				if err.Error() == http.StatusText(http.StatusNotFound) {
 					return nil
@@ -213,8 +215,10 @@ func (spc *NodeSetPodControl) updateSlurmNode(
 			}
 
 			logger.Info("Undrain Slurm Node", "slurmNode", slurmNode, "Pod", pod)
-			slurmNode.State.Insert(slurmtypes.NodeStateUNDRAIN)
-			if err := slurmClient.Update(ctx, slurmNode); err != nil {
+			req := &v0041.V0041UpdateNodeMsg{
+				State: ptr.To([]v0041.V0041UpdateNodeMsgState{v0041.V0041UpdateNodeMsgStateUNDRAIN}),
+			}
+			if err := slurmClient.Update(ctx, slurmNode, req); err != nil {
 				if err.Error() == http.StatusText(http.StatusNotFound) {
 					return nil
 				}
@@ -314,7 +318,7 @@ func (spc *NodeSetPodControl) isNodeSetPodDrained(
 	}
 
 	objectKey := object.ObjectKey(pod.Spec.Hostname)
-	slurmNode := &slurmtypes.Node{}
+	slurmNode := &slurmtypes.V0041Node{}
 	opts := &slurmclient.GetOptions{
 		RefreshCache: true,
 	}
@@ -323,8 +327,8 @@ func (spc *NodeSetPodControl) isNodeSetPodDrained(
 		return false
 	}
 
-	return slurmNode.State.Has(slurmtypes.NodeStateDRAIN) &&
-		slurmNode.State.HasAny(slurmtypes.NodeStateIDLE, slurmtypes.NodeStateDOWN)
+	return slurmNode.GetStateAsSet().Has(v0041.V0041NodeStateDRAIN) &&
+		slurmNode.GetStateAsSet().HasAny(v0041.V0041NodeStateIDLE, v0041.V0041NodeStateDOWN)
 }
 
 func (spc *NodeSetPodControl) deleteSlurmNode(
@@ -353,7 +357,7 @@ func (spc *NodeSetPodControl) deleteSlurmNode(
 		slurmClient := spc.slurmClusters.Get(clusterName)
 		if slurmClient != nil && !isNodeSetPodDelete(pod) {
 			objectKey := object.ObjectKey(pod.Spec.Hostname)
-			slurmNode := &slurmtypes.Node{}
+			slurmNode := &slurmtypes.V0041Node{}
 			if err := slurmClient.Get(ctx, objectKey, slurmNode); err != nil {
 				if err.Error() == http.StatusText(http.StatusNotFound) {
 					return nil
@@ -363,9 +367,10 @@ func (spc *NodeSetPodControl) deleteSlurmNode(
 
 			if !spc.isNodeSetPodDrain(ctx, nodeset, pod) {
 				logger.Info("Drain Slurm Node before Pod deletion", "slurmNode", slurmNode, "Pod", pod)
-				slurmNode = slurmNode.DeepCopy()
-				slurmNode.State.Insert(slurmtypes.NodeStateDRAIN)
-				if err := slurmClient.Update(ctx, slurmNode); err != nil {
+				req := &v0041.V0041UpdateNodeMsg{
+					State: ptr.To([]v0041.V0041UpdateNodeMsgState{v0041.V0041UpdateNodeMsgStateDRAIN}),
+				}
+				if err := slurmClient.Update(ctx, slurmNode, req); err != nil {
 					if err.Error() == http.StatusText(http.StatusNotFound) {
 						return nil
 					}

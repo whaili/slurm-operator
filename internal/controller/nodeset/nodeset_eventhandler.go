@@ -26,6 +26,7 @@ import (
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/utils"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/podinfo"
 )
 
 var _ handler.EventHandler = &podEventHandler{}
@@ -351,65 +352,52 @@ func shouldIgnoreNodeUpdate(oldNode, curNode corev1.Node) bool {
 // SetEventHandler is a helper function to make slurm node updates propagate to
 // the nodeset controller via configured event channel.
 func SetEventHandler(client slurmclient.Client, eventCh chan event.GenericEvent) {
-	informer := client.GetInformer(slurmtypes.ObjectTypeNode)
+	informer := client.GetInformer(slurmtypes.ObjectTypeV0041Node)
 	informer.SetEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			node, ok := obj.(*slurmtypes.Node)
+			node, ok := obj.(*slurmtypes.V0041Node)
 			if !ok {
 				return
 			}
-			nodeInfo := slurmtypes.NodeInfo{}
-			_ = slurmtypes.NodeInfoParse(node.Comment, &nodeInfo)
-			genericEvent := event.GenericEvent{
-				Object: &corev1.Pod{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: nodeInfo.Namespace,
-						Name:      nodeInfo.PodName,
-					},
-				},
-			}
-			eventCh <- genericEvent
+			podInfo := podinfo.PodInfo{}
+			_ = podinfo.ParseIntoPodInfo(node.Comment, &podInfo)
+			eventCh <- podEvent(podInfo)
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
-			oldNode, ok := oldObj.(*slurmtypes.Node)
+			oldNode, ok := oldObj.(*slurmtypes.V0041Node)
 			if !ok {
 				return
 			}
-			newNode, ok := newObj.(*slurmtypes.Node)
+			newNode, ok := newObj.(*slurmtypes.V0041Node)
 			if !ok {
 				return
 			}
-			if newNode.DeepEqualObject(oldNode) {
+			if apiequality.Semantic.DeepEqual(newNode.State, oldNode.State) {
 				return
 			}
-			nodeInfo := slurmtypes.NodeInfo{}
-			_ = slurmtypes.NodeInfoParse(newNode.Comment, &nodeInfo)
-			genericEvent := event.GenericEvent{
-				Object: &corev1.Pod{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: nodeInfo.Namespace,
-						Name:      nodeInfo.PodName,
-					},
-				},
-			}
-			eventCh <- genericEvent
+			podInfo := podinfo.PodInfo{}
+			_ = podinfo.ParseIntoPodInfo(newNode.Comment, &podInfo)
+			eventCh <- podEvent(podInfo)
 		},
 		DeleteFunc: func(obj interface{}) {
-			node, ok := obj.(*slurmtypes.Node)
+			node, ok := obj.(*slurmtypes.V0041Node)
 			if !ok {
 				return
 			}
-			nodeInfo := slurmtypes.NodeInfo{}
-			_ = slurmtypes.NodeInfoParse(node.Comment, &nodeInfo)
-			genericEvent := event.GenericEvent{
-				Object: &corev1.Pod{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: nodeInfo.Namespace,
-						Name:      nodeInfo.PodName,
-					},
-				},
-			}
-			eventCh <- genericEvent
+			podInfo := podinfo.PodInfo{}
+			_ = podinfo.ParseIntoPodInfo(node.Comment, &podInfo)
+			eventCh <- podEvent(podInfo)
 		},
 	})
+}
+
+func podEvent(podInfo podinfo.PodInfo) event.GenericEvent {
+	return event.GenericEvent{
+		Object: &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: podInfo.Namespace,
+				Name:      podInfo.PodName,
+			},
+		},
+	}
 }

@@ -10,9 +10,10 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	v0041 "github.com/SlinkyProject/slurm-client/api/v0041"
 	slurmclient "github.com/SlinkyProject/slurm-client/pkg/client"
-	"github.com/SlinkyProject/slurm-client/pkg/fake"
-	"github.com/SlinkyProject/slurm-client/pkg/interceptor"
+	"github.com/SlinkyProject/slurm-client/pkg/client/fake"
+	"github.com/SlinkyProject/slurm-client/pkg/client/interceptor"
 	"github.com/SlinkyProject/slurm-client/pkg/object"
 	slurmtypes "github.com/SlinkyProject/slurm-client/pkg/types"
 
@@ -20,6 +21,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/ptr"
 )
 
 func newFakeClientList(interceptorFuncs interceptor.Funcs, initObjLists ...object.ObjectList) slurmclient.Client {
@@ -103,7 +105,12 @@ var _ = Describe("Cluster controller", func() {
 			// successful ping response in the cache
 			slurmClusters.Add(types.NamespacedName{Name: clusterName, Namespace: clusterNamespace},
 				newFakeClientList(interceptor.Funcs{},
-					&slurmtypes.PingList{Items: []slurmtypes.Ping{{Hostname: "localhost", Pinged: true}}}))
+					&slurmtypes.V0041ControllerPingList{
+						Items: []slurmtypes.V0041ControllerPing{
+							{V0041ControllerPing: v0041.V0041ControllerPing{Hostname: ptr.To("localhost"), Pinged: ptr.To(slurmtypes.V0041ControllerPingPingedUP)}},
+						},
+					},
+				))
 
 			Eventually(func(g Gomega) {
 				g.Expect(k8sClient.Get(ctx, clusterLookupKey, createdCluster)).To(Succeed())

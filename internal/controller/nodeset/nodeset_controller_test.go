@@ -5,6 +5,7 @@ package nodeset
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -16,19 +17,47 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 	"k8s.io/utils/set"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 
+	v0041 "github.com/SlinkyProject/slurm-client/api/v0041"
 	slurmclient "github.com/SlinkyProject/slurm-client/pkg/client"
-	"github.com/SlinkyProject/slurm-client/pkg/fake"
-	"github.com/SlinkyProject/slurm-client/pkg/interceptor"
+	"github.com/SlinkyProject/slurm-client/pkg/client/fake"
+	"github.com/SlinkyProject/slurm-client/pkg/client/interceptor"
 	"github.com/SlinkyProject/slurm-client/pkg/object"
 	slurmtypes "github.com/SlinkyProject/slurm-client/pkg/types"
-	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 )
 
 func newFakeClientList(interceptorFuncs interceptor.Funcs, initObjLists ...object.ObjectList) slurmclient.Client {
+	updateFn := func(_ context.Context, obj object.Object, req any, opts ...slurmclient.UpdateOption) error {
+		switch o := obj.(type) {
+		case *slurmtypes.V0041Node:
+			r, ok := req.(v0041.V0041UpdateNodeMsg)
+			if !ok {
+				return errors.New("failed to cast request object")
+			}
+			stateSet := set.New(ptr.Deref(o.State, []v0041.V0041NodeState{})...)
+			statesReq := ptr.Deref(r.State, []v0041.V0041UpdateNodeMsgState{})
+			for _, stateReq := range statesReq {
+				switch stateReq {
+				case v0041.V0041UpdateNodeMsgStateUNDRAIN:
+					stateSet.Delete(v0041.V0041NodeStateDRAIN)
+				default:
+					stateSet.Insert(v0041.V0041NodeState(stateReq))
+				}
+			}
+			o.State = ptr.To(stateSet.UnsortedList())
+			o.Comment = r.Comment
+			o.Reason = r.Reason
+		default:
+			return errors.New("failed to cast slurm object")
+		}
+		return nil
+	}
+
 	return fake.NewClientBuilder().
+		WithUpdateFn(updateFn).
 		WithLists(initObjLists...).
 		WithInterceptorFuncs(interceptorFuncs).
 		Build()
@@ -55,10 +84,10 @@ var _ = Describe("Nodeset controller", func() {
 			// creating the nodeset so the reconcile loop
 			// will create pods on the matching nodes.
 			slurmClusters.Add(types.NamespacedName{Name: clusterName, Namespace: nodesetNamespace},
-				newFakeClientList(interceptor.Funcs{}, &slurmtypes.NodeList{
-					Items: []slurmtypes.Node{
-						{Name: "node-1", State: make(set.Set[slurmtypes.NodeState], 0)},
-						{Name: "node-2", State: make(set.Set[slurmtypes.NodeState], 0)},
+				newFakeClientList(interceptor.Funcs{}, &slurmtypes.V0041NodeList{
+					Items: []slurmtypes.V0041Node{
+						{V0041Node: v0041.V0041Node{Name: ptr.To("node-1"), State: ptr.To([]v0041.V0041NodeState{v0041.V0041NodeStateIDLE})}},
+						{V0041Node: v0041.V0041Node{Name: ptr.To("node-2"), State: ptr.To([]v0041.V0041NodeState{v0041.V0041NodeStateIDLE})}},
 					},
 				}))
 
@@ -87,8 +116,10 @@ var _ = Describe("Nodeset controller", func() {
 					Kind:       "NodeSet",
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      nodesetName,
-					Namespace: nodesetNamespace,
+					Name:        nodesetName,
+					Namespace:   nodesetNamespace,
+					Labels:      map[string]string{"foo": "bar"},
+					Annotations: map[string]string{"biz": "buz"},
 				},
 				Spec: slinkyv1alpha1.NodeSetSpec{
 					ClusterName: clusterName,
@@ -153,13 +184,11 @@ var _ = Describe("Nodeset controller", func() {
 			Expect(k8sClient.Update(ctx, createdNodeset)).To(Succeed())
 
 			// Verify the Slurm nodes are marked as NodeStateDRAIN
-			drainState := make(set.Set[slurmtypes.NodeState])
-			drainState.Insert(slurmtypes.NodeStateDRAIN)
 			Eventually(func(g Gomega) {
-				slurmNodes := &slurmtypes.NodeList{}
+				slurmNodes := &slurmtypes.V0041NodeList{}
 				g.Expect(slurmClusters.Get(types.NamespacedName{Namespace: nodesetNamespace, Name: clusterName}).List(ctx, slurmNodes)).To(Succeed())
 				for _, node := range slurmNodes.Items {
-					g.Expect(node.State.Equal(drainState)).Should(BeTrue())
+					g.Expect(node.GetStateAsSet().Has(v0041.V0041NodeStateDRAIN)).Should(BeTrue())
 				}
 			}, timeout, interval).Should(Succeed())
 

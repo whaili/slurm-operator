@@ -13,6 +13,7 @@ import (
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -126,7 +127,7 @@ func (cc *defaultClusterControl) slurmClientUpdate(
 	}
 	options := &slurmclient.ClientOptions{
 		DisableFor: []object.Object{
-			&slurmtypes.Ping{},
+			&slurmtypes.V0041ControllerPing{},
 		},
 	}
 	slurmClient, err := slurmclient.NewClient(config, options)
@@ -212,13 +213,13 @@ func (cc *defaultClusterControl) syncClusterStatus(
 	isReady := false
 
 	if slurmClient := cc.slurmClusters.Get(clusterName); slurmClient != nil {
-		pingList := &slurmtypes.PingList{}
+		pingList := &slurmtypes.V0041ControllerPingList{}
 		err := slurmClient.List(ctx, pingList)
 		if err != nil {
 			logger.Error(err, "unable to ping cluster")
 		} else {
 			for _, ping := range pingList.Items {
-				if ping.Pinged {
+				if ptr.Deref(ping.Pinged, "") == slurmtypes.V0041ControllerPingPingedUP {
 					isReady = true
 					break
 				}
