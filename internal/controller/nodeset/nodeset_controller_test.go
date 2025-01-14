@@ -14,6 +14,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/ptr"
 	"k8s.io/utils/set"
 
 	slurmclient "github.com/SlinkyProject/slurm-client/pkg/client"
@@ -145,12 +146,10 @@ var _ = Describe("Nodeset controller", func() {
 
 			// Scale down a NodeSet to verify pods are deleted and
 			// Slurm nodes are drained and deleted
-			replicas := new(int32)
-			*replicas = 0
 			Eventually(func(g Gomega) {
 				g.Expect(k8sClient.Get(ctx, nodesetLookupKey, createdNodeset)).To(Succeed())
 			}, timeout, interval).Should(Succeed())
-			createdNodeset.Spec.Replicas = replicas
+			createdNodeset.Spec.Replicas = ptr.To[int32](0)
 			Expect(k8sClient.Update(ctx, createdNodeset)).To(Succeed())
 
 			// Verify the Slurm nodes are marked as NodeStateDRAIN
