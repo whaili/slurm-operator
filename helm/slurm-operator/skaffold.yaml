@@ -11,17 +11,6 @@ profiles:
       artifacts:
         - image: slinky.slurm.net/slurm-operator
           context: ../../
-          docker:
-            dockerfile: Dockerfile.dev
-          hooks:
-            before:
-              - command: ["make", "vendor"]
-                dir: ../../
-                os: [linux, darwin]
-      tagPolicy:
-        inputDigest: {}
-      local:
-        push: false
     deploy:
       helm:
         releases:

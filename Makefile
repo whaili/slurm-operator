@@ -268,10 +268,6 @@ get-u: ## Run `go get -u`
 vet: ## Run go vet against code.
 	go vet ./...
 
-.PHONY: vendor
-vendor: ## Generate the vendor/ dir.
-	go work vendor || go mod vendor
-
 CODECOV_PERCENT ?= 54.0
 
 .PHONY: test
