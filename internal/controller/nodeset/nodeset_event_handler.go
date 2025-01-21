@@ -34,7 +34,7 @@ type podEventHandler struct {
 	client.Reader
 }
 
-func enqueueNodeSet(q workqueue.RateLimitingInterface, set *slinkyv1alpha1.NodeSet) {
+func enqueueNodeSet(q workqueue.TypedRateLimitingInterface[reconcile.Request], set *slinkyv1alpha1.NodeSet) {
 	q.Add(reconcile.Request{
 		NamespacedName: types.NamespacedName{
 			Name:      set.GetName(),
@@ -46,7 +46,7 @@ func enqueueNodeSet(q workqueue.RateLimitingInterface, set *slinkyv1alpha1.NodeS
 func (e *podEventHandler) Create(
 	ctx context.Context,
 	evt event.CreateEvent,
-	q workqueue.RateLimitingInterface,
+	q workqueue.TypedRateLimitingInterface[reconcile.Request],
 ) {
 	logger := log.FromContext(ctx)
 	pod := evt.Object.(*corev1.Pod)
@@ -86,7 +86,7 @@ func (e *podEventHandler) Create(
 func (e *podEventHandler) Update(
 	ctx context.Context,
 	evt event.UpdateEvent,
-	q workqueue.RateLimitingInterface,
+	q workqueue.TypedRateLimitingInterface[reconcile.Request],
 ) {
 	logger := log.FromContext(ctx)
 	oldPod := evt.ObjectOld.(*corev1.Pod)
@@ -147,7 +147,7 @@ func (e *podEventHandler) Update(
 func (e *podEventHandler) Delete(
 	ctx context.Context,
 	evt event.DeleteEvent,
-	q workqueue.RateLimitingInterface,
+	q workqueue.TypedRateLimitingInterface[reconcile.Request],
 ) {
 	logger := log.FromContext(ctx)
 	pod, ok := evt.Object.(*corev1.Pod)
@@ -163,7 +163,7 @@ func (e *podEventHandler) Delete(
 func (e *podEventHandler) deletePod(
 	ctx context.Context,
 	pod *corev1.Pod,
-	q workqueue.RateLimitingInterface,
+	q workqueue.TypedRateLimitingInterface[reconcile.Request],
 	isDeleted bool,
 ) {
 	logger := log.FromContext(ctx)
@@ -189,7 +189,7 @@ func (e *podEventHandler) deletePod(
 func (e *podEventHandler) Generic(
 	ctx context.Context,
 	evt event.GenericEvent,
-	q workqueue.RateLimitingInterface,
+	q workqueue.TypedRateLimitingInterface[reconcile.Request],
 ) {
 	pod := evt.Object.(*corev1.Pod)
 	namespacedName := types.NamespacedName{
@@ -265,7 +265,7 @@ type nodeEventHandler struct {
 func (e *nodeEventHandler) Create(
 	ctx context.Context,
 	evt event.CreateEvent,
-	q workqueue.RateLimitingInterface,
+	q workqueue.TypedRateLimitingInterface[reconcile.Request],
 ) {
 	logger := log.FromContext(ctx)
 	nodesetList := &slinkyv1alpha1.NodeSetList{}
@@ -290,7 +290,7 @@ func (e *nodeEventHandler) Create(
 func (e *nodeEventHandler) Update(
 	ctx context.Context,
 	evt event.UpdateEvent,
-	q workqueue.RateLimitingInterface,
+	q workqueue.TypedRateLimitingInterface[reconcile.Request],
 ) {
 	logger := log.FromContext(ctx)
 	oldNode := evt.ObjectOld.(*corev1.Node)
@@ -326,7 +326,7 @@ func (e *nodeEventHandler) Update(
 func (e *nodeEventHandler) Delete(
 	ctx context.Context,
 	evt event.DeleteEvent,
-	q workqueue.RateLimitingInterface,
+	q workqueue.TypedRateLimitingInterface[reconcile.Request],
 ) {
 	// Intentionally empty
 }
@@ -334,7 +334,7 @@ func (e *nodeEventHandler) Delete(
 func (e *nodeEventHandler) Generic(
 	ctx context.Context,
 	evt event.GenericEvent,
-	q workqueue.RateLimitingInterface,
+	q workqueue.TypedRateLimitingInterface[reconcile.Request],
 ) {
 	// Intentionally empty
 }

@@ -4,11 +4,13 @@
 package v1alpha1
 
 import (
+	"context"
 	"fmt"
 
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
+	"k8s.io/klog/v2"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -24,54 +26,60 @@ var nodesetlog = logf.Log.WithName("nodeset-resource")
 func (r *NodeSet) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(r).
+		WithDefaulter(r).
+		WithValidator(r).
 		Complete()
 }
 
 //+kubebuilder:webhook:path=/mutate-slinky-slurm-net-v1alpha1-nodeset,mutating=true,failurePolicy=fail,sideEffects=None,groups=slinky.slurm.net,resources=nodesets,verbs=create;update,versions=v1alpha1,name=mnodeset.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Defaulter = &NodeSet{}
+var _ webhook.CustomDefaulter = &NodeSet{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *NodeSet) Default() {
-	nodesetlog.Info("default", "name", r.Name)
+func (r *NodeSet) Default(ctx context.Context, obj runtime.Object) error {
+	nodeset := obj.(*NodeSet)
+	nodesetlog.Info("default", "nodeset", klog.KObj(nodeset))
 
-	if r.Spec.RevisionHistoryLimit == nil {
-		r.Spec.RevisionHistoryLimit = ptr.To[int32](0)
+	if nodeset.Spec.RevisionHistoryLimit == nil {
+		nodeset.Spec.RevisionHistoryLimit = ptr.To[int32](0)
 	}
-	if r.Spec.UpdateStrategy.Type == "" {
-		r.Spec.UpdateStrategy.Type = RollingUpdateNodeSetStrategyType
+	if nodeset.Spec.UpdateStrategy.Type == "" {
+		nodeset.Spec.UpdateStrategy.Type = RollingUpdateNodeSetStrategyType
 	}
+	return nil
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 //+kubebuilder:webhook:path=/validate-slinky-slurm-net-v1alpha1-nodeset,mutating=false,failurePolicy=fail,sideEffects=None,groups=slinky.slurm.net,resources=nodesets,verbs=create;update,versions=v1alpha1,name=vnodeset.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Validator = &NodeSet{}
+var _ webhook.CustomValidator = &NodeSet{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *NodeSet) ValidateCreate() (admission.Warnings, error) {
-	nodesetlog.Info("validate create", "name", r.Name)
+func (r *NodeSet) ValidateCreate(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
+	nodeset := obj.(*NodeSet)
+	nodesetlog.Info("validate create", "nodeset", klog.KObj(nodeset))
 
-	warns, errs := validateNodeSet(r)
+	warns, errs := validateNodeSet(nodeset)
 
 	return warns, utilerrors.NewAggregate(errs)
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *NodeSet) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	nodesetlog.Info("validate update", "name", r.Name)
+func (r *NodeSet) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) (admission.Warnings, error) {
+	newNodeSet := newObj.(*NodeSet)
+	oldNodeSet := oldObj.(*NodeSet)
+	nodesetlog.Info("validate update", "newNodeSet", klog.KObj(newNodeSet), "oldNodeSet", klog.KObj(oldNodeSet))
 
-	warns, errs := validateNodeSet(r)
+	warns, errs := validateNodeSet(newNodeSet)
 
-	oldObj := old.(*NodeSet)
 	errMsgStub := "Mutatable fields include: 'Replicas', 'Selector', 'RevisionHistoryLimit', 'UpdateStrategy', 'PersistentVolumeClaimRetentionPolicy', 'MinReadySeconds'"
-	if r.Spec.ClusterName != oldObj.Spec.ClusterName {
+	if newNodeSet.Spec.ClusterName != oldNodeSet.Spec.ClusterName {
 		errs = append(errs, fmt.Errorf("updates to `NodeSet.Spec.ClusterName` is forbidden. %v", errMsgStub))
 	}
-	if r.Spec.ServiceName != oldObj.Spec.ServiceName {
+	if newNodeSet.Spec.ServiceName != oldNodeSet.Spec.ServiceName {
 		errs = append(errs, fmt.Errorf("updates to `NodeSet.Spec.ServiceName` is forbidden. %v", errMsgStub))
 	}
-	if !apiequality.Semantic.DeepEqual(r.Spec.VolumeClaimTemplates, oldObj.Spec.VolumeClaimTemplates) {
+	if !apiequality.Semantic.DeepEqual(newNodeSet.Spec.VolumeClaimTemplates, oldNodeSet.Spec.VolumeClaimTemplates) {
 		errs = append(errs, fmt.Errorf("updates to `NodeSet.Spec.VolumeClaimTemplates` is forbidden. %v", errMsgStub))
 	}
 
@@ -79,8 +87,9 @@ func (r *NodeSet) ValidateUpdate(old runtime.Object) (admission.Warnings, error)
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *NodeSet) ValidateDelete() (admission.Warnings, error) {
-	nodesetlog.Info("validate delete", "name", r.Name)
+func (r *NodeSet) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
+	nodeset := obj.(*NodeSet)
+	nodesetlog.Info("validate delete", "nodeset", klog.KObj(nodeset))
 
 	return nil, nil
 }
