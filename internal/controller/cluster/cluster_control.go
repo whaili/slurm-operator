@@ -13,7 +13,7 @@ import (
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/utils/ptr"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -24,6 +24,7 @@ import (
 	slurmtypes "github.com/SlinkyProject/slurm-client/pkg/types"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
+	"github.com/SlinkyProject/slurm-operator/internal/controller/cluster/slurmcontrol"
 	nodesetcontroller "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset"
 	"github.com/SlinkyProject/slurm-operator/internal/resources"
 	"github.com/SlinkyProject/slurm-operator/internal/utils"
@@ -45,6 +46,7 @@ func NewDefaultClusterControl(
 	client client.Client,
 	eventRecorder record.EventRecorder,
 	statusUpdater ClusterStatusUpdaterInterface,
+	slurmControl slurmcontrol.SlurmControlInterface,
 	slurmClusters *resources.Clusters,
 	eventCh chan event.GenericEvent,
 ) ClusterControlInterface {
@@ -52,6 +54,7 @@ func NewDefaultClusterControl(
 		Client:        client,
 		eventRecorder: eventRecorder,
 		statusUpdater: statusUpdater,
+		slurmControl:  slurmControl,
 		slurmClusters: slurmClusters,
 		eventCh:       eventCh,
 	}
@@ -62,6 +65,7 @@ type defaultClusterControl struct {
 	KubeClient    *kubernetes.Clientset
 	eventRecorder record.EventRecorder
 	statusUpdater ClusterStatusUpdaterInterface
+	slurmControl  slurmcontrol.SlurmControlInterface
 	slurmClusters *resources.Clusters
 	eventCh       chan event.GenericEvent
 }
@@ -206,31 +210,16 @@ func (cc *defaultClusterControl) syncClusterStatus(
 	logger := log.FromContext(ctx)
 	status := cluster.Status.DeepCopy()
 
-	clusterName := types.NamespacedName{
-		Namespace: cluster.GetNamespace(),
-		Name:      cluster.GetName(),
-	}
 	isReady := false
-
-	if slurmClient := cc.slurmClusters.Get(clusterName); slurmClient != nil {
-		pingList := &slurmtypes.V0041ControllerPingList{}
-		err := slurmClient.List(ctx, pingList)
-		if err != nil {
-			logger.Error(err, "unable to ping cluster")
-		} else {
-			for _, ping := range pingList.Items {
-				if ptr.Deref(ping.Pinged, "") == slurmtypes.V0041ControllerPingPingedUP {
-					isReady = true
-					break
-				}
-			}
-		}
+	if ok, err := cc.slurmControl.PingController(ctx, cluster); err != nil {
+		logger.Error(err, "unable to ping cluster", "cluster", klog.KObj(cluster))
+	} else if ok {
+		isReady = ok
 	}
-
 	status.IsReady = isReady
 
 	if err := cc.updateStatus(ctx, cluster, status); err != nil {
-		return fmt.Errorf("error updating Cluster(%s) status: %v", clusterName, err)
+		return fmt.Errorf("error updating Cluster(%s) status: %v", klog.KObj(cluster), err)
 	}
 
 	if !status.IsReady {

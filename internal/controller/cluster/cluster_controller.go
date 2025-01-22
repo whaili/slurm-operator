@@ -26,6 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
+	"github.com/SlinkyProject/slurm-operator/internal/controller/cluster/slurmcontrol"
 	"github.com/SlinkyProject/slurm-operator/internal/resources"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/durationstore"
 )
@@ -109,6 +110,7 @@ func (r *ClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		r.Client,
 		eventRecorder,
 		NewRealClusterStatusUpdater(r.Client),
+		slurmcontrol.NewSlurmControl(r.SlurmClusters),
 		r.SlurmClusters,
 		r.EventCh,
 	)
