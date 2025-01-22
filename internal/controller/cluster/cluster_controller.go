@@ -60,7 +60,8 @@ type ClusterReconciler struct {
 	SlurmClusters *resources.Clusters
 	EventCh       chan event.GenericEvent
 
-	control ClusterControlInterface
+	slurmControl  slurmcontrol.SlurmControlInterface
+	eventRecorder record.EventRecorderLogger
 }
 
 //+kubebuilder:rbac:groups=slinky.slurm.net,resources=clusters,verbs=get;list;watch;create;update;patch;delete
@@ -93,7 +94,7 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (re
 		_ = durationStore.Pop(req.Namespace)
 	}()
 
-	retErr = r.control.SyncCluster(ctx, req)
+	retErr = r.Sync(ctx, req)
 	res = reconcile.Result{
 		RequeueAfter: durationStore.Pop(req.String()),
 	}
@@ -105,15 +106,8 @@ func (r *ClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	if r.EventCh == nil {
 		return fmt.Errorf("EventCh cannot be nil")
 	}
-	eventRecorder := record.NewBroadcaster().NewRecorder(r.Scheme, corev1.EventSource{Component: "cluster-controller"})
-	r.control = NewDefaultClusterControl(
-		r.Client,
-		eventRecorder,
-		NewRealClusterStatusUpdater(r.Client),
-		slurmcontrol.NewSlurmControl(r.SlurmClusters),
-		r.SlurmClusters,
-		r.EventCh,
-	)
+	r.eventRecorder = record.NewBroadcaster().NewRecorder(r.Scheme, corev1.EventSource{Component: "cluster-controller"})
+	r.slurmControl = slurmcontrol.NewSlurmControl(r.SlurmClusters)
 	return ctrl.NewControllerManagedBy(mgr).
 		Named("cluster-controller").
 		For(&slinkyv1alpha1.Cluster{}).
