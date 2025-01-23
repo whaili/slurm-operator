@@ -22,6 +22,58 @@ import (
 	"github.com/SlinkyProject/slurm-operator/internal/utils"
 )
 
+// Sync implements control logic for synchronizing a Cluster.
+func (r *ClusterReconciler) Sync(ctx context.Context, req reconcile.Request) error {
+	logger := log.FromContext(ctx)
+	clusterName := req.NamespacedName
+
+	cluster := &slinkyv1alpha1.Cluster{}
+	if err := r.Get(ctx, req.NamespacedName, cluster); err != nil {
+		if apierrors.IsNotFound(err) {
+			logger.Info("Cluster has been deleted.", "request", req)
+			r.slurmClientDelete(ctx, clusterName)
+			return nil
+		}
+		return err
+	}
+
+	// Make a copy now to avoid mutation errors.
+	cluster = cluster.DeepCopy()
+
+	if err := r.syncCluster(ctx, cluster); err != nil {
+		errors := []error{err}
+		if err := r.syncClusterStatus(ctx, cluster); err != nil {
+			errors = append(errors, err)
+		}
+		return utilerrors.NewAggregate(errors)
+	}
+
+	return r.syncClusterStatus(ctx, cluster)
+}
+
+// syncCluster performs the main syncing logic.
+func (r *ClusterReconciler) syncCluster(
+	ctx context.Context,
+	cluster *slinkyv1alpha1.Cluster,
+) error {
+	clusterName := types.NamespacedName{
+		Namespace: cluster.GetNamespace(),
+		Name:      cluster.GetName(),
+	}
+
+	// Handle resources marked for deletion
+	if cluster.GetDeletionTimestamp() != nil {
+		r.slurmClientDelete(ctx, clusterName)
+		return nil
+	}
+
+	if err := r.slurmClientUpdate(ctx, cluster); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // slurmClientDelete handles stopping and deleing the cluster/slurmClient data.
 func (r *ClusterReconciler) slurmClientDelete(
 	ctx context.Context,
@@ -99,56 +151,4 @@ func (r *ClusterReconciler) slurmClientUpdate(
 	}
 
 	return nil
-}
-
-// syncCluster performs the main syncing logic.
-func (r *ClusterReconciler) syncCluster(
-	ctx context.Context,
-	cluster *slinkyv1alpha1.Cluster,
-) error {
-	clusterName := types.NamespacedName{
-		Namespace: cluster.GetNamespace(),
-		Name:      cluster.GetName(),
-	}
-
-	// Handle resources marked for deletion
-	if cluster.GetDeletionTimestamp() != nil {
-		r.slurmClientDelete(ctx, clusterName)
-		return nil
-	}
-
-	if err := r.slurmClientUpdate(ctx, cluster); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Sync implements control logic for synchronizing a Cluster.
-func (r *ClusterReconciler) Sync(ctx context.Context, req reconcile.Request) error {
-	logger := log.FromContext(ctx)
-	clusterName := req.NamespacedName
-
-	cluster := &slinkyv1alpha1.Cluster{}
-	if err := r.Get(ctx, req.NamespacedName, cluster); err != nil {
-		if apierrors.IsNotFound(err) {
-			logger.Info("Cluster has been deleted.", "request", req)
-			r.slurmClientDelete(ctx, clusterName)
-			return nil
-		}
-		return err
-	}
-
-	// Make a copy now to avoid mutation errors.
-	cluster = cluster.DeepCopy()
-
-	if err := r.syncCluster(ctx, cluster); err != nil {
-		errors := []error{err}
-		if err := r.syncClusterStatus(ctx, cluster); err != nil {
-			errors = append(errors, err)
-		}
-		return utilerrors.NewAggregate(errors)
-	}
-
-	return r.syncClusterStatus(ctx, cluster)
 }
