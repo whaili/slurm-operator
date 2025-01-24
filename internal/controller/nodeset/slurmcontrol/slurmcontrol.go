@@ -5,9 +5,12 @@ package slurmcontrol
 
 import (
 	"context"
+	"math"
 	"net/http"
 	"strings"
+	"time"
 
+	"github.com/puttsk/hostlist"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
@@ -24,6 +27,7 @@ import (
 	nodesetutils "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/resources"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/podinfo"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/timestore"
 )
 
 type SlurmControlInterface interface {
@@ -39,6 +43,8 @@ type SlurmControlInterface interface {
 	IsNodeDrained(ctx context.Context, nodeset *slinkyv1alpha1.NodeSet, pod *corev1.Pod) (bool, error)
 	// CalculateNodeStatus returns the current state of the registered slurm nodes.
 	CalculateNodeStatus(ctx context.Context, nodeset *slinkyv1alpha1.NodeSet, pods []*corev1.Pod) (SlurmNodeStatus, error)
+	// GetNodeDeadlines returns a map of node to its deadline time.Time calculated from running jobs.
+	GetNodeDeadlines(ctx context.Context, nodeset *slinkyv1alpha1.NodeSet, pods []*corev1.Pod) (*timestore.TimeStore, error)
 }
 
 // realSlurmControl is the default implementation of SlurmControlInterface.
@@ -367,6 +373,64 @@ func (r *realSlurmControl) CalculateNodeStatus(ctx context.Context, nodeset *sli
 	}
 
 	return status, nil
+}
+
+const infiniteDuration = time.Duration(math.MaxInt64)
+
+// GetNodeDeadlines implements SlurmControlInterface.
+func (r *realSlurmControl) GetNodeDeadlines(ctx context.Context, nodeset *slinkyv1alpha1.NodeSet, pods []*corev1.Pod) (*timestore.TimeStore, error) {
+	logger := log.FromContext(ctx)
+	ts := timestore.NewTimeStore(timestore.Greater)
+
+	slurmClient := r.lookupClient(nodeset)
+	if slurmClient == nil {
+		logger.V(2).Info("no client for nodeset, cannot do GetNodeDeadlines()",
+			"nodeset", klog.KObj(nodeset))
+		return ts, nil
+	}
+
+	slurmNodeNamesSet := set.New[string]()
+	for _, pod := range pods {
+		slurmNodeName := nodesetutils.GetNodeName(pod)
+		slurmNodeNamesSet.Insert(slurmNodeName)
+	}
+
+	jobList := &slurmtypes.V0041JobInfoList{}
+	if err := slurmClient.List(ctx, jobList); err != nil {
+		return nil, err
+	}
+
+	for _, job := range jobList.Items {
+		if !job.GetStateAsSet().Has(v0041.V0041JobInfoJobStateRUNNING) {
+			continue
+		}
+		slurmNodeNames, err := hostlist.Expand(ptr.Deref(job.Nodes, ""))
+		if err != nil {
+			logger.Error(err, "failed to expand job node hostlist",
+				"job", ptr.Deref(job.JobId, 0))
+			return nil, err
+		}
+		if !slurmNodeNamesSet.HasAny(slurmNodeNames...) {
+			continue
+		}
+
+		// Get startTime, when the job was launched on the compute node.
+		startTime_NoVal := ptr.Deref(job.StartTime, v0041.V0041Uint64NoValStruct{})
+		startTime := time.Unix(ptr.Deref(startTime_NoVal.Number, 0), 0)
+		// Get the timeLimit, the wall time of the job.
+		timeLimit_NoVal := ptr.Deref(job.TimeLimit, v0041.V0041Uint32NoValStruct{})
+		timeLimit := time.Duration(ptr.Deref(timeLimit_NoVal.Number, 0)) * time.Minute
+		if ptr.Deref(timeLimit_NoVal.Infinite, false) {
+			timeLimit = infiniteDuration
+		}
+
+		// Push time/duration into the fancy map for each node allocated to the job.
+		for _, slurmNodeName := range slurmNodeNames {
+			ts.Push(slurmNodeName, startTime.Add(timeLimit))
+		}
+	}
+
+	return ts, nil
 }
 
 func (r *realSlurmControl) lookupClient(nodeset *slinkyv1alpha1.NodeSet) slurmclient.Client {

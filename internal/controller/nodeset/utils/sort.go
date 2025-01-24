@@ -57,6 +57,13 @@ func (o ActivePods) Less(i, j int) bool {
 		return podDeletionCost1 < podDeletionCost2
 	}
 
+	// Step: ealier deadline timestamp < later deadline timestamp
+	podDeadline1, _ := utils.GetTimeFromAnnotations(pod1.Annotations, annotations.PodDeadline)
+	podDeadline2, _ := utils.GetTimeFromAnnotations(pod2.Annotations, annotations.PodDeadline)
+	if !podDeadline1.Equal(podDeadline2) {
+		return podDeadline1.Before(podDeadline2)
+	}
+
 	// Step: cordon < not cordon
 	podCordon1, _ := utils.GetBoolFromAnnotations(pod1.Annotations, annotations.PodCordon)
 	podCordon2, _ := utils.GetBoolFromAnnotations(pod2.Annotations, annotations.PodCordon)

@@ -5,6 +5,7 @@ package utils
 
 import (
 	"testing"
+	"time"
 )
 
 func Test_validFirstDigit(t *testing.T) {
@@ -210,6 +211,53 @@ func TestGetBoolFromAnnotations(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("GetBoolFromAnnotations() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetTimeFromAnnotations(t *testing.T) {
+	now := time.Now()
+	unitTime := time.Time{}
+	type args struct {
+		annotations map[string]string
+		key         string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    time.Time
+		wantErr bool
+	}{
+		{
+			name: "Get number from map key: Now",
+			args: args{
+				annotations: map[string]string{"foo": now.Format(time.RFC3339)},
+				key:         "foo",
+			},
+			want:    now,
+			wantErr: false,
+		},
+		{
+			name: "Get number from map key: parse error",
+			args: args{
+				annotations: map[string]string{"foo": " "},
+				key:         "foo",
+			},
+			want:    unitTime,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := GetTimeFromAnnotations(tt.args.annotations, tt.args.key)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetTimeFromAnnotations() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			// Compare Unix to avoid nanosecond precision loss due to (un)marshaling
+			if tt.want.Unix() != got.Unix() {
+				t.Errorf("GetTimeFromAnnotations() = %v, want %v", got, tt.want)
 			}
 		})
 	}

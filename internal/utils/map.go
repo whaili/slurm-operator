@@ -6,6 +6,7 @@ package utils
 import (
 	"fmt"
 	"strconv"
+	"time"
 )
 
 func validFirstDigit(str string) bool {
@@ -46,4 +47,18 @@ func GetBoolFromAnnotations(annotations map[string]string, key string) (bool, er
 		return b, nil
 	}
 	return false, nil
+}
+
+// GetTimeFromAnnotations returns the integer value of annotation.
+// Returns unit Time if not set or the value is invalid.
+func GetTimeFromAnnotations(annotations map[string]string, key string) (time.Time, error) {
+	if value, ok := annotations[key]; ok {
+		t, err := time.Parse(time.RFC3339, value)
+		if err != nil {
+			// make sure we default to unit Time on error.
+			return time.Time{}, err
+		}
+		return t, nil
+	}
+	return time.Time{}, nil
 }

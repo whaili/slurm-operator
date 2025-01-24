@@ -8,9 +8,11 @@ import (
 	"errors"
 	"net/http"
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/puttsk/hostlist"
 	corev1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -185,6 +187,125 @@ var _ = Describe("SlurmControlInterface", func() {
 			Expect(err).ToNot(HaveOccurred())
 			isundrain := !checkNode.GetStateAsSet().Has(v0041.V0041NodeStateDRAIN)
 			Expect(isundrain).To(BeTrue())
+		})
+	})
+
+	Context("GetNodeDeadlines()", func() {
+		now := time.Now()
+
+		It("Should get completion time for jobs", func() {
+			By("Setup initial system state")
+			nodeset = newNodeSet("bar", clusterName, 1)
+			pod = nodesetutils.NewNodeSetPod(nodeset, 0, "")
+			pod2 := nodesetutils.NewNodeSetPod(nodeset, 1, "")
+			pods := []*corev1.Pod{pod, pod2}
+			nodeList := &types.V0041NodeList{
+				Items: []types.V0041Node{
+					{
+						V0041Node: v0041.V0041Node{
+							Name: ptr.To(nodesetutils.GetNodeName(pod)),
+							State: ptr.To([]v0041.V0041NodeState{
+								v0041.V0041NodeStateMIXED,
+							}),
+						},
+					},
+					{
+						V0041Node: v0041.V0041Node{
+							Name: ptr.To(nodesetutils.GetNodeName(pod2)),
+							State: ptr.To([]v0041.V0041NodeState{
+								v0041.V0041NodeStateMIXED,
+							}),
+						},
+					},
+				},
+			}
+			jobList := &types.V0041JobInfoList{
+				Items: []types.V0041JobInfo{
+					{
+						V0041JobInfo: v0041.V0041JobInfo{
+							JobId:     ptr.To[int32](1),
+							JobState:  ptr.To([]v0041.V0041JobInfoJobState{v0041.V0041JobInfoJobStateRUNNING}),
+							StartTime: ptr.To(v0041.V0041Uint64NoValStruct{Number: ptr.To(now.Unix())}),
+							TimeLimit: ptr.To(v0041.V0041Uint32NoValStruct{Number: ptr.To(30 * int32(time.Minute.Seconds()))}),
+							Nodes: func() *string {
+								hostlist, err := hostlist.Compress([]string{*nodeList.Items[0].Name})
+								if err != nil {
+									panic(err)
+								}
+								return ptr.To(hostlist)
+							}(),
+						},
+					},
+					{
+						V0041JobInfo: v0041.V0041JobInfo{
+							JobId:     ptr.To[int32](2),
+							JobState:  ptr.To([]v0041.V0041JobInfoJobState{v0041.V0041JobInfoJobStateRUNNING}),
+							StartTime: ptr.To(v0041.V0041Uint64NoValStruct{Number: ptr.To(now.Unix())}),
+							TimeLimit: ptr.To(v0041.V0041Uint32NoValStruct{Number: ptr.To(45 * int32(time.Minute.Seconds()))}),
+							Nodes: func() *string {
+								hostlist, err := hostlist.Compress([]string{*nodeList.Items[0].Name, *nodeList.Items[1].Name})
+								if err != nil {
+									panic(err)
+								}
+								return ptr.To(hostlist)
+							}(),
+						},
+					},
+					{
+						V0041JobInfo: v0041.V0041JobInfo{
+							JobId:     ptr.To[int32](3),
+							JobState:  ptr.To([]v0041.V0041JobInfoJobState{v0041.V0041JobInfoJobStateRUNNING}),
+							StartTime: ptr.To(v0041.V0041Uint64NoValStruct{Number: ptr.To(now.Unix())}),
+							TimeLimit: ptr.To(v0041.V0041Uint32NoValStruct{Number: ptr.To(int32(time.Hour.Seconds()))}),
+							Nodes: func() *string {
+								hostlist, err := hostlist.Compress([]string{*nodeList.Items[0].Name})
+								if err != nil {
+									panic(err)
+								}
+								return ptr.To(hostlist)
+							}(),
+						},
+					},
+					{
+						V0041JobInfo: v0041.V0041JobInfo{
+							JobId:    ptr.To[int32](4),
+							JobState: ptr.To([]v0041.V0041JobInfoJobState{v0041.V0041JobInfoJobStateCOMPLETED}),
+							Nodes: func() *string {
+								hostlist, err := hostlist.Compress([]string{*nodeList.Items[0].Name, *nodeList.Items[1].Name})
+								if err != nil {
+									panic(err)
+								}
+								return ptr.To(hostlist)
+							}(),
+						},
+					},
+					{
+						V0041JobInfo: v0041.V0041JobInfo{
+							JobId:    ptr.To[int32](5),
+							JobState: ptr.To([]v0041.V0041JobInfoJobState{v0041.V0041JobInfoJobStateCOMPLETED}),
+							Nodes: func() *string {
+								hostlist, err := hostlist.Compress([]string{*nodeList.Items[1].Name})
+								if err != nil {
+									panic(err)
+								}
+								return ptr.To(hostlist)
+							}(),
+						},
+					},
+				},
+			}
+			sclient = fake.NewClientBuilder().WithLists(nodeList, jobList).Build()
+			clusters := newSlurmClusters(clusterName, sclient)
+			slurmcontrol = NewSlurmControl(clusters)
+
+			By("Getting TimeStore")
+			ts, err := slurmcontrol.GetNodeDeadlines(ctx, nodeset, pods)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Check TimeStore for Slurm Nodes")
+			for _, node := range nodeList.Items {
+				Expect(ts.Peek(*node.Name).After(now)).To(BeTrue())
+			}
 		})
 	})
 })

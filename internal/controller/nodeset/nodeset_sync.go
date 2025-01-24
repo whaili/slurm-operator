@@ -242,8 +242,26 @@ func (r *NodeSetReconciler) syncSlurm(
 	nodeset *slinkyv1alpha1.NodeSet,
 	pods []*corev1.Pod,
 ) error {
+	nodeDeadlines, err := r.slurmControl.GetNodeDeadlines(ctx, nodeset, pods)
+	if err != nil {
+		return err
+	}
+
 	syncSlurmFn := func(i int) error {
 		pod := pods[i]
+		slurmNodeName := nodesetutils.GetNodeName(pod)
+		deadline := nodeDeadlines.Peek(slurmNodeName)
+
+		toUpdate := pod.DeepCopy()
+		if deadline.IsZero() {
+			delete(toUpdate.Annotations, annotations.PodDeadline)
+		} else {
+			toUpdate.Annotations[annotations.PodDeadline] = deadline.Format(time.RFC3339)
+		}
+		if err := r.Update(ctx, toUpdate); err != nil {
+			return err
+		}
+
 		if utils.IsPodCordon(pod) {
 			reason := fmt.Sprintf("Pod (%s) is cordoned", klog.KObj(pod))
 			if err := r.slurmControl.MakeNodeDrain(ctx, nodeset, pod, reason); err != nil {
