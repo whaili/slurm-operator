@@ -36,6 +36,7 @@ test:
     - go install github.com/norwoodj/helm-docs/cmd/helm-docs@latest
     - go install golang.org/x/vuln/cmd/govulncheck@latest
     - pre-commit run --verbose --all-files --show-diff-on-failure
+  coverage: /total:\s+\(statements\)\s+\d+.\d+%/
   artifacts:
     expire_in: 7 days
     paths:
