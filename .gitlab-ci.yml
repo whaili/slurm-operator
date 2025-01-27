@@ -35,9 +35,7 @@ test:
     - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
     - go install github.com/norwoodj/helm-docs/cmd/helm-docs@latest
     - go install golang.org/x/vuln/cmd/govulncheck@latest
-    - pre-commit run --all-files --show-diff-on-failure
-    - make codecov
-    - make audit
+    - pre-commit run --verbose --all-files --show-diff-on-failure
   artifacts:
     expire_in: 7 days
     paths:

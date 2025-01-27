@@ -279,16 +279,14 @@ test: envtest ## Run tests.
 	rm -f cover.out cover.html
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" \
 	go test `go list ./... | grep -v "/api"` -v -coverprofile cover.out
+	go tool cover -func cover.out
 	go tool cover -html cover.out -o cover.html
-
-codecov: test ## Compare code coverage for being over 80%
 	@percentage=$$(go tool cover -func=cover.out | grep ^total | awk '{print $$3}' | tr -d '%'); \
-	if [ $$(echo "$$percentage < $(CODECOV_PERCENT)" | bc -l) -eq 1 ]; then \
-		echo "The total percentage ($$percentage%) is less than $(CODECOV_PERCENT)%.";  \
-		exit 1; \
-	else \
-		echo "The total percentage ($$percentage%) is greater than or equal to $(CODECOV_PERCENT)%."; \
-	fi
+		if (( $$(echo "$$percentage < $(CODECOV_PERCENT)" | bc -l) )); then \
+			echo "----------"; \
+			echo "Total test coverage ($${percentage}%) is less than the coverage threshold ($(CODECOV_PERCENT)%)."; \
+			exit 1; \
+		fi
 
 .PHONY: vuln-scan
 vuln-scan: ## Run vulnerability scanning tool
