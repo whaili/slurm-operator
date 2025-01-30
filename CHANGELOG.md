@@ -8,6 +8,13 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- Fixed HTTP/2 enabled by default. [CVE-2023-44487] [CVE-2023-39325]
+
 ### Changed
 
 ### Removed
+
+<!-- Links -->
+
+[CVE-2023-44487]: https://github.com/advisories/GHSA-qppj-fm5r-hxr3
+[CVE-2023-39325]: https://github.com/advisories/GHSA-4374-p667-p6c8
