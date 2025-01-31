@@ -21,14 +21,6 @@ var (
 	NodeSetAPIVersion = GroupVersion.String()
 )
 
-const (
-	// LabelNodeSetPodName indicates the pod name.
-	LabelNodeSetPodName = "nodeset.slinky.slurm.net/pod-name"
-
-	// LabelNodeSetPodIndex indicates the pod's ordinal.
-	LabelNodeSetPodIndex = "nodeset.slinky.slurm.net/pod-index"
-)
-
 // NodeSetSpec defines the desired state of NodeSet
 type NodeSetSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster

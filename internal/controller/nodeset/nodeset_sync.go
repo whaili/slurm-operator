@@ -26,7 +26,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
-	"github.com/SlinkyProject/slurm-operator/internal/annotations"
 	nodesetutils "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/historycontrol"
@@ -254,9 +253,9 @@ func (r *NodeSetReconciler) syncSlurm(
 
 		toUpdate := pod.DeepCopy()
 		if deadline.IsZero() {
-			delete(toUpdate.Annotations, annotations.PodDeadline)
+			delete(toUpdate.Annotations, slinkyv1alpha1.AnnotationPodDeadline)
 		} else {
-			toUpdate.Annotations[annotations.PodDeadline] = deadline.Format(time.RFC3339)
+			toUpdate.Annotations[slinkyv1alpha1.AnnotationPodDeadline] = deadline.Format(time.RFC3339)
 		}
 		if err := r.Update(ctx, toUpdate); err != nil {
 			return err
@@ -613,7 +612,7 @@ func (r *NodeSetReconciler) makePodCordon(
 	if pod.Annotations == nil {
 		pod.Annotations = make(map[string]string)
 	}
-	pod.Annotations[annotations.PodCordon] = "true"
+	pod.Annotations[slinkyv1alpha1.AnnotationPodCordon] = "true"
 	if err := r.Update(ctx, pod); err != nil {
 		return err
 	}
@@ -648,7 +647,7 @@ func (r *NodeSetReconciler) makePodUncordon(ctx context.Context, pod *corev1.Pod
 	}
 
 	logger.Info("Uncordon Pod", "Pod", klog.KObj(pod))
-	delete(pod.Annotations, annotations.PodCordon)
+	delete(pod.Annotations, slinkyv1alpha1.AnnotationPodCordon)
 	if err := r.Update(ctx, pod); err != nil {
 		return err
 	}

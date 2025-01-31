@@ -10,6 +10,7 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
@@ -35,10 +36,8 @@ import (
 	sinterceptor "github.com/SlinkyProject/slurm-client/pkg/client/interceptor"
 	slurmobject "github.com/SlinkyProject/slurm-client/pkg/object"
 	slurmtypes "github.com/SlinkyProject/slurm-client/pkg/types"
-	"github.com/google/go-cmp/cmp"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
-	"github.com/SlinkyProject/slurm-operator/internal/annotations"
 	"github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/podcontrol"
 	"github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/slurmcontrol"
 	nodesetutils "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/utils"
@@ -1048,7 +1047,7 @@ func TestNodeSetReconciler_makePodCordon(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "pod-1",
 			Annotations: map[string]string{
-				annotations.PodCordon: "true",
+				slinkyv1alpha1.AnnotationPodCordon: "true",
 			},
 		},
 	}
@@ -1127,7 +1126,7 @@ func TestNodeSetReconciler_makePodUncordonAndUndrain(t *testing.T) {
 	const clusterName = "slurm"
 	nodeset := newNodeSet("foo", clusterName, 2)
 	pod := nodesetutils.NewNodeSetPod(nodeset, 0, "")
-	pod.Annotations[annotations.PodCordon] = "true"
+	pod.Annotations[slinkyv1alpha1.AnnotationPodCordon] = "true"
 	type fields struct {
 		Client        client.Client
 		SlurmClusters *resources.Clusters
@@ -1284,7 +1283,7 @@ func TestNodeSetReconciler_makePodUncordon(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "pod-0",
 			Annotations: map[string]string{
-				annotations.PodCordon: "true",
+				slinkyv1alpha1.AnnotationPodCordon: "true",
 			},
 		},
 	}

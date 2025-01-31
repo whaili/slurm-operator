@@ -12,7 +12,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	podutil "k8s.io/kubernetes/pkg/api/v1/pod"
 
-	"github.com/SlinkyProject/slurm-operator/internal/annotations"
+	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/utils"
 )
 
@@ -51,22 +51,22 @@ func (o ActivePods) Less(i, j int) bool {
 	}
 
 	// Step: lower pod-deletion-cost < higher pod-deletion-cost
-	podDeletionCost1, _ := utils.GetNumberFromAnnotations(pod1.Annotations, annotations.PodDeletionCost)
-	podDeletionCost2, _ := utils.GetNumberFromAnnotations(pod2.Annotations, annotations.PodDeletionCost)
+	podDeletionCost1, _ := utils.GetNumberFromAnnotations(pod1.Annotations, slinkyv1alpha1.AnnotationPodDeletionCost)
+	podDeletionCost2, _ := utils.GetNumberFromAnnotations(pod2.Annotations, slinkyv1alpha1.AnnotationPodDeletionCost)
 	if podDeletionCost1 != podDeletionCost2 {
 		return podDeletionCost1 < podDeletionCost2
 	}
 
 	// Step: ealier deadline timestamp < later deadline timestamp
-	podDeadline1, _ := utils.GetTimeFromAnnotations(pod1.Annotations, annotations.PodDeadline)
-	podDeadline2, _ := utils.GetTimeFromAnnotations(pod2.Annotations, annotations.PodDeadline)
+	podDeadline1, _ := utils.GetTimeFromAnnotations(pod1.Annotations, slinkyv1alpha1.AnnotationPodDeadline)
+	podDeadline2, _ := utils.GetTimeFromAnnotations(pod2.Annotations, slinkyv1alpha1.AnnotationPodDeadline)
 	if !podDeadline1.Equal(podDeadline2) {
 		return podDeadline1.Before(podDeadline2)
 	}
 
 	// Step: cordon < not cordon
-	podCordon1, _ := utils.GetBoolFromAnnotations(pod1.Annotations, annotations.PodCordon)
-	podCordon2, _ := utils.GetBoolFromAnnotations(pod2.Annotations, annotations.PodCordon)
+	podCordon1, _ := utils.GetBoolFromAnnotations(pod1.Annotations, slinkyv1alpha1.AnnotationPodCordon)
+	podCordon2, _ := utils.GetBoolFromAnnotations(pod2.Annotations, slinkyv1alpha1.AnnotationPodCordon)
 	if podCordon1 || podCordon2 {
 		return podCordon1
 	}

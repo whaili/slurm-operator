@@ -14,7 +14,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/SlinkyProject/slurm-operator/internal/annotations"
+	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 )
 
 func TestSortingActivePods(t *testing.T) {
@@ -92,7 +92,7 @@ func TestSortingActivePods(t *testing.T) {
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:        "runningWithCost1",
-						Annotations: map[string]string{annotations.PodDeletionCost: "1"},
+						Annotations: map[string]string{slinkyv1alpha1.AnnotationPodDeletionCost: "1"},
 					},
 					Spec: corev1.PodSpec{NodeName: "foo"},
 					Status: corev1.PodStatus{
@@ -105,7 +105,7 @@ func TestSortingActivePods(t *testing.T) {
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:        "runningWithCost10",
-						Annotations: map[string]string{annotations.PodDeletionCost: "10"},
+						Annotations: map[string]string{slinkyv1alpha1.AnnotationPodDeletionCost: "10"},
 					},
 					Spec: corev1.PodSpec{NodeName: "foo"},
 					Status: corev1.PodStatus{
@@ -118,7 +118,7 @@ func TestSortingActivePods(t *testing.T) {
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:        "runningWithCordon",
-						Annotations: map[string]string{annotations.PodCordon: "True"},
+						Annotations: map[string]string{slinkyv1alpha1.AnnotationPodCordon: "True"},
 					},
 					Spec: corev1.PodSpec{NodeName: "foo"},
 					Status: corev1.PodStatus{

@@ -27,7 +27,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/interceptor"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
-	"github.com/SlinkyProject/slurm-operator/internal/annotations"
 	nodesetutils "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/podcontrol"
 )
@@ -779,7 +778,7 @@ func Test_isClaimOwnerUpToDate(t *testing.T) {
 					pod.GetObjectMeta().SetUID("pod-123")
 					if tc.podCordon {
 						pod.Annotations = map[string]string{
-							annotations.PodCordon: "true",
+							slinkyv1alpha1.AnnotationPodCordon: "true",
 						}
 					}
 					nodeset := slinkyv1alpha1.NodeSet{}
@@ -990,7 +989,7 @@ func TestEdgeCases_isClaimOwnerUpToDate(t *testing.T) {
 		pod.Name = "pod-1"
 		pod.GetObjectMeta().SetUID("pod-123")
 		pod.Annotations = map[string]string{
-			annotations.PodCordon: "true",
+			slinkyv1alpha1.AnnotationPodCordon: "true",
 		}
 		nodeset := slinkyv1alpha1.NodeSet{}
 		nodeset.Name = "nodeset"
@@ -1475,7 +1474,7 @@ func Test_updateClaimOwnerRefForSetAndPod(t *testing.T) {
 			if tc.condemned {
 				pod.Name = "pod-8"
 				pod.Annotations = map[string]string{
-					annotations.PodCordon: "true",
+					slinkyv1alpha1.AnnotationPodCordon: "true",
 				}
 			} else {
 				pod.Name = "pod-1"
