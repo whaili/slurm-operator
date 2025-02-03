@@ -242,14 +242,6 @@ func (r *NodeSetReconciler) syncSlurm(
 	nodeset *slinkyv1alpha1.NodeSet,
 	pods []*corev1.Pod,
 ) error {
-	if err := r.deleteFailedNodes(ctx, nodeset, pods); err != nil {
-		return err
-	}
-
-	if err := r.slurmControl.DeleteDefunctNodes(ctx, nodeset, pods); err != nil {
-		return err
-	}
-
 	syncSlurmFn := func(i int) error {
 		pod := pods[i]
 		if utils.IsPodCordon(pod) {
@@ -266,43 +258,6 @@ func (r *NodeSetReconciler) syncSlurm(
 		return nil
 	}
 	if _, err := utils.SlowStartBatch(len(pods), utils.SlowStartInitialBatchSize, syncSlurmFn); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// deleteFailedNodes will delete healthy NodeSet pods which lack a registered Slurm node.
-func (r *NodeSetReconciler) deleteFailedNodes(
-	ctx context.Context,
-	nodeset *slinkyv1alpha1.NodeSet,
-	pods []*corev1.Pod,
-) error {
-	logger := log.FromContext(ctx)
-
-	nodeNames, err := r.slurmControl.GetNodeNames(ctx, nodeset, pods)
-	if err != nil {
-		return err
-	}
-	nodeNamesSet := set.New(nodeNames...)
-
-	deleteFailedNodesFn := func(i int) error {
-		pod := pods[i]
-		if nodeNamesSet.Has(nodesetutils.GetNodeName(pod)) ||
-			!utils.IsRunningAndAvailable(pod, nodeset.Spec.MinReadySeconds) ||
-			!utils.IsHealthy(pod) {
-			return nil
-		}
-		logger.Info("Deleting failed NodeSet pod",
-			"nodeset", klog.KObj(nodeset), "pod", klog.KObj(pod))
-		if err := r.Delete(ctx, pod); err != nil {
-			if !apierrors.IsNotFound(err) {
-				return err
-			}
-		}
-		return nil
-	}
-	if _, err := utils.SlowStartBatch(len(pods), utils.SlowStartInitialBatchSize, deleteFailedNodesFn); err != nil {
 		return err
 	}
 

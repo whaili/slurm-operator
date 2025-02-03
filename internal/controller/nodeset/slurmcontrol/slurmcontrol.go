@@ -23,13 +23,10 @@ import (
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	nodesetutils "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/resources"
-	"github.com/SlinkyProject/slurm-operator/internal/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/podinfo"
 )
 
 type SlurmControlInterface interface {
-	// GetNodeNames returns a list of registered Slurm nodes.
-	GetNodeNames(ctx context.Context, nodeset *slinkyv1alpha1.NodeSet, pods []*corev1.Pod) ([]string, error)
 	// UpdateNodeWithPodInfo handles updating the Node with its pod info
 	UpdateNodeWithPodInfo(ctx context.Context, nodeset *slinkyv1alpha1.NodeSet, pod *corev1.Pod) error
 	// MakeNodeDrain handles adding the DRAIN state to the slurm node.
@@ -42,8 +39,6 @@ type SlurmControlInterface interface {
 	IsNodeDrained(ctx context.Context, nodeset *slinkyv1alpha1.NodeSet, pod *corev1.Pod) (bool, error)
 	// CalculateNodeStatus returns the current state of the registered slurm nodes.
 	CalculateNodeStatus(ctx context.Context, nodeset *slinkyv1alpha1.NodeSet, pods []*corev1.Pod) (SlurmNodeStatus, error)
-	// DeleteDefunctNodes deletes all nodes from the NodeSet that are defunct.
-	DeleteDefunctNodes(ctx context.Context, nodeset *slinkyv1alpha1.NodeSet, pods []*corev1.Pod) error
 }
 
 // realSlurmControl is the default implementation of SlurmControlInterface.
@@ -372,59 +367,6 @@ func (r *realSlurmControl) CalculateNodeStatus(ctx context.Context, nodeset *sli
 	}
 
 	return status, nil
-}
-
-// DeleteDefunctNodes implements SlurmControlInterface.
-func (r *realSlurmControl) DeleteDefunctNodes(ctx context.Context, nodeset *slinkyv1alpha1.NodeSet, pods []*corev1.Pod) error {
-	logger := log.FromContext(ctx)
-
-	slurmClient := r.lookupClient(nodeset)
-	if slurmClient == nil {
-		logger.V(2).Info("no client for nodeset, cannot do DeleteDefunctNodes()",
-			"nodeset", klog.KObj(nodeset))
-		return nil
-	}
-
-	nodeList := &slurmtypes.V0041NodeList{}
-	if err := slurmClient.List(ctx, nodeList); err != nil {
-		if tolerateError(err) {
-			return nil
-		}
-		return err
-	}
-
-	podNodeNameSet := set.New[string]()
-	for _, pod := range pods {
-		podNodeName := nodesetutils.GetNodeName(pod)
-		podNodeNameSet.Insert(podNodeName)
-	}
-
-	deleteDefunctNodesFn := func(i int) error {
-		node := nodeList.Items[i]
-		nodeName := ptr.Deref(node.Name, "")
-		if !podNodeNameSet.Has(nodeName) {
-			return nil
-		}
-		hasCommunicationFailure := node.GetStateAsSet().HasAll(v0041.V0041NodeStateDOWN, v0041.V0041NodeStateNOTRESPONDING)
-		if !hasCommunicationFailure {
-			return nil
-		}
-		podInfo := &podinfo.PodInfo{}
-		_ = podinfo.ParseIntoPodInfo(node.Comment, podInfo)
-		logger.Info("Deleting Slurm Node without a corresponding Pod",
-			"node", nodeName, "podInfo", podInfo)
-		if err := slurmClient.Delete(ctx, &node); err != nil {
-			if !tolerateError(err) {
-				return err
-			}
-		}
-		return nil
-	}
-	if _, err := utils.SlowStartBatch(len(nodeList.Items), utils.SlowStartInitialBatchSize, deleteDefunctNodesFn); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (r *realSlurmControl) lookupClient(nodeset *slinkyv1alpha1.NodeSet) slurmclient.Client {

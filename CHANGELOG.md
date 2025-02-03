@@ -31,6 +31,7 @@ All notable changes to this project will be documented in this file.
 
 - Removed `NodeSet.Spec.UpdateStrategy.RollingUpdate.Partition` option.
 - Removed `NodeSet.Spec.UpdateStrategy.RollingUpdate.Paused` option.
+- Removed pruning of defunct Slurm nodes and pods.
 
 <!-- Links -->
 
