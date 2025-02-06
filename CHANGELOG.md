@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - Fixed HTTP/2 enabled by default. [CVE-2023-44487] [CVE-2023-39325]
+- Fixed Slurm helm chart using incorrect imagePullPolicy in values file.
 
 ### Changed
 
