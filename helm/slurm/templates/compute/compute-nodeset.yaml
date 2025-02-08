@@ -94,7 +94,6 @@ spec:
             {{- $nodeset.resources | toYaml | nindent 12 }}
           {{- end }}{{- /* if not $nodeset.resources */}}
           args:
-            - -D
             - -Z
             - --conf-server
             - {{ printf "%s:%s" (include "slurm.controller.name" $) (include "slurm.controller.port" $) }}

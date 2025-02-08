@@ -81,5 +81,5 @@ Determine slurm image repository
 Define image tag
 */}}
 {{- define "slurm.image.tag" -}}
-{{- printf "%s-ubuntu-24.04" .Chart.AppVersion -}}
+{{- printf "%s-ubuntu24.04" .Chart.AppVersion -}}
 {{- end }}

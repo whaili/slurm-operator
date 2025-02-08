@@ -21,12 +21,12 @@ Helm Chart for Slurm HPC Workload Manager
 | accounting.external.host | string | `""` |  The external acounting instance (slurmdbd) host. |
 | accounting.external.port | integer | `6819` |  The external acounting instance (slurmdbd) port. |
 | accounting.image.repository | string | `"ghcr.io/slinkyproject/slurmdbd"` |  Set the image repository to use. |
-| accounting.image.tag | string | `"24.05-ubuntu-24.04"` |  Set the image tag to use. |
+| accounting.image.tag | string | `"24.05-ubuntu24.04"` |  Set the image tag to use. |
 | accounting.imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |
 | accounting.replicas | integer | `1` |  Set the number of replicas to deploy. |
 | accounting.resources | object | `{}` |  Set container resource requests and limits for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container |
 | authcred.image.repository | string | `"ghcr.io/slinkyproject/sackd"` |  Set the image repository to use. |
-| authcred.image.tag | string | `"24.05-ubuntu-24.04"` |  Set the image tag to use. |
+| authcred.image.tag | string | `"24.05-ubuntu24.04"` |  Set the image tag to use. |
 | authcred.resources | object | `{}` |  Set container resource requests and limits for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container |
 | compute.image.repository | string | `"ghcr.io/slinkyproject/slurmd"` |  Set the image repository to use. |
 | compute.image.tag | string | The Release appVersion. |  Set the image tag to use. |
@@ -66,7 +66,7 @@ Helm Chart for Slurm HPC Workload Manager
 | controller.affinity | object | `{}` |  Set affinity for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity |
 | controller.enabled | bool | `true` |  Enables the controller node. |
 | controller.image.repository | string | `"ghcr.io/slinkyproject/slurmctld"` |  Set the image repository to use. |
-| controller.image.tag | string | `"24.05-ubuntu-24.04"` |  Set the image tag to use. |
+| controller.image.tag | string | `"24.05-ubuntu24.04"` |  Set the image tag to use. |
 | controller.imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |
 | controller.persistence.accessModes | list | `["ReadWriteOnce"]` |  Create a `PersistentVolumeClaim` with these access modes. |
 | controller.persistence.annotations | object | `{}` |  Create a `PersistentVolumeClaim` with these annotations. |
@@ -106,7 +106,7 @@ Helm Chart for Slurm HPC Workload Manager
 | restapi.affinity | object | `{}` |  Set affinity for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity |
 | restapi.enabled | bool | `true` |  Enables restapi services. |
 | restapi.image.repository | string | `"ghcr.io/slinkyproject/slurmrestd"` |  Set the image repository to use. |
-| restapi.image.tag | string | `"24.05-ubuntu-24.04"` |  Set the image tag to use. |
+| restapi.image.tag | string | `"24.05-ubuntu24.04"` |  Set the image tag to use. |
 | restapi.imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |
 | restapi.priorityClassName | string | `""` |  Set the priority class to use. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass |
 | restapi.replicas | integer | `1` |  Set the number of replicas to deploy. |

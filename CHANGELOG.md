@@ -15,6 +15,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Changed Slurm images to new schema.
+
 ### Removed
 
 <!-- Links -->

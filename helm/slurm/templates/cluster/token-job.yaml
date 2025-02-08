@@ -48,12 +48,6 @@ spec:
           restartPolicy: Always
           securityContext:
             {{- include "slurm.securityContext" . | nindent 12 }}
-          command:
-            - bash
-            - -c
-            - |
-              sackd
-              sleep inf
           volumeMounts:
             {{- include "slurm.volumeMounts" . | nindent 12 }}
             - name: authsocket

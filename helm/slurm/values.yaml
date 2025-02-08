@@ -195,7 +195,7 @@ authcred:
     #
     # -- (string)
     # Set the image tag to use.
-    tag: 24.05-ubuntu-24.04
+    tag: 24.05-ubuntu24.04
   #
   # -- (object)
   # Set container resource requests and limits for Kubernetes Pod scheduling.
@@ -233,7 +233,7 @@ controller:
     #
     # -- (string)
     # Set the image tag to use.
-    tag: 24.05-ubuntu-24.04
+    tag: 24.05-ubuntu24.04
   #
   # -- (string)
   # Set the priority class to use.
@@ -311,7 +311,7 @@ compute:
     # -- (string)
     # Set the image tag to use.
     # @default -- The Release appVersion.
-    tag: 24.05-ubuntu-24.04
+    tag: 24.05-ubuntu24.04
   #
   # -- (list)
   # Slurm NodeSets by object list.
@@ -529,7 +529,7 @@ accounting:
     #
     # -- (string)
     # Set the image tag to use.
-    tag: 24.05-ubuntu-24.04
+    tag: 24.05-ubuntu24.04
   #
   # -- (object)
   # Set affinity for Kubernetes Pod scheduling.
@@ -622,7 +622,7 @@ restapi:
     #
     # -- (string)
     # Set the image tag to use.
-    tag: 24.05-ubuntu-24.04
+    tag: 24.05-ubuntu24.04
   #
   # -- (string)
   # Set the priority class to use.
