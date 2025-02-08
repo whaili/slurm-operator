@@ -62,9 +62,9 @@ data:
     PurgeSuspendAfter=1month
     PurgeTXNAfter=12month
     PurgeUsageAfter=12month
+    {{- with .Values.slurm.slurmdbdConfig }}
     #
     ### EXTRA CONFIG ###
-    {{- with .Values.slurm.slurmdbdConfig -}}
     {{- . | nindent 4 -}}
     {{- end }}{{- /* with .Values.slurm.slurmdbdConfig */}}
 {{- end }}

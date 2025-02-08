@@ -88,11 +88,6 @@ data:
     AccountingStorageType=accounting_storage/none
     {{- end }}{{- /* if .Values.accounting.enabled */}}
     #
-    ### EXTRA CONFIG ###
-    {{- with .Values.slurm.extraSlurmConf -}}
-    {{- . | nindent 4 }}
-    {{- end }}{{- /* with .Values.slurm.extraSlurmConf */}}
-    #
     ### COMPUTE & PARTITION ###
     {{- range $nodeset := .Values.compute.nodesets -}}
     {{- if $nodeset.enabled }}
@@ -120,6 +115,11 @@ data:
     PartitionName={{- $part.name }} Nodes={{- join "," $part.nodesets }} {{ $part.config }}
     {{- end }}{{- /* if and $part.enabled $part.nodesets */}}
     {{- end }}{{- /* range $part := .Values.compute.partitions */}}
+    {{- with .Values.slurm.extraSlurmConf }}
+    #
+    ### EXTRA CONFIG ###
+    {{- . | nindent 4 }}
+    {{- end }}{{- /* with .Values.slurm.extraSlurmConf */}}
   cgroup.conf: |
     CgroupPlugin=disabled
   {{- range $key, $val := .Values.slurm.configFiles -}}
