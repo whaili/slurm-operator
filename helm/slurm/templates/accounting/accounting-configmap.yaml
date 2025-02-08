@@ -44,7 +44,7 @@ data:
     LogFile=/proc/1/fd/1
     LogTimeFormat=iso8601_ms
     #
-    ### ARCHIEVE ###
+    ### ARCHIVE ###
     ArchiveDir=/tmp
     ArchiveEvents=YES
     ArchiveJobs=YES
