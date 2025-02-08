@@ -32,7 +32,10 @@ Kubernetes.
 
 ### Supported Slurm Versions
 
-Slurm 24.05 Data parsers v40, v41
+Data Parser: v41
+
+- 24.05
+- 24.11
 
 ## Quickstart
 
