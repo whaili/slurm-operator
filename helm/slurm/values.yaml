@@ -461,7 +461,7 @@ compute:
         # Ref: https://slurm.schedmd.com/slurm.conf.html#lbAI
         config: >-
           State=UP
-          MaxTime=INFINITE
+          MaxTime=UNLIMITED
       #
       # -- (string)
       # Set Slurm node GRES.
@@ -502,7 +502,7 @@ compute:
       config: >-
         State=UP
         Default=YES
-        MaxTime=INFINITE
+        MaxTime=UNLIMITED
 
 #
 # Slurm accounting (slurmdbd) configurations.
