@@ -26,10 +26,11 @@ data:
     PidFile=/var/run/slurmdbd.pid
     SlurmUser={{- include "slurm.user" . }}
     #
-    ### AUTH ###
+    ### PLUGINS & PARAMETERS ###
     AuthType=auth/slurm
     AuthAltTypes=auth/jwt
     AuthAltParameters=jwt_key={{- include "slurm.jwt.hs256.fullPath" . }}
+    AuthInfo=use_client_ids
     #
     ### STORAGE ###
     StorageType=accounting_storage/mysql
@@ -40,28 +41,7 @@ data:
     StoragePort={{- default .Values.mariadb.primary.service.ports.mysql 3306 }}
     #
     ### LOGGING ###
-    DebugLevel=info
     LogFile=/proc/1/fd/1
-    LogTimeFormat=iso8601_ms
-    #
-    ### ARCHIVE ###
-    ArchiveDir=/tmp
-    ArchiveEvents=YES
-    ArchiveJobs=YES
-    ArchiveResvs=YES
-    ArchiveSteps=YES
-    ArchiveSuspend=YES
-    ArchiveTXN=YES
-    ArchiveUsage=YES
-    #
-    ### PURGE ###
-    PurgeEventAfter=12month
-    PurgeJobAfter=12month
-    PurgeResvAfter=2month
-    PurgeStepAfter=2month
-    PurgeSuspendAfter=1month
-    PurgeTXNAfter=12month
-    PurgeUsageAfter=12month
     {{- with .Values.slurm.slurmdbdConfig }}
     #
     ### EXTRA CONFIG ###

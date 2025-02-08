@@ -30,7 +30,6 @@ data:
     SlurmUser={{- include "slurm.user" . }}
     SlurmdUser=root
     StateSaveLocation={{- include "slurm.controller.statesavePath" . }}
-    ReturnToService=2
     GresTypes=gpu
     MaxNodeCount=1024
     {{- if or .Values.slurm.prologScripts .Values.slurm.epilogScripts }}
@@ -45,30 +44,19 @@ data:
     {{- end }}{{- /* if or .Values.slurm.prologScripts .Values.slurm.epilogScripts */}}
     #
     ### LOGGING ###
-    LogTimeFormat=iso8601_ms
-    SlurmctldDebug=info
     SlurmctldLogFile=/proc/1/fd/1
-    SlurmdDebug=info
-    SlurmdLogFile=/proc/1/fd/1
-    SlurmSchedLogLevel=1
     SlurmSchedLogFile=/proc/1/fd/1
+    SlurmdLogFile=/proc/1/fd/1
     #
     ### PLUGINS & PARAMETERS ###
     AuthType=auth/slurm
     CredType=cred/slurm
+    AuthInfo=use_client_ids
     AuthAltTypes=auth/jwt
     AuthAltParameters=jwt_key={{- include "slurm.jwt.hs256.fullPath" . }}
-    LaunchParameters=enable_nss_slurm,use_interactive_step
-    PrologFlags=Contain
     ProctrackType=proctrack/linuxproc
-    SchedulerType=sched/backfill
-    SelectType=select/cons_tres
-    SelectTypeParameters=CR_Core_Memory
     SlurmctldParameters=enable_configless,enable_stepmgr
-    SwitchType=switch/none
     TaskPlugin=task/affinity
-    TopologyPlugin=topology/default
-    TopologyParam=RoutePart
     #
     ### ACCOUNTING ###
     {{- if .Values.accounting.enabled }}

@@ -76,14 +76,63 @@ slurm:
   # Ref: https://slurm.schedmd.com/slurmdbd.conf.html
   extraSlurmdbdConf: |-
     CommitDelay=1
+    #
+    ### LOGGING ###
+    DebugLevel=info
+    #DebugFlags=
+    LogTimeFormat=iso8601_ms
+    #
+    # PLUGINS & PARAMETERS
+    #CommunicationParameters=
+    HashPlugin=hash/k12
+    #
+    ### ARCHIVE ###
+    ArchiveDir=/dev/null
+    #ArchiveEvents=YES
+    #ArchiveJobs=YES
+    #ArchiveResvs=YES
+    #ArchiveSteps=NO
+    #ArchiveSuspend=NO
+    #ArchiveTXN=NO
+    #ArchiveUsage=NO
+    #
+    ### PURGE ###
+    #PurgeEventAfter=12month
+    #PurgeJobAfter=12month
+    #PurgeResvAfter=2month
+    #PurgeStepAfter=2month
+    #PurgeSuspendAfter=1month
+    #PurgeTXNAfter=12month
+    #PurgeUsageAfter=12month
   #
   # -- (string)
   # Extra slurm configuration lines to append to `slurm.conf`.
   # WARNING: Values can override existing ones.
   # Ref: https://slurm.schedmd.com/slurm.conf.html
   extraSlurmConf: |-
+    MaxNodeCount=1024
+    ReturnToService=2
+    EnforcePartLimits=NO
+    #
+    ### PLUGINS & PARAMETERS ###
+    SchedulerType=sched/backfill
     SchedulerParameters=batch_sched_delay=20,bf_continue,bf_interval=300,bf_min_age_reserve=10800,bf_resolution=600,bf_yield_interval=1000000,partition_job_depth=500,sched_max_job_start=200,sched_min_interval=2000000
-    DefMemPerCPU=1
+    SelectType=select/cons_tres
+    SelectTypeParameters=CR_Core_Memory
+    SlurmctldParameters=enable_configless,enable_stepmgr
+    SlurmdParameters=contain_spank
+    CommunicationParameters=block_null_hash
+    LaunchParameters=enable_nss_slurm,use_interactive_step,ulimit_pam_adopt
+    #ReconfigFlags=KeepPartInfo,KeepPartState
+    PrologFlags=Contain
+    HashPlugin=hash/k12
+    #
+    ### LOGGING ###
+    SlurmctldDebug=info
+    SlurmSchedLogLevel=1
+    SlurmdDebug=info
+    #DebugFlags=
+    LogTimeFormat=iso8601_ms
   #
   # -- (map[string]string)
   # Optional raw Slurm configuration files, as a map.
