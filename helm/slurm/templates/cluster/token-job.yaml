@@ -28,8 +28,8 @@ spec:
       {{- include "slurm.imagePullSecrets" . | nindent 6 }}
       initContainers:
         - name: init
-          image: {{ include "slurm.controller.imageRef" . }}
-          imagePullPolicy: {{ .Values.controller.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
+          image: {{ include "slurm.authcred.imageRef" . }}
+          imagePullPolicy: {{ .Values.authcred.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
           env:
             - name: SLURM_USER
               value: {{ include "slurm.user" . }}
@@ -54,8 +54,8 @@ spec:
               mountPath: /run/slurm
       containers:
         - name: {{ printf "token-%s" (include "slurm.user" .) }}
-          image: {{ include "slurm.controller.imageRef" . }}
-          imagePullPolicy: {{ .Values.controller.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
+          image: {{ include "slurm.authcred.imageRef" . }}
+          imagePullPolicy: {{ .Values.authcred.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
           env:
             - name: SLURM_USER
               value: {{ include "slurm.user" . }}
@@ -76,8 +76,8 @@ spec:
               mountPath: /run/slurm
         {{- if (index .Values "slurm-exporter" "exporter" "enabled") }}
         - name: {{ printf "token-%s" (include "exporter.user" .) }}
-          image: {{ include "slurm.controller.imageRef" . }}
-          imagePullPolicy: {{ .Values.controller.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
+          image: {{ include "slurm.authcred.imageRef" . }}
+          imagePullPolicy: {{ .Values.authcred.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
           env:
             - name: SLURM_USER
               value: {{ include "exporter.user" . }}
