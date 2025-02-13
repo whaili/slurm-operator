@@ -74,27 +74,6 @@ Create the name of the operator service account to use
 {{- end }}
 
 {{/*
-Determine operator image repository
-*/}}
-{{- define "slurm-operator.image.repository" -}}
-{{ .Values.image.repository | default "slinky.slurm.net/slurm-operator" }}
-{{- end }}
-
-{{/*
-Define operator image tag
-*/}}
-{{- define "slurm-operator.image.tag" -}}
-{{ .Values.image.tag | default .Chart.Version }}
-{{- end }}
-
-{{/*
-Determine operator image reference (repo:tag)
-*/}}
-{{- define "slurm-operator.imageRef" -}}
-{{ printf "%s:%s" (include "slurm-operator.image.repository" .) (include "slurm-operator.image.tag" .) | quote }}
-{{- end }}
-
-{{/*
 Common imagePullPolicy
 */}}
 {{- define "slurm-operator.imagePullPolicy" -}}

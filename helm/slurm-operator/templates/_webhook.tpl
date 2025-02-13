@@ -40,3 +40,24 @@ Create the name of the webhook service account to use
 {{- default "default" .Values.webhook.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Determine operator webhook image repository
+*/}}
+{{- define "slurm-operator.webhook.image.repository" -}}
+{{ .Values.webhook.image.repository | default "slinky.slurm.net/slurm-operator-webhook" }}
+{{- end }}
+
+{{/*
+Define operator webhook image tag
+*/}}
+{{- define "slurm-operator.webhook.image.tag" -}}
+{{ .Values.webhook.image.tag | default .Chart.Version }}
+{{- end }}
+
+{{/*
+Determine operator webhook image reference (repo:tag)
+*/}}
+{{- define "slurm-operator.webhook.imageRef" -}}
+{{ printf "%s:%s" (include "slurm-operator.webhook.image.repository" .) (include "slurm-operator.webhook.image.tag" .) | quote }}
+{{- end }}

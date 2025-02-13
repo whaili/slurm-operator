@@ -52,9 +52,6 @@ endif
 # This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
 OPERATOR_SDK_VERSION ?= v1.36.1
 
-# Image URL to use all building/pushing image targets
-IMG ?= slinky.slurm.net/slurm-operator:$(VERSION)
-
 # Set the namespaces that helm tests will run against
 SLURM_NAMESPACE ?= slurm
 SLURM_OPERATOR_NAMESPACE ?= slinky
@@ -107,8 +104,7 @@ all: build ## Build slurm-operator.
 
 .PHONY: build
 build: manifests generate fmt tidy vet ## Build manager binary.
-	go build -o bin/manager cmd/manager/main.go
-	go build -o bin/webhook cmd/webhook/main.go
+	$(foreach dockerfile, $(wildcard ./build/**/Dockerfile), $(MAKE) docker-build IMG="slinky.slurm.net/$(shell basename "$(shell dirname "${dockerfile}")"):$(VERSION)" DOCKERFILE_PATH="${dockerfile}" ;)
 	helm package helm/slurm-operator --destination helm/slurm-operator
 
 .PHONY: clean
@@ -128,8 +124,8 @@ run: manifests generate fmt tidy vet ## Run a controller from your host.
 # (i.e. docker build --platform linux/arm64 ). However, you must enable docker buildKit for it.
 # More info: https://docs.docker.com/develop/develop-images/build_enhancements/
 .PHONY: docker-build
-docker-build: test ## Build docker image with the manager.
-	$(CONTAINER_TOOL) build $(CONTAINER_BUILD_FLAGS) -t ${IMG} .
+docker-build: ## Build docker image with the manager.
+	$(CONTAINER_TOOL) build $(CONTAINER_BUILD_FLAGS) -f ${DOCKERFILE_PATH} -t ${IMG} .
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.

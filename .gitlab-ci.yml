@@ -9,7 +9,8 @@ variables:
   DOCKER_HOST: tcp://docker:2376
   DOCKER_TLS_CERTDIR: /certs
   VERSION: 0.2.0
-  CONTAINER_CI_IMAGE: ${CI_REGISTRY_IMAGE}:${VERSION}
+  CONTAINER_OPERATOR: ${CI_REGISTRY}/slurm-operator:${VERSION}
+  CONTAINER_WEBHOOK: ${CI_REGISTRY}/slurm-operator-webhook:${VERSION}
   CI_JOB_USER: gitlab-ci-token
 
 .docker:
@@ -48,8 +49,13 @@ build:
   extends: .docker
   script:
     - set -euo pipefail
-    - go mod vendor
-    - docker build --pull -t $CONTAINER_CI_IMAGE .
+    - |
+      for dockerfile in $(find ./build -name "Dockerfile" -type f); do
+        kind="$(basename "$(dirname "$dockerfile")")"
+        image="${CI_REGISTRY_IMAGE}/${kind}:${VERSION}"
+        docker build --pull -t $image -f $dockerfile .
+        docker push $image
+      done
     - |
       for chart in $(find ./helm -name "Chart.yaml" -type f -exec dirname {} \;); do
         helm package --dependency-update ${chart};
@@ -68,9 +74,13 @@ push:
   extends: .docker
   script:
     - set -euo pipefail
-    - go mod vendor
-    - docker build --pull -t $CONTAINER_CI_IMAGE .
-    - docker push $CONTAINER_CI_IMAGE
+    - |
+      for dockerfile in $(find ./build -name "Dockerfile" -type f); do
+        kind="$(basename "$(dirname "$dockerfile")")"
+        image="${CI_REGISTRY_IMAGE}/${kind}:${VERSION}"
+        docker build -t $image -f $dockerfile .
+        docker push $image
+      done
     - helm plugin install https://github.com/chartmuseum/helm-push
     - helm repo add --username ${CI_JOB_USER} --password ${CI_JOB_TOKEN} ${CI_PROJECT_NAME} ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/helm/stable
     - helm repo update

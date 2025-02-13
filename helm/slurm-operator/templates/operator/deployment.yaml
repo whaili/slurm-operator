@@ -30,7 +30,7 @@ spec:
       {{- include "slurm-operator.imagePullSecrets" . | nindent 6 }}
       containers:
         - name: slurm-operator
-          image: {{ include "slurm-operator.imageRef" . }}
+          image: {{ include "slurm-operator.operator.imageRef" . }}
           imagePullPolicy: {{ include "slurm-operator.imagePullPolicy" . }}
           args:
             - --cluster-workers

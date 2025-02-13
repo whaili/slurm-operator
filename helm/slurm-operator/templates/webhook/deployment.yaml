@@ -32,10 +32,8 @@ spec:
       {{- include "slurm-operator.imagePullSecrets" . | nindent 6 }}
       containers:
         - name: webhook
-          image: {{ include "slurm-operator.imageRef" . }}
+          image: {{ include "slurm-operator.webhook.imageRef" . }}
           imagePullPolicy: {{ include "slurm-operator.imagePullPolicy" . }}
-          command:
-            - /webhook
           args:
             - --zap-log-level
             - {{ default "info" .Values.webhook.logLevel | quote }}

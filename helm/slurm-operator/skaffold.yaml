@@ -11,6 +11,12 @@ profiles:
       artifacts:
         - image: slinky.slurm.net/slurm-operator
           context: ../../
+          docker:
+            dockerfile: ./build/slurm-operator/Dockerfile
+        - image: slinky.slurm.net/slurm-operator-webhook
+          context: ../../
+          docker:
+            dockerfile: ./build/slurm-operator-webhook/Dockerfile
     deploy:
       helm:
         releases:
@@ -19,8 +25,10 @@ profiles:
             valuesFiles:
               - ./values-dev.yaml
             setValueTemplates:
-              image.repository: '{{.IMAGE_REPO_slinky_slurm_net_slurm_operator}}'
-              image.tag: '{{.IMAGE_TAG_slinky_slurm_net_slurm_operator}}'
+              operator.image.repository: '{{.IMAGE_REPO_slinky_slurm_net_slurm_operator}}'
+              operator.image.tag: '{{.IMAGE_TAG_slinky_slurm_net_slurm_operator}}'
+              webhook.image.repository: '{{.IMAGE_REPO_slinky_slurm_net_slurm_operator_webhook}}'
+              webhook.image.tag: '{{.IMAGE_TAG_slinky_slurm_net_slurm_operator_webhook}}'
             namespace: slinky
             createNamespace: true
 deploy:

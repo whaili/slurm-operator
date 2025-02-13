@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 - Changed Slurm images to new schema.
 - Changed Slurm image version to 24.11.
 - Changed token job to only use authcred container images.
+- Changed slurm-operator-webhook to use its own image.
 
 ### Removed
 
