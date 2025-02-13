@@ -1,3 +1,8 @@
+# syntax=docker/dockerfile:1
+# SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
+# SPDX-License-Identifier: Apache-2.0
+
+################################################################################
 # Build the manager binary
 FROM golang:1 AS builder
 ARG TARGETOS
