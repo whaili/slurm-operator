@@ -74,7 +74,7 @@ imagePullSecrets:
 Determine slurm image repository
 */}}
 {{- define "slurm.image.repository" -}}
-{{- print "registry.gitlab.com/schedmd/slinky-dev/containers" -}}
+{{- print "ghcr.io/slinkyproject" -}}
 {{- end }}
 
 {{/*
