@@ -257,7 +257,7 @@ func (r *NodeSetReconciler) syncSlurm(
 		} else {
 			toUpdate.Annotations[slinkyv1alpha1.AnnotationPodDeadline] = deadline.Format(time.RFC3339)
 		}
-		if err := r.Update(ctx, toUpdate); err != nil {
+		if err := r.Patch(ctx, toUpdate, client.StrategicMergeFrom(pod)); err != nil {
 			return err
 		}
 
@@ -608,12 +608,13 @@ func (r *NodeSetReconciler) makePodCordon(
 		return nil
 	}
 
-	logger.Info("Cordon Pod, pending deletion", "Pod", klog.KObj(pod))
-	if pod.Annotations == nil {
-		pod.Annotations = make(map[string]string)
+	toUpdate := pod.DeepCopy()
+	logger.Info("Cordon Pod, pending deletion", "Pod", klog.KObj(toUpdate))
+	if toUpdate.Annotations == nil {
+		toUpdate.Annotations = make(map[string]string)
 	}
-	pod.Annotations[slinkyv1alpha1.AnnotationPodCordon] = "true"
-	if err := r.Update(ctx, pod); err != nil {
+	toUpdate.Annotations[slinkyv1alpha1.AnnotationPodCordon] = "true"
+	if err := r.Patch(ctx, toUpdate, client.StrategicMergeFrom(pod)); err != nil {
 		return err
 	}
 
@@ -646,9 +647,10 @@ func (r *NodeSetReconciler) makePodUncordon(ctx context.Context, pod *corev1.Pod
 		return nil
 	}
 
-	logger.Info("Uncordon Pod", "Pod", klog.KObj(pod))
-	delete(pod.Annotations, slinkyv1alpha1.AnnotationPodCordon)
-	if err := r.Update(ctx, pod); err != nil {
+	toUpdate := pod.DeepCopy()
+	logger.Info("Uncordon Pod", "Pod", klog.KObj(toUpdate))
+	delete(toUpdate.Annotations, slinkyv1alpha1.AnnotationPodCordon)
+	if err := r.Patch(ctx, toUpdate, client.StrategicMergeFrom(pod)); err != nil {
 		return err
 	}
 

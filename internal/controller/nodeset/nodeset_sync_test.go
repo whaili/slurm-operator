@@ -944,6 +944,9 @@ func TestNodeSetReconciler_makePodCordonAndDrain(t *testing.T) {
 						Update: func(ctx context.Context, client client.WithWatch, obj client.Object, opts ...client.UpdateOption) error {
 							return http.ErrAbortHandler
 						},
+						Patch: func(ctx context.Context, client client.WithWatch, obj client.Object, patch client.Patch, opts ...client.PatchOption) error {
+							return http.ErrAbortHandler
+						},
 					}).
 					WithRuntimeObjects(nodeset.DeepCopy(), pod.DeepCopy()).
 					Build(),
@@ -1177,6 +1180,9 @@ func TestNodeSetReconciler_makePodUncordonAndUndrain(t *testing.T) {
 				Client: fake.NewClientBuilder().
 					WithInterceptorFuncs(interceptor.Funcs{
 						Update: func(ctx context.Context, client client.WithWatch, obj client.Object, opts ...client.UpdateOption) error {
+							return http.ErrAbortHandler
+						},
+						Patch: func(ctx context.Context, client client.WithWatch, obj client.Object, patch client.Patch, opts ...client.PatchOption) error {
 							return http.ErrAbortHandler
 						},
 					}).
