@@ -27,6 +27,7 @@ All notable changes to this project will be documented in this file.
 - Changed NodeSet controller to scale pods similar to StatefulSet, rather than
   DaemonSet.
 - Changed `NodeSet.Status` fields.
+- Changed NodeSet controller specific annotations prefix.
 
 ### Removed
 

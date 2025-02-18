@@ -13,19 +13,19 @@ const (
 // Well Known Annotations
 const (
 	// AnnotationPodCordon indicates NodeSet Pods that should be DRAIN[ING|ED] in Slurm.
-	AnnotationPodCordon = SlinkyPrefix + "pod-cordon"
+	AnnotationPodCordon = NodeSetPrefix + "pod-cordon"
 
 	// LabelPodDeletionCost can be used to set to an int32 that represent the cost of deleting a pod compared to other
 	// pods belonging to the same ReplicaSet. Pods with lower deletion cost are preferred to be deleted before pods
 	// with higher deletion cost.
 	// NOTE: this is honored on a best-effort basis, and does not offer guarantees on pod deletion order.
 	// The implicit deletion cost for pods that don't set the annotation is 0, negative values are permitted.
-	AnnotationPodDeletionCost = SlinkyPrefix + "pod-deletion-cost"
+	AnnotationPodDeletionCost = NodeSetPrefix + "pod-deletion-cost"
 
 	// AnnotationPodDeadline stores a time.RFC3339 timestamp, indicating when the Slurm node should complete its running
 	// workload by. Pods an earlier daedline are preferred to be deleted before pods with a later deadline.
 	// NOTE: this is honored on a best-effort basis, and does not offer guarantees on pod deletion order.
-	AnnotationPodDeadline = SlinkyPrefix + "pod-deadline"
+	AnnotationPodDeadline = NodeSetPrefix + "pod-deadline"
 )
 
 // Well Known Labels
