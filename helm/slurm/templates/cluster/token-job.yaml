@@ -48,6 +48,9 @@ spec:
           restartPolicy: Always
           securityContext:
             {{- include "slurm.securityContext" . | nindent 12 }}
+          args:
+            - --conf-server
+            - {{ printf "%s:%s" (include "slurm.controller.name" .) (include "slurm.controller.port" .) }}
           volumeMounts:
             {{- include "slurm.volumeMounts" . | nindent 12 }}
             - name: authsocket
@@ -103,12 +106,6 @@ spec:
           projected:
             defaultMode: 0600
             sources:
-              - configMap:
-                  name: {{ include "slurm.configMapName" . }}
-                  items:
-                    - key: slurm.conf
-                      path: slurm.conf
-                      mode: 0644
               - secret:
                   name: {{ include "slurm.auth.secretName" $ }}
 {{- end }}{{- /* if .Values.controller.enabled */}}
