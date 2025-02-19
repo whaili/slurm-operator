@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 - Fixed Slurm helm chart interaction with OwnerReferencesPermissionEnforcement
   admission controller plugin being enabled.
 - Fixed unprivileged slurmrestd pod from using unshare functionality.
+- Fixed Slurm helm chart projected volume overlapping paths warning.
 
 ### Changed
 

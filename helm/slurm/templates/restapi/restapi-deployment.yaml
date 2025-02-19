@@ -96,10 +96,6 @@ spec:
             sources:
               - configMap:
                   name: {{ include "slurm.configMapName" . }}
-                  items:
-                    - key: slurm.conf
-                      path: slurm.conf
-                      mode: 0644
               - secret:
                   name: {{ include "slurm.auth.secretName" . }}
 {{- end }}{{- /* if .Values.restapi.enabled */}}
