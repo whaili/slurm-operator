@@ -50,10 +50,11 @@ This is a basic architecture. A more in depth description can be found
 
 ## Known Issues
 
-- CGroups is currently disabled, due to difficulties getting core information
-  into the pods.
-- Updates may be slow, due to needing to wait for sequencing before the
-  slurm-controller can be deployed.
+- `slurmd` fails to dynamically register with its pod's resource limits.
+  - `slurmd` currently registers and assets the host machine's resources instead
+    of its pod resource limits.
+- `slurmd` fails to start with cgroups enforcement enabled within a pod.
+  - `cgroup.conf` is forced to `CgroupPlugin=disabled` to avoid init failure.
 
 ## License
 
