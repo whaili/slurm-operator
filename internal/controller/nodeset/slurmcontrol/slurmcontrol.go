@@ -6,6 +6,7 @@ package slurmcontrol
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -190,10 +191,15 @@ func (r *realSlurmControl) MakeNodeUndrain(ctx context.Context, nodeset *slinkyv
 		return err
 	}
 
+	nodeReason := ptr.Deref(slurmNode.Reason, "")
 	if !slurmNode.GetStateAsSet().Has(v0041.V0041NodeStateDRAIN) ||
 		slurmNode.GetStateAsSet().Has(v0041.V0041NodeStateUNDRAIN) {
 		logger.V(1).Info("Node is already undrained, skipping undrain request",
 			"node", slurmNode.GetKey(), "nodeState", slurmNode.State)
+		return nil
+	} else if nodeReason != "" && !strings.Contains(nodeReason, nodeReasonPrefix) {
+		logger.Info("Node was drained but not by slurm-operator, skipping undrain request",
+			"node", slurmNode.GetKey(), "nodeReason", nodeReason)
 		return nil
 	}
 
