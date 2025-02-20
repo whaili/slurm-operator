@@ -48,7 +48,7 @@ spec:
         app.kubernetes.io/instance: {{ $name }}
         {{- include "slurm.compute.labels" $ | nindent 8 }}
     spec:
-      hostname: {{ $name }}
+      hostname: "{{ $name }}-"
       priorityClassName: {{ $nodeset.priorityClassName | default $.Values.priorityClassName }}
       automountServiceAccountToken: false
       dnsConfig:

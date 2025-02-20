@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - Added `NodeSet.PersistentVolumeClaimRetentionPolicy.WhenScaled`
 - Added out-of-order scale-in for NodeSet pods.
 - Added NodeSet pod scale-in to consider running Slurm jobs.
+- Added support for Slurm node names that do not have to match their pod name.
 
 ### Fixed
 

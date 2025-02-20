@@ -43,7 +43,11 @@ func NewNodeSetPod(nodeset *slinkyv1alpha1.NodeSet, ordinal int, revisionHash st
 func initIdentity(nodeset *slinkyv1alpha1.NodeSet, pod *corev1.Pod) {
 	UpdateIdentity(nodeset, pod)
 	// Set these immutable fields only on initial Pod creation, not updates.
-	pod.Spec.Hostname = pod.Name
+	if pod.Spec.Hostname != "" {
+		pod.Spec.Hostname = fmt.Sprintf("%s%d", pod.Spec.Hostname, GetOrdinal(pod))
+	} else {
+		pod.Spec.Hostname = pod.Name
+	}
 	pod.Spec.Subdomain = nodeset.Spec.ServiceName
 }
 
