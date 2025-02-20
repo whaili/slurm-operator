@@ -27,7 +27,6 @@ spec:
   clusterName: {{ include "slurm.cluster.name" $ }}
   replicas: {{ $nodeset.replicas }}
   serviceName: {{ include "slurm.compute.name" $ }}
-  minReadySeconds: {{ $nodeset.minReadySeconds | default 0 }}
   {{- if $nodeset.updateStrategy }}
   updateStrategy:
     {{- $nodeset.updateStrategy | toYaml | nindent 4 }}

@@ -333,11 +333,6 @@ compute:
       # Set the number of replicas to deploy.
       replicas: 1
       #
-      # -- (int)
-      # The minimum number of seconds for which a newly created NodeSet Pod should be ready
-      # without any of its container crashing, for it to be considered available.
-      minReadySeconds: 0
-      #
       # -- (string)
       # Set the image pull policy.
       imagePullPolicy: IfNotPresent
