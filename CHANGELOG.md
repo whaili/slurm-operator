@@ -29,6 +29,7 @@ All notable changes to this project will be documented in this file.
   DaemonSet.
 - Changed `NodeSet.Status` fields.
 - Changed NodeSet controller specific annotations prefix.
+- Changed NodeSet pod hostname to `compute.nodeset[].name`.
 
 ### Removed
 
