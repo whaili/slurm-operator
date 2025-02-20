@@ -67,6 +67,7 @@ spec:
         {{- if .Values.accounting.enabled }}
         - name: wait
           image: {{ include "slurm.controller.imageRef" . }}
+          imagePullPolicy: {{ .Values.controller.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
           securityContext:
             capabilities:
               add:
