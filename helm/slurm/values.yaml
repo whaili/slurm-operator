@@ -186,6 +186,10 @@ slurm:
 # Slurm authcred (sackd) configurations.
 authcred:
   #
+  # -- (string)
+  # Set the image pull policy.
+  imagePullPolicy: IfNotPresent
+  #
   # Set the image to use.
   image:
     #

@@ -27,6 +27,7 @@ Helm Chart for Slurm HPC Workload Manager
 | accounting.resources | object | `{}` |  Set container resource requests and limits for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container |
 | authcred.image.repository | string | `"ghcr.io/slinkyproject/sackd"` |  Set the image repository to use. |
 | authcred.image.tag | string | `"24.11-ubuntu24.04"` |  Set the image tag to use. |
+| authcred.imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |
 | authcred.resources | object | `{}` |  Set container resource requests and limits for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container |
 | compute.image.repository | string | `"ghcr.io/slinkyproject/slurmd"` |  Set the image repository to use. |
 | compute.image.tag | string | The Release appVersion. |  Set the image tag to use. |
