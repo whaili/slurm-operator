@@ -3,9 +3,6 @@ SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
 SPDX-License-Identifier: Apache-2.0
 */}}
 
-{{- $repository := default (include "slurm.image.repository" $) }}
-{{- $tag :=  default (include "slurm.image.tag" $) }}
-{{- $imageRef := printf "%s:%s" $repository $tag }}
 {{- $name := printf "slurm-test" }}
 apiVersion: v1
 kind: Pod
@@ -27,7 +24,12 @@ spec:
   restartPolicy: Never
   initContainers:
     - name: init
-      image: {{ $imageRef }}
+      image: {{ include "slurm.authcred.imageRef" . }}
+      imagePullPolicy: {{ .Values.authcred.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
+      {{- if .Values.authcred.resources }}
+      resources:
+        {{- .Values.authcred.resources | toYaml | nindent 12 }}
+      {{- end }}{{- /* if .Values.authcred.resources */}}
       env:
         - name: SLURM_USER
           value: {{ include "slurm.user" . }}
@@ -57,7 +59,12 @@ spec:
           {{- end }}{{- /* range .Files.Lines "scripts/wait-ping.sh" */}}
     {{- end }}{{- /* if and .Values.accounting.enabled (not .Values.accounting.external.enabled) */}}
     - name: waitctl
-      image: {{ $imageRef }}
+      image: {{ include "slurm.authcred.imageRef" . }}
+      imagePullPolicy: {{ .Values.authcred.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
+      {{- if .Values.authcred.resources }}
+      resources:
+        {{- .Values.authcred.resources | toYaml | nindent 12 }}
+      {{- end }}{{- /* if .Values.authcred.resources */}}
       securityContext:
         {{- include "slurm.securityContext" $ | nindent 8 }}
       env:
@@ -72,7 +79,12 @@ spec:
           {{- end }}{{- /* range .Files.Lines "scripts/wait-ping.sh" */}}
   containers:
     - name: controllertest
-      image: {{ $imageRef }}
+      image: {{ include "slurm.authcred.imageRef" . }}
+      imagePullPolicy: {{ .Values.authcred.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
+      {{- if .Values.authcred.resources }}
+      resources:
+        {{- .Values.authcred.resources | toYaml | nindent 12 }}
+      {{- end }}{{- /* if .Values.authcred.resources */}}
       securityContext:
         {{- include "slurm.securityContext" $ | nindent 8 }}
       command:

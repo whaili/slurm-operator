@@ -30,6 +30,10 @@ spec:
         - name: init
           image: {{ include "slurm.authcred.imageRef" . }}
           imagePullPolicy: {{ .Values.authcred.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
+          {{- if .Values.authcred.resources }}
+          resources:
+            {{- .Values.authcred.resources | toYaml | nindent 12 }}
+          {{- end }}{{- /* if .Values.authcred.resources */}}
           env:
             - name: SLURM_USER
               value: {{ include "slurm.user" . }}
@@ -59,6 +63,10 @@ spec:
         - name: {{ printf "token-%s" (include "slurm.user" .) }}
           image: {{ include "slurm.authcred.imageRef" . }}
           imagePullPolicy: {{ .Values.authcred.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
+          {{- if .Values.authcred.resources }}
+          resources:
+            {{- .Values.authcred.resources | toYaml | nindent 12 }}
+          {{- end }}{{- /* if .Values.authcred.resources */}}
           env:
             - name: SLURM_USER
               value: {{ include "slurm.user" . }}
@@ -81,6 +89,10 @@ spec:
         - name: {{ printf "token-%s" (include "exporter.user" .) }}
           image: {{ include "slurm.authcred.imageRef" . }}
           imagePullPolicy: {{ .Values.authcred.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
+          {{- if .Values.authcred.resources }}
+          resources:
+            {{- .Values.authcred.resources | toYaml | nindent 12 }}
+          {{- end }}{{- /* if .Values.authcred.resources */}}
           env:
             - name: SLURM_USER
               value: {{ include "exporter.user" . }}

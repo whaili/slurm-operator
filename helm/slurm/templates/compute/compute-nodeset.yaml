@@ -65,6 +65,10 @@ spec:
         - name: init
           image: {{ $imageRef }}
           imagePullPolicy: {{ $nodeset.imagePullPolicy | default (include "slurm.imagePullPolicy" $) }}
+          {{- if $.Values.authcred.resources }}
+          resources:
+            {{- $.Values.authcred.resources | toYaml | nindent 12 }}
+          {{- end }}{{- /* if .Values.authcred.resources */}}
           env:
             - name: SLURM_USER
               value: {{ include "slurm.user" $ }}

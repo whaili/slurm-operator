@@ -48,8 +48,12 @@ spec:
       {{- end }}{{- /* if .Values.accounting.enabled */}}
       initContainers:
         - name: init
-          image: {{ include "slurm.controller.imageRef" . }}
-          imagePullPolicy: {{ .Values.controller.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
+          image: {{ include "slurm.authcred.imageRef" . }}
+          imagePullPolicy: {{ .Values.authcred.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
+          {{- if .Values.authcred.resources }}
+          resources:
+            {{- .Values.authcred.resources | toYaml | nindent 12 }}
+          {{- end }}{{- /* if .Values.authcred.resources */}}
           env:
             - name: SLURM_USER
               value: {{ include "slurm.user" . }}
@@ -66,8 +70,12 @@ spec:
               mountPath: {{ include "slurm.controller.statesavePath" . }}
         {{- if .Values.accounting.enabled }}
         - name: wait
-          image: {{ include "slurm.controller.imageRef" . }}
-          imagePullPolicy: {{ .Values.controller.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
+          image: {{ include "slurm.authcred.imageRef" . }}
+          imagePullPolicy: {{ .Values.authcred.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
+          {{- if .Values.authcred.resources }}
+          resources:
+            {{- .Values.authcred.resources | toYaml | nindent 12 }}
+          {{- end }}{{- /* if .Values.authcred.resources */}}
           securityContext:
             capabilities:
               add:
@@ -116,8 +124,12 @@ spec:
             - name: {{ include "slurm.controller.statesave.name" . }}
               mountPath: {{ include "slurm.controller.statesavePath" . }}
         - name: reconfigure
-          image: {{ include "slurm.controller.imageRef" . }}
-          imagePullPolicy: {{ .Values.controller.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
+          image: {{ include "slurm.authcred.imageRef" . }}
+          imagePullPolicy: {{ .Values.authcred.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
+          {{- if .Values.authcred.resources }}
+          resources:
+            {{- .Values.authcred.resources | toYaml | nindent 12 }}
+          {{- end }}{{- /* if .Values.authcred.resources */}}
           env:
             - name: SLURM_USER
               value: {{ include "slurm.user" . }}

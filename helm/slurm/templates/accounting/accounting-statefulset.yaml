@@ -49,8 +49,12 @@ spec:
       {{- include "slurm.imagePullSecrets" $ | nindent 6 }}
       initContainers:
         - name: init
-          image: {{ include "slurm.accounting.imageRef" . }}
-          imagePullPolicy: {{ .Values.accounting.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
+          image: {{ include "slurm.authcred.imageRef" . }}
+          imagePullPolicy: {{ .Values.authcred.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
+          {{- if .Values.authcred.resources }}
+          resources:
+            {{- .Values.authcred.resources | toYaml | nindent 12 }}
+          {{- end }}{{- /* if .Values.authcred.resources */}}
           env:
             - name: SLURM_USER
               value: {{ include "slurm.user" . }}
