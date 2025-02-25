@@ -50,11 +50,7 @@ spec:
       name: DRAIN
       priority: 1
       type: integer
-    - description: CreationTimestamp is a timestamp representing the server time when
-        this object was created. It is not guaranteed to be set in happens-before
-        order across separate operations. Clients may not set this value. It is represented
-        in RFC3339 form and is in UTC.
-      jsonPath: .metadata.creationTimestamp
+    - jsonPath: .metadata.creationTimestamp
       name: AGE
       type: date
     name: v1alpha1

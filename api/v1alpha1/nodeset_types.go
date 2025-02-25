@@ -261,7 +261,7 @@ type NodeSetStatus struct {
 //+kubebuilder:printcolumn:name="ALLOCATED",type="integer",JSONPath=".status.slurmAllocated",priority=1,description="The number of ALLOCATED/MIXED slurm nodes."
 //+kubebuilder:printcolumn:name="DOWN",type="integer",JSONPath=".status.slurmDown",priority=1,description="The number of DOWN slurm nodes."
 //+kubebuilder:printcolumn:name="DRAIN",type="integer",JSONPath=".status.slurmDrain",priority=1,description="The number of DRAIN slurm nodes."
-//+kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp",priority=0,description="CreationTimestamp is a timestamp representing the server time when this object was created. It is not guaranteed to be set in happens-before order across separate operations. Clients may not set this value. It is represented in RFC3339 form and is in UTC."
+//+kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 
 // NodeSet is the Schema for the nodesets API
 type NodeSet struct {
