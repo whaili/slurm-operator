@@ -70,6 +70,8 @@ spec:
           env:
             - name: SLURM_JWT
               value: daemon
+            - name: SLURMRESTD_SECURITY
+              value: disable_unshare_files,disable_unshare_sysv
           args:
             - "0.0.0.0:{{- include "slurm.restapi.port" . }}"
           ports:
