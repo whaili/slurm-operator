@@ -144,7 +144,7 @@ spec:
 default `AverageValue`. `AverageValue` calculates the replica count by averaging
 the threshold across the current replica count.
 
-Check \[ScaledObject\] documentation for a full list of allowable options.
+Check [ScaledObject] documentation for a full list of allowable options.
 
 In this scenario, the ScaledObject `scale-radar` will query the Slurm metric
 `slurm_partition_pending_jobs` from Prometheus with the label
@@ -192,8 +192,8 @@ NAME                    REFERENCE                      TARGETS       MINPODS   M
 keda-hpa-scale-radar    NodeSet/slurm-compute-radar    <unknown>/5   1         5         0          32s
 ```
 
-Once the \[ScaledObject\] and HPA are created, initiate some jobs to test that
-the `NodeSet` scale subresource is scaled in response.
+Once the [ScaledObject] and HPA are created, initiate some jobs to test that the
+`NodeSet` scale subresource is scaled in response.
 
 ```sh
 $ sbatch --wrap "sleep 30" --partition radar --exclusive
