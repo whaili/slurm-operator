@@ -18,6 +18,8 @@ All notable changes to this project will be documented in this file.
 - Fixed Slurm helm chart using incorrect imagePullPolicy in values file.
 - Fixed accidental Slurm node undrain when drained by another source (e.g.
   Prolog, Epilog, HealthCheck).
+- Fixed Slurm helm chart interaction with OwnerReferencesPermissionEnforcement
+  admission controller plugin being enabled.
 
 ### Changed
 

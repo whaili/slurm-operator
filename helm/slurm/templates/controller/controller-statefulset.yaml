@@ -68,6 +68,9 @@ spec:
         - name: wait
           image: {{ include "slurm.controller.imageRef" . }}
           securityContext:
+            capabilities:
+              add:
+                - NET_RAW
             {{- include "slurm.securityContext" . | nindent 12 }}
           env:
             - name: HOST
