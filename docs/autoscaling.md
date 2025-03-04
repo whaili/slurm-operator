@@ -75,11 +75,6 @@ number of replicas of a resource. In the case of NodeSet, it allows Kubernetes
 and related services to control the number of `slurmd` replicas running as part
 of the NodeSet.
 
-**Note**: NodeSets with `replicas: null` are intended to scale similar to a
-DaemonSet. This is not an appropriate type of NodeSet to use with Autoscaling as
-the Slinky operator will handle scaling NodeSet replicas across the cluster
-based on the selection criterea.
-
 To manually scale a NodeSet, use the `kubectl scale` command. In this example,
 the NodeSet (nss) `slurm-compute-radar` is scaled to 1.
 
@@ -88,8 +83,8 @@ $ kubectl scale -n slurm nss/slurm-compute-radar --replicas=1
 nodeset.slinky.slurm.net/slurm-compute-radar scaled
 
 $ kubectl get pods -o wide -n slurm -l app.kubernetes.io/instance=slurm-compute-radar
-NAME                        READY   STATUS    RESTARTS   AGE     IP            NODE          NOMINATED NODE   READINESS GATES
-slurm-compute-radar-p8jwh   1/1     Running   0          2m48s   10.244.4.17   kind-worker   <none>           <none>
+NAME                    READY   STATUS    RESTARTS   AGE     IP            NODE          NOMINATED NODE   READINESS GATES
+slurm-compute-radar-0   1/1     Running   0          2m48s   10.244.4.17   kind-worker   <none>           <none>
 ```
 
 This corresponds to the Slurm partition `radar`.
