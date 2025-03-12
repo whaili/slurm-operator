@@ -61,9 +61,11 @@ help: ## Display this help.
 .PHONY: all
 all: build ## Build slurm-operator.
 
+REGISTRY ?= slinky.slurm.net
+
 .PHONY: build
-build: manifests generate fmt tidy vet ## Build manager binary.
-	$(foreach dockerfile, $(wildcard ./build/**/Dockerfile), $(MAKE) docker-build IMG="slinky.slurm.net/$(shell basename "$(shell dirname "${dockerfile}")"):$(VERSION)" DOCKERFILE_PATH="${dockerfile}" ;)
+build: manifests generate fmt tidy vet ## Build container images.
+	$(foreach dockerfile, $(wildcard ./build/**/Dockerfile), $(MAKE) docker-build IMG="$(REGISTRY)/$(shell basename "$(shell dirname "${dockerfile}")"):$(VERSION)" DOCKERFILE_PATH="${dockerfile}" ;)
 	helm package helm/slurm-operator --destination helm/slurm-operator
 
 .PHONY: clean
