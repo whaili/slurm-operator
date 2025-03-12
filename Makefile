@@ -68,6 +68,10 @@ build: manifests generate fmt tidy vet ## Build container images.
 	$(foreach dockerfile, $(wildcard ./build/**/Dockerfile), $(MAKE) docker-build IMG="$(REGISTRY)/$(shell basename "$(shell dirname "${dockerfile}")"):$(VERSION)" DOCKERFILE_PATH="${dockerfile}" ;)
 	helm package helm/slurm-operator --destination helm/slurm-operator
 
+.PHONY: push
+push: build ## Push container images.
+	$(foreach dockerfile, $(wildcard ./build/**/Dockerfile), $(MAKE) docker-push IMG="$(REGISTRY)/$(shell basename "$(shell dirname "${dockerfile}")"):$(VERSION)" DOCKERFILE_PATH="${dockerfile}" ;)
+
 .PHONY: clean
 clean: ## Clean executable files.
 	@ chmod -R -f u+w bin/ || true # make test installs files without write permissions.
