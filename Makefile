@@ -79,7 +79,7 @@ clean: ## Clean executable files.
 	rm -rf vendor/
 	rm -f govulnreport.txt
 	rm -f cover.out cover.html
-	rm helm/slurm-operator/*.tgz
+	rm -f helm/slurm-operator/*.tgz
 
 .PHONY: run
 run: manifests generate fmt tidy vet ## Run a controller from your host.
