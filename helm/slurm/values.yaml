@@ -116,7 +116,7 @@ slurm:
     #
     ### PLUGINS & PARAMETERS ###
     SchedulerType=sched/backfill
-    SchedulerParameters=batch_sched_delay=20,bf_continue,bf_interval=300,bf_min_age_reserve=10800,bf_resolution=600,bf_yield_interval=1000000,partition_job_depth=500,sched_max_job_start=200,sched_min_interval=2000000
+    SchedulerParameters=defer_batch
     SelectType=select/cons_tres
     SelectTypeParameters=CR_Core_Memory
     SlurmctldParameters=enable_configless,enable_stepmgr
