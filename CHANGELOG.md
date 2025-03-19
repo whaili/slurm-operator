@@ -36,6 +36,7 @@ All notable changes to this project will be documented in this file.
 - Changed `NodeSet.Status` fields.
 - Changed NodeSet controller specific annotations prefix.
 - Changed NodeSet pod hostname to `compute.nodeset[].name`.
+- Changed default to `mariadb.persistence.enabled=true`.
 
 ### Removed
 

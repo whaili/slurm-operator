@@ -577,7 +577,7 @@ mariadb:
       SET GLOBAL max_allowed_packet=(16 * 1024 * 1024);
   primary:
     persistence:
-      enabled: false
+      enabled: true
       existingClaim: ""
       storageClass: standard
       labels: {}

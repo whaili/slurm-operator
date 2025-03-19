@@ -91,7 +91,7 @@ Helm Chart for Slurm HPC Workload Manager
 | mariadb.metrics.serviceMonitor.enabled | bool | `false` |  |
 | mariadb.primary.persistence.accessModes[0] | string | `"ReadWriteOnce"` |  |
 | mariadb.primary.persistence.annotations | object | `{}` |  |
-| mariadb.primary.persistence.enabled | bool | `false` |  |
+| mariadb.primary.persistence.enabled | bool | `true` |  |
 | mariadb.primary.persistence.existingClaim | string | `""` |  |
 | mariadb.primary.persistence.labels | object | `{}` |  |
 | mariadb.primary.persistence.selector | object | `{}` |  |
