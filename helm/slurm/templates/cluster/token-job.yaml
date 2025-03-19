@@ -85,7 +85,7 @@ spec:
             {{- include "slurm.volumeMounts" . | nindent 12 }}
             - name: authsocket
               mountPath: /run/slurm
-        {{- if (index .Values "slurm-exporter" "exporter" "enabled") }}
+        {{- if and (index .Values "slurm-exporter" "enabled") (index .Values "slurm-exporter" "exporter" "enabled") }}
         - name: {{ printf "token-%s" (include "exporter.user" .) }}
           image: {{ include "slurm.authcred.imageRef" . }}
           imagePullPolicy: {{ .Values.authcred.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
@@ -111,7 +111,7 @@ spec:
             {{- include "slurm.volumeMounts" . | nindent 12 }}
             - name: authsocket
               mountPath: /run/slurm
-        {{- end }}{{- /* if slurm-exporter.exporter.enabled */}}
+        {{- end }}{{- /* if and slurm-exporter.enabled slurm-exporter.exporter.enabled */}}
       volumes:
         {{- include "slurm.volumes" $ | nindent 8 }}
         - name: slurm-config

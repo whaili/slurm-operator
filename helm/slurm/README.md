@@ -110,6 +110,7 @@ Helm Chart for Slurm HPC Workload Manager
 | restapi.priorityClassName | string | `""` |  Set the priority class to use. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass |
 | restapi.replicas | integer | `1` |  Set the number of replicas to deploy. |
 | restapi.resources | object | `{}` |  Set container resource requests and limits for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container |
+| slurm-exporter.enabled | bool | `true` |  |
 | slurm-exporter.exporter.enabled | bool | `true` |  |
 | slurm-exporter.exporter.secretName | string | `"slurm-token-exporter"` |  |
 | slurm.auth.existingSecret | string | `""` |  The existing secret to use otherwise one will be generated. |

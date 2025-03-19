@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 - Fixed unprivileged slurmrestd pod from using unshare functionality.
 - Fixed Slurm helm chart projected volume overlapping paths warning.
 - Fixed Slurm helm chart missing `authcred.imagePullPolicy` in values file.
+- Fixed Slurm helm chart ability to disable slurm-exporter subchart.
 
 ### Changed
 
