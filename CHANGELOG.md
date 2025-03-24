@@ -6,6 +6,16 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+### Fixed
+
+### Changed
+
+### Removed
+
+## v0.2.0
+
+### Added
+
 - Added container image labels.
 - Added `NodeSet.PersistentVolumeClaimRetentionPolicy.WhenScaled`
 - Added out-of-order scale-in for NodeSet pods.
