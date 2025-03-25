@@ -123,10 +123,6 @@ push:
 release-oci:
   stage: release
   extends: .docker
-  variables:
-    CONTAINER_IMAGE: ${CI_PROJECT_NAME}:${VERSION}
-    CONTAINER_SOURCE_IMAGE: ${CONTAINER_CI_IMAGE}
-    CONTAINER_TARGET_IMAGE: ${DOCKER_REGISTRY}/${CONTAINER_IMAGE}
   script:
     - set -euo pipefail
     - |
@@ -139,8 +135,8 @@ release-oci:
       for dockerfile in $(find ./build -name "Dockerfile" -type f); do
         kind="$(basename "$(dirname "$dockerfile")")"
         image="${kind}:${VERSION}"
-        source_image="${CONTAINER_SOURCE_IMAGE}/${image}"
-        target_image="${CONTAINER_TARGET_IMAGE}/${image}"
+        source_image="${CI_REGISTRY_IMAGE}/${image}"
+        target_image="${DOCKER_REGISTRY}/${image}"
         docker pull ${source_image}
         docker tag ${source_image} ${target_image}
         docker push ${target_image}
