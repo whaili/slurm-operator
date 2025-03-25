@@ -10,15 +10,12 @@ workflow:
 
 stages:
   - test
-  - build
   - release
 
 variables:
   DOCKER_HOST: tcp://docker:2376
   DOCKER_TLS_CERTDIR: /certs
   VERSION: 0.2.0
-  CONTAINER_OPERATOR: ${CI_REGISTRY}/slurm-operator:${VERSION}
-  CONTAINER_WEBHOOK: ${CI_REGISTRY}/slurm-operator-webhook:${VERSION}
   CI_JOB_USER: gitlab-ci-token
 
 .docker:
@@ -30,7 +27,7 @@ variables:
     - docker info
     - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
     - apk update && apk upgrade
-    - apk add --no-cache git go helm
+    - apk add --no-cache bash git make go helm
     - export PATH=$PATH:$HOME/go/bin/
     - go env -w GOPRIVATE=github.com/SlinkyProject/*
 
@@ -63,66 +60,11 @@ secret_detection:
     paths:
       - gl-secret-detection-report.json
 
-build:
-  stage: build
-  extends: .docker
-  script:
-    - set -euo pipefail
-    - |
-      for dockerfile in $(find ./build -name "Dockerfile" -type f); do
-        kind="$(basename "$(dirname "$dockerfile")")"
-        image="${CI_REGISTRY_IMAGE}/${kind}:${VERSION}"
-        docker build --pull -t $image -f $dockerfile .
-        docker push $image
-      done
-    - |
-      for chart in $(find ./helm -name "Chart.yaml" -type f -exec dirname {} \;); do
-        helm package --dependency-update ${chart};
-      done
-  rules:
-    - if: $CI_COMMIT_REF_PROTECTED != "true"
-      changes:
-        - Dockerfile
-        - ./**/*.go
-        - go.mod
-        - go.sum
-        - helm/**/*
-
-push:
-  stage: build
-  extends: .docker
-  script:
-    - set -euo pipefail
-    - |
-      for dockerfile in $(find ./build -name "Dockerfile" -type f); do
-        kind="$(basename "$(dirname "$dockerfile")")"
-        image="${CI_REGISTRY_IMAGE}/${kind}:${VERSION}"
-        docker build -t $image -f $dockerfile .
-        docker push $image
-      done
-    - helm plugin install https://github.com/chartmuseum/helm-push
-    - helm repo add --username ${CI_JOB_USER} --password ${CI_JOB_TOKEN} ${CI_PROJECT_NAME} ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/helm/stable
-    - helm repo update
-    - |
-      for chart in $(find ./helm -name "Chart.yaml" -type f -exec dirname {} \;); do
-        export CHART_NAME=$(basename $chart);
-        export CHART_VERSION=$(grep ^version ${chart}/Chart.yaml | awk '{print $2}');
-        export CHART_ARTIFACT=${CHART_NAME}-${CHART_VERSION}.tgz;
-        helm package --dependency-update ${chart};
-        helm cm-push ./${CHART_ARTIFACT} ${CI_PROJECT_NAME};
-      done
-  rules:
-    - if: $CI_COMMIT_REF_PROTECTED == "true"
-      changes:
-        - Dockerfile
-        - ./**/*.go
-        - go.mod
-        - go.sum
-        - helm/**/*
-
 release-oci:
   stage: release
   extends: .docker
+  variables:
+    REGISTRY: ${DOCKER_REGISTRY}
   script:
     - set -euo pipefail
     - |
@@ -131,26 +73,7 @@ release-oci:
         exit 1;
       fi
     - echo "$DOCKER_REGISTRY_PASSWORD" | docker login $DOCKER_REGISTRY -u $DOCKER_REGISTRY_USER --password-stdin
-    - |
-      for dockerfile in $(find ./build -name "Dockerfile" -type f); do
-        kind="$(basename "$(dirname "$dockerfile")")"
-        image="${kind}:${VERSION}"
-        source_image="${CI_REGISTRY_IMAGE}/${image}"
-        target_image="${DOCKER_REGISTRY}/${image}"
-        docker pull ${source_image}
-        docker tag ${source_image} ${target_image}
-        docker push ${target_image}
-      done
-    - helm repo add --username ${CI_JOB_USER} --password ${CI_JOB_TOKEN} ${CI_PROJECT_NAME} ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/helm/stable
-    - helm repo update
-    - |
-      for chart in $(find ./helm -name "Chart.yaml" -type f -exec dirname {} \;); do
-        export CHART_NAME=$(basename $chart);
-        export CHART_VERSION=$(grep ^version ${chart}/Chart.yaml | awk '{print $2}');
-        export CHART_ARTIFACT=${CHART_NAME}-${CHART_VERSION}.tgz;
-        helm pull ${CI_PROJECT_NAME}/${CHART_NAME};
-        helm push ./${CHART_ARTIFACT} oci://${DOCKER_REGISTRY}/charts;
-      done
+    - make push
   rules:
     - if: $CI_COMMIT_REF_PROTECTED == "true"
       when: manual
@@ -158,6 +81,7 @@ release-oci:
 .git:
   image: alpine:latest
   before_script:
+    - set -euo pipefail
     - apk update && apk upgrade
     - apk add --no-cache git
     - git version

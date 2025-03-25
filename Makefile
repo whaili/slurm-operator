@@ -64,13 +64,14 @@ all: build ## Build slurm-operator.
 REGISTRY ?= slinky.slurm.net
 
 .PHONY: build
-build: manifests generate fmt tidy vet ## Build container images.
+build: ## Build container images.
 	$(foreach dockerfile, $(wildcard ./build/**/Dockerfile), $(MAKE) docker-build IMG="$(REGISTRY)/$(shell basename "$(shell dirname "${dockerfile}")"):$(VERSION)" DOCKERFILE_PATH="${dockerfile}" ;)
-	helm package helm/slurm-operator --destination helm/slurm-operator
+	$(foreach chart, $(wildcard ./helm/**/Chart.yaml), helm package --dependency-update helm/$(shell basename "$(shell dirname "${chart}")") ;)
 
 .PHONY: push
 push: build ## Push container images.
 	$(foreach dockerfile, $(wildcard ./build/**/Dockerfile), $(MAKE) docker-push IMG="$(REGISTRY)/$(shell basename "$(shell dirname "${dockerfile}")"):$(VERSION)" DOCKERFILE_PATH="${dockerfile}" ;)
+	$(foreach chart, $(wildcard ./*.tgz), helm push ${chart} oci://$(REGISTRY)/charts ;)
 
 .PHONY: clean
 clean: ## Clean executable files.
@@ -79,7 +80,7 @@ clean: ## Clean executable files.
 	rm -rf vendor/
 	rm -f govulnreport.txt
 	rm -f cover.out cover.html
-	rm -f helm/slurm-operator/*.tgz
+	rm -f *.tgz
 
 .PHONY: run
 run: manifests generate fmt tidy vet ## Run a controller from your host.
