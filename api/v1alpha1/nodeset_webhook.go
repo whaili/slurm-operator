@@ -9,7 +9,6 @@ import (
 	"sort"
 	"strings"
 
-	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/klog/v2"
@@ -81,6 +80,7 @@ func (r *NodeSet) ValidateUpdate(ctx context.Context, oldObj runtime.Object, new
 		"RevisionHistoryLimit",
 		"Selector",
 		"UpdateStrategy",
+		"VolumeClaimTemplates",
 	}
 	sort.Strings(updateFields)
 	errMsgStub := fmt.Sprintf("Mutatable fields include: %s", strings.Join(updateFields, ", "))
@@ -89,9 +89,6 @@ func (r *NodeSet) ValidateUpdate(ctx context.Context, oldObj runtime.Object, new
 	}
 	if newNodeSet.Spec.ServiceName != oldNodeSet.Spec.ServiceName {
 		errs = append(errs, fmt.Errorf("updates to `NodeSet.Spec.ServiceName` is forbidden. %v", errMsgStub))
-	}
-	if !apiequality.Semantic.DeepEqual(newNodeSet.Spec.VolumeClaimTemplates, oldNodeSet.Spec.VolumeClaimTemplates) {
-		errs = append(errs, fmt.Errorf("updates to `NodeSet.Spec.VolumeClaimTemplates` is forbidden. %v", errMsgStub))
 	}
 
 	return warns, utilerrors.NewAggregate(errs)

@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Changed webhook to allow updates to `NodeSets[].VolumeClaimTemplates`.
+
 ### Removed
 
 ## v0.2.0
