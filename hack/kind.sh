@@ -60,9 +60,11 @@ function helm::uninstall() {
 
 function slurm::prerequisites() {
 	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-	helm repo add kedacore https://kedacore.github.io/charts
 	helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
 	helm repo add bitnami https://charts.bitnami.com/bitnami
+	if $FLAG_EXTRAS; then
+		helm repo add kedacore https://kedacore.github.io/charts
+	fi
 	helm repo update
 
 	local prometheus="prometheus"
@@ -72,16 +74,18 @@ function slurm::prerequisites() {
 			--set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
 
 	fi
-	local keda="keda"
-	if [ "$(helm list --all-namespaces --short --filter="$keda" | wc -l)" -eq 0 ]; then
-		helm install "$keda" kedacore/keda \
-			--namespace "$keda" --create-namespace
-	fi
 	local metrics="metrics-server"
 	if [ "$(helm list --all-namespaces --short --filter="$metrics" | wc -l)" -eq 0 ]; then
 		helm install "$metrics" metrics-server/metrics-server \
 			--set args="{--kubelet-insecure-tls}" \
 			--namespace "$metrics" --create-namespace
+	fi
+	if $FLAG_EXTRAS; then
+		local keda="keda"
+		if [ "$(helm list --all-namespaces --short --filter="$keda" | wc -l)" -eq 0 ]; then
+			helm install "$keda" kedacore/keda \
+				--namespace "$keda" --create-namespace
+		fi
 	fi
 }
 
@@ -163,6 +167,7 @@ OPTIONS:
 	--helm              Deploy with helm instead of skaffold.
 	--operator          Deploy helm/slurm-operator with skaffold.
 	--slurm             Deploy helm/slurm with skaffold.
+	--extras            Install optional dependencies.
 
 HELP OPTIONS:
 	--debug             Show script debug information.
@@ -218,9 +223,10 @@ FLAG_INSTALL=false
 FLAG_UNINSTALL=false
 FLAG_SLURM=false
 FLAG_OPERATOR=false
+FLAG_EXTRAS=false
 
 SHORT="+h"
-LONG="create,config:,delete,debug,helm,slurm,operator,install,uninstall,help"
+LONG="create,config:,delete,debug,helm,slurm,operator,install,extras,uninstall,help"
 OPTS="$(getopt -a --options "$SHORT" --longoptions "$LONG" -- "$@")"
 eval set -- "${OPTS}"
 while :; do
@@ -268,6 +274,10 @@ while :; do
 			echo "Flags --install and --uninstall are mutually exclusive!"
 			exit 1
 		fi
+		;;
+	--extras)
+		FLAG_EXTRAS=true
+		shift
 		;;
 	--uninstall)
 		FLAG_UNINSTALL=true
