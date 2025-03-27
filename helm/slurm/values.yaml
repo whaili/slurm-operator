@@ -429,10 +429,10 @@ compute:
         # deleted.
         whenScaled: Retain
       #
-      # --(list)
-      # List of claims that pods are allowed to reference.
-      # The NodeSet controller is responsible for mapping network identities to
-      # claims in a way that maintains the identity of a pod.
+      # -- (list)
+      # List of PVCs to be created from template and mounted on each NodeSet pod.
+      # PVCs are given a unique identity relative to each NodeSet pod.
+      # Ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#volume-claim-templates
       volumeClaimTemplates: []
         # - metadata:
         #     name: scratch

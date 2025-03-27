@@ -56,7 +56,7 @@ Helm Chart for Slurm HPC Workload Manager
 | compute.nodesets[0].updateStrategy.rollingUpdate | object | `{"maxUnavailable":"20%"}` |  Define the rolling update policy. Only used when "updateStrategy.type=RollingUpdate". |
 | compute.nodesets[0].updateStrategy.rollingUpdate.maxUnavailable | string | `"20%"` |  The maximum number of pods that can be unavailable during the update. Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%). Absolute number is calculated from percentage by rounding up. This can not be 0. Defaults to 1. |
 | compute.nodesets[0].updateStrategy.type | string | `"RollingUpdate"` |  Set the update strategy type. Can be either: "RollingUpdate"; "OnDelete". |
-| compute.nodesets[0].volumeClaimTemplates | list | `[]` |  List of claims that pods are allowed to reference. The NodeSet controller is responsible for mapping network identities to claims in a way that maintains the identity of a pod. |
+| compute.nodesets[0].volumeClaimTemplates | list | `[]` |  List of PVCs to be created from template and mounted on each NodeSet pod. PVCs are given a unique identity relative to each NodeSet pod. Ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#volume-claim-templates |
 | compute.nodesets[0].volumes | list | `[]` |  List of volumes to be mounted on each NodeSet pod. Ref: https://kubernetes.io/docs/concepts/storage/volumes/ |
 | compute.partitions | list | `[{"config":"State=UP Default=YES MaxTime=UNLIMITED","enabled":true,"name":"all","nodesets":["ALL"]}]` |  Slurm Partitions by object list. |
 | compute.partitions[0] | string | `{"config":"State=UP Default=YES MaxTime=UNLIMITED","enabled":true,"name":"all","nodesets":["ALL"]}` |  Name of Partition. Must be unique. |
