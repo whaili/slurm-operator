@@ -6,6 +6,8 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+	"sort"
+	"strings"
 
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -72,7 +74,16 @@ func (r *NodeSet) ValidateUpdate(ctx context.Context, oldObj runtime.Object, new
 
 	warns, errs := validateNodeSet(newNodeSet)
 
-	errMsgStub := "Mutatable fields include: 'Replicas', 'Selector', 'RevisionHistoryLimit', 'UpdateStrategy', 'PersistentVolumeClaimRetentionPolicy', 'MinReadySeconds'"
+	updateFields := []string{
+		"MinReadySeconds",
+		"PersistentVolumeClaimRetentionPolicy",
+		"Replicas",
+		"RevisionHistoryLimit",
+		"Selector",
+		"UpdateStrategy",
+	}
+	sort.Strings(updateFields)
+	errMsgStub := fmt.Sprintf("Mutatable fields include: %s", strings.Join(updateFields, ", "))
 	if newNodeSet.Spec.ClusterName != oldNodeSet.Spec.ClusterName {
 		errs = append(errs, fmt.Errorf("updates to `NodeSet.Spec.ClusterName` is forbidden. %v", errMsgStub))
 	}
