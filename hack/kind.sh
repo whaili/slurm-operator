@@ -59,6 +59,14 @@ function sys::check() {
 		echo "  $ sudo sysctl -w fs.inotify.max_user_watches=1048576"
 		echo "  $ echo 'fs.inotify.max_user_watches=1048576' | sudo tee --append /etc/sysctl.d/fs"
 	fi
+	if $FLAG_EXTRAS; then
+		if ! systemctl is-active --quiet nfs-kernel-server.service; then
+			echo "Recommended to install, start, and enable 'nfs-kernel-server.service':"
+			echo "  $ sudo apt install -qq -y nfs-kernel-server"
+			echo "  $ sudo systemctl start nfs-kernel-server.service"
+			echo "  $ sudo systemctl enable nfs-kernel-server.service"
+		fi
+	fi
 
 	if $fail; then
 		exit 1
@@ -117,6 +125,7 @@ function slurm::prerequisites() {
 	helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
 	helm repo add bitnami https://charts.bitnami.com/bitnami
 	if $FLAG_EXTRAS; then
+		helm repo add nfs-server-provisioner https://kubernetes-sigs.github.io/nfs-ganesha-server-and-external-provisioner/
 		helm repo add kedacore https://kedacore.github.io/charts
 	fi
 	helm repo update
@@ -139,6 +148,11 @@ function slurm::prerequisites() {
 		if [ "$(helm list --all-namespaces --short --filter="$keda" | wc -l)" -eq 0 ]; then
 			helm install "$keda" kedacore/keda \
 				--namespace "$keda" --create-namespace
+		fi
+		local nfsServer="nfs-server-provisioner"
+		if [ "$(helm list --all-namespaces --short --filter="$nfsServer" | wc -l)" -eq 0 ]; then
+			helm install "$nfsServer" nfs-server-provisioner/nfs-server-provisioner \
+				--namespace=kube-system --create-namespace
 		fi
 	fi
 }

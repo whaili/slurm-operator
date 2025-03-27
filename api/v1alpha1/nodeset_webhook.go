@@ -81,6 +81,7 @@ func (r *NodeSet) ValidateUpdate(ctx context.Context, oldObj runtime.Object, new
 		"Selector",
 		"UpdateStrategy",
 		"VolumeClaimTemplates",
+		"Volumes",
 	}
 	sort.Strings(updateFields)
 	errMsgStub := fmt.Sprintf("Mutatable fields include: %s", strings.Join(updateFields, ", "))

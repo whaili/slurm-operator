@@ -435,15 +435,30 @@ compute:
       # claims in a way that maintains the identity of a pod.
       volumeClaimTemplates: []
         # - metadata:
-        #     name: data
+        #     name: scratch
         #   spec:
+        #     mountPath: /mnt/scratch
         #     storageClassName: standard
-        #     mountPath: /mnt/data
         #     accessModes:
         #       - ReadWriteOnce
         #     resources:
         #       requests:
         #         storage: 1Gi
+      #
+      # -- (list)
+      # List of volumes to be mounted on each NodeSet pod.
+      # Ref: https://kubernetes.io/docs/concepts/storage/volumes/
+      volumes: []
+        # - name: nfs-bin
+        #   mountPath: /usr/local/bin
+        #   nfs:
+        #     server: nfs-server.example.com
+        #     path: /opt/bin
+        #     readOnly: true
+        # - name: nfs-data
+        #   mountPath: /mnt/data
+        #   persistentVolumeClaim:
+        #     claimName: nfs-data
       #
       # -- (object)
       # Partition describes the partition created specifically for this NodeSet to be added.
