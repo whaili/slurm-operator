@@ -20,7 +20,7 @@ metadata:
   namespace: {{ include "slurm.namespace" $ }}
   labels:
     app.kubernetes.io/name: slurmd
-    app.kubernetes.io/instance: {{ $name }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
     app.kubernetes.io/component: compute
     {{- include "slurm.labels" $ | nindent 4 }}
 spec:
@@ -37,14 +37,14 @@ spec:
   {{- end }}{{- /* if $nodeset.persistentVolumeClaimRetentionPolicy */}}
   selector:
     matchLabels:
-      app.kubernetes.io/instance: {{ $name }}
+      app.kubernetes.io/instance: {{ $.Release.Name }}
       {{- include "slurm.compute.selectorLabels" $ | nindent 6 }}
   template:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: slurmd
       labels:
-        app.kubernetes.io/instance: {{ $name }}
+        app.kubernetes.io/instance: {{ $.Release.Name }}
         {{- include "slurm.compute.labels" $ | nindent 8 }}
     spec:
       hostname: "{{ $nodeset.name }}-"

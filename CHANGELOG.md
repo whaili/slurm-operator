@@ -12,6 +12,8 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- Fixed Slurm chart `app.kubernetes.io/instance` labels.
+
 ### Changed
 
 - Changed webhook to allow updates to `NodeSets[].VolumeClaimTemplates`.

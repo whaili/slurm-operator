@@ -66,7 +66,7 @@ Define controller selectorLabels
 */}}
 {{- define "slurm.controller.selectorLabels" -}}
 app.kubernetes.io/name: slurmctld
-app.kubernetes.io/instance: {{ include "slurm.controller.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
@@ -132,7 +132,7 @@ Define accounting selectorLabels
 */}}
 {{- define "slurm.accounting.selectorLabels" -}}
 app.kubernetes.io/name: slurmdbd
-app.kubernetes.io/instance: {{ include "slurm.accounting.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
@@ -245,7 +245,7 @@ Define restapi selectorLabels
 */}}
 {{- define "slurm.restapi.selectorLabels" -}}
 app.kubernetes.io/name: slurmrestd
-app.kubernetes.io/instance: {{ include "slurm.restapi.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
@@ -290,7 +290,7 @@ Define cluster selectorLabels
 */}}
 {{- define "slurm.cluster.selectorLabels" -}}
 app.kubernetes.io/name: cluster
-app.kubernetes.io/instance: {{ include "slurm.cluster.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
@@ -321,7 +321,7 @@ Define token selectorLabels
 */}}
 {{- define "slurm.token.selectorLabels" -}}
 app.kubernetes.io/name: token
-app.kubernetes.io/instance: {{ include "slurm.token.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
