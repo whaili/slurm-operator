@@ -42,22 +42,6 @@ spec:
           {{- end }}
       volumeMounts:
         {{- include "slurm.init.volumeMounts" . | nindent 8 }}
-    {{- if and .Values.accounting.enabled (not .Values.accounting.external.enabled) }}
-    - name: waitacct
-      image: {{ include "slurm.controller.imageRef" . }}
-      securityContext:
-        {{- include "slurm.securityContext" . | nindent 8 }}
-      env:
-        - name: HOST
-          value: {{ include "slurm.accounting.name" . }}
-      command:
-        - bash
-        - -c
-        - |
-          {{- range .Files.Lines "scripts/wait-ping.sh" }}
-          {{ . }}
-          {{- end }}{{- /* range .Files.Lines "scripts/wait-ping.sh" */}}
-    {{- end }}{{- /* if and .Values.accounting.enabled (not .Values.accounting.external.enabled) */}}
     - name: waitctl
       image: {{ include "slurm.authcred.imageRef" . }}
       imagePullPolicy: {{ .Values.authcred.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
@@ -94,7 +78,7 @@ spec:
         sackd
         scontrol ping
     {{- if .Values.accounting.enabled }}
-        sacct
+        sacctmgr ping
     {{- end }}{{- /* if .Values.accounting.enabled */}}
       volumeMounts:
         {{- include "slurm.volumeMounts" . | nindent 8 }}

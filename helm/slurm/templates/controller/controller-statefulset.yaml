@@ -40,12 +40,6 @@ spec:
         {{- .Values.controller.affinity | toYaml | nindent 8 }}
       {{- end }}{{- /* if .Values.controller.affinity */}}
       {{- include "slurm.imagePullSecrets" . | nindent 6 }}
-      {{- if .Values.accounting.enabled }}
-      securityContext:
-        sysctls:
-          - name: net.ipv4.ping_group_range
-            value: "{{ include "slurm.uid" . }} {{ include "slurm.uid" . }}"
-      {{- end }}{{- /* if .Values.accounting.enabled */}}
       initContainers:
         - name: init
           image: {{ include "slurm.authcred.imageRef" . }}
@@ -68,32 +62,6 @@ spec:
             {{- include "slurm.init.volumeMounts" . | nindent 12 }}
             - name: {{ include "slurm.controller.statesave.name" . }}
               mountPath: {{ include "slurm.controller.statesavePath" . }}
-        {{- if .Values.accounting.enabled }}
-        - name: wait
-          image: {{ include "slurm.authcred.imageRef" . }}
-          imagePullPolicy: {{ .Values.authcred.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
-          {{- if .Values.authcred.resources }}
-          resources:
-            {{- .Values.authcred.resources | toYaml | nindent 12 }}
-          {{- end }}{{- /* if .Values.authcred.resources */}}
-          securityContext:
-            capabilities:
-              add:
-                - NET_RAW
-            {{- include "slurm.securityContext" . | nindent 12 }}
-          env:
-            - name: HOST
-              value: {{ include "slurm.accounting.name" . }}
-          command:
-            - bash
-            - -c
-            - |
-              {{- range .Files.Lines "scripts/wait-ping.sh" }}
-              {{ . }}
-              {{- end }}{{- /* range .Files.Lines "scripts/wait-ping.sh" */}}
-          volumeMounts:
-            {{- include "slurm.init.volumeMounts" . | nindent 12 }}
-        {{- end }}{{- /* if .Values.accounting.enabled */}}
       containers:
         - name: slurmctld
           image: {{ include "slurm.controller.imageRef" . }}

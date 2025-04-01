@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 ### Removed
 
 - Removed Slurm daemon `startupProbe`.
+- Removed `initContainer` to wait on slurmdbd.
 
 ## v0.2.0
 
