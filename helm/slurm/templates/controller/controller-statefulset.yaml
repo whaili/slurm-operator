@@ -121,12 +121,15 @@ spec:
                   name: {{ include "slurm.auth.secretName" . }}
               - secret:
                   name: {{ include "slurm.jwt.hs256.secretName" . }}
-        {{- if .Values.controller.persistence.existingClaim }}
+        {{- if and .Values.controller.persistence.enabled .Values.controller.persistence.existingClaim }}
         - name: {{ include "slurm.controller.statesave.name" . }}
           persistentVolumeClaim:
             claimName: {{ tpl .Values.controller.persistence.existingClaim . }}
-        {{- end }}{{- /* if .Values.controller.persistence.existingClaim */}}
-  {{- if not .Values.controller.persistence.existingClaim }}
+        {{- else if not .Values.controller.persistence.enabled }}
+        - name: {{ include "slurm.controller.statesave.name" . }}
+          emptyDir: {}
+        {{- end }}{{- /* if and .Values.controller.persistence.enabled .Values.controller.persistence.existingClaim */}}
+  {{- if and .Values.controller.persistence.enabled (not .Values.controller.persistence.existingClaim) }}
   volumeClaimTemplates:
     - metadata:
         name: {{ include "slurm.controller.statesave.name" . }}
@@ -153,5 +156,5 @@ spec:
         selector:
           {{- toYaml .Values.controller.persistence.selector | indent 10 }}
         {{- end -}}{{- /* if .Values.controller.persistence.selector */}}
-  {{- end -}}{{- /* if not .Values.controller.persistence.existingClaim */}}
+  {{- end -}}{{- /* if and .Values.persistence.enabled (not .Values.controller.persistence.existingClaim) */}}
 {{- end }}{{- /* if .Values.controller.enabled */}}
