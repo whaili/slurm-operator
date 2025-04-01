@@ -12,7 +12,61 @@ function kind::prerequisites() {
 	go install sigs.k8s.io/kind@latest
 }
 
+function sys::check() {
+	local fail=false
+	if ! command -v docker >/dev/null 2>&1 && ! command -v podman >/dev/null 2>&1; then
+		echo "'docker' or 'podman' is required:"
+		echo "docker: https://www.docker.com/"
+		echo "podman: https://podman.io/"
+		fail=true
+	fi
+	if ! command -v go >/dev/null 2>&1; then
+		echo "'go' is required: https://go.dev/"
+		fail=true
+	fi
+	if ! command -v helm >/dev/null 2>&1; then
+		echo "'helm' is required: https://helm.sh/"
+		fail=true
+	fi
+	if ! command -v skaffold >/dev/null 2>&1; then
+		echo "'skaffold' is required: https://skaffold.dev/"
+		fail=true
+	fi
+	if ! command -v yq >/dev/null 2>&1; then
+		echo "'yq' is required: https://github.com/mikefarah/yq"
+		fail=true
+	fi
+	if ! command -v kubectl >/dev/null 2>&1; then
+		echo "'kubectl' is recommended: https://kubernetes.io/docs/reference/kubectl/"
+	fi
+	if [ "$(sysctl -n kernel.keys.maxkeys)" -lt 2000 ]; then
+		echo "Recommended to increase 'kernel.keys.maxkeys':"
+		echo "  $ sudo sysctl -w kernel.keys.maxkeys=2000"
+		echo "  $ echo 'kernel.keys.maxkeys=2000' | sudo tee --append /etc/sysctl.d/kernel"
+	fi
+	if [ "$(sysctl -n fs.file-max)" -lt 10000000 ]; then
+		echo "Recommended to increase 'fs.file-max':"
+		echo "  $ sudo sysctl -w fs.file-max=10000000"
+		echo "  $ echo 'fs.file-max=10000000' | sudo tee --append /etc/sysctl.d/fs"
+	fi
+	if [ "$(sysctl -n fs.inotify.max_user_instances)" -lt 65535 ]; then
+		echo "Recommended to increase 'fs.inotify.max_user_instances':"
+		echo "  $ sudo sysctl -w fs.inotify.max_user_instances=65535"
+		echo "  $ echo 'fs.inotify.max_user_instances=65535' | sudo tee --append /etc/sysctl.d/fs"
+	fi
+	if [ "$(sysctl -n fs.inotify.max_user_watches)" -lt 1048576 ]; then
+		echo "Recommended to increase 'fs.inotify.max_user_watches':"
+		echo "  $ sudo sysctl -w fs.inotify.max_user_watches=1048576"
+		echo "  $ echo 'fs.inotify.max_user_watches=1048576' | sudo tee --append /etc/sysctl.d/fs"
+	fi
+
+	if $fail; then
+		exit 1
+	fi
+}
+
 function kind::start() {
+	sys::check
 	kind::prerequisites
 	local cluster_name="${1:-"kind"}"
 	local kind_config="${2:-"$ROOT_DIR/hack/kind-config.yaml"}"
