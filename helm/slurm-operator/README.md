@@ -28,6 +28,7 @@ Helm Chart for Slurm HPC Workload Manager Operator
 | operator.resources | object | `{}` |  Set container resource requests and limits for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container |
 | operator.serviceAccount.create | bool | `true` |  Allows chart to create the service account. |
 | operator.serviceAccount.name | string | `""` |  Set the service account to use (and create). |
+| operator.tolerations | list | `[]` |  Configure pod tolerations. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
 | priorityClassName | string | `""` |  Set the priority class to use. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass |
 | webhook.affinity | object | `{}` |  Set affinity for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity |
 | webhook.enabled | bool | `true` |  Enables the webhook. |
@@ -39,4 +40,5 @@ Helm Chart for Slurm HPC Workload Manager Operator
 | webhook.resources | object | `{}` |  Set container resource requests and limits for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container |
 | webhook.serviceAccount.create | bool | `true` |  Allows chart to create the service account. |
 | webhook.serviceAccount.name | string | `""` |  Set the service account to use (and create). |
+| webhook.tolerations | list | `[]` |  Configure pod tolerations. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
 

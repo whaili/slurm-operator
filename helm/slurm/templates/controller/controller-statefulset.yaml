@@ -105,6 +105,10 @@ spec:
             {{- include "slurm.init.volumeMounts" . | nindent 12 }}
             - name: authsocket
               mountPath: /run/slurmctld
+      {{- with .Values.controller.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with .Values.controller.tolerations */}}
       volumes:
         {{- include "slurm.volumes" . | nindent 8 }}
         - name: slurm-config

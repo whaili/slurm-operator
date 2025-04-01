@@ -92,6 +92,10 @@ spec:
               port: slurmrestd
           volumeMounts:
             {{- include "slurm.volumeMounts" . | nindent 12 }}
+      {{- with .Values.restapi.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with .Values.restapi.tolerations */}}
       volumes:
         {{- include "slurm.volumes" . | nindent 8 }}
         - name: slurm-config

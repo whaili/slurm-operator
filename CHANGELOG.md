@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Added `NodeSets[].Volumes` to mount additional volumes.
+- Added `Tolerations[]` to components.
 
 ### Fixed
 

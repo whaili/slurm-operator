@@ -25,6 +25,7 @@ Helm Chart for Slurm HPC Workload Manager
 | accounting.imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |
 | accounting.replicas | integer | `1` |  Set the number of replicas to deploy. |
 | accounting.resources | object | `{}` |  Set container resource requests and limits for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container |
+| accounting.tolerations | list | `[]` |  Configure pod tolerations. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
 | authcred.image.repository | string | `"ghcr.io/slinkyproject/sackd"` |  Set the image repository to use. |
 | authcred.image.tag | string | `"24.11-ubuntu24.04"` |  Set the image tag to use. |
 | authcred.imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |
@@ -32,8 +33,8 @@ Helm Chart for Slurm HPC Workload Manager
 | compute.image.repository | string | `"ghcr.io/slinkyproject/slurmd"` |  Set the image repository to use. |
 | compute.image.tag | string | The Release appVersion. |  Set the image tag to use. |
 | compute.imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |
-| compute.nodesets | list | `[{"affinity":{},"enabled":true,"image":{"repository":"","tag":""},"imagePullPolicy":"IfNotPresent","name":"debug","nodeFeatures":[],"nodeGres":"","nodeSelector":{"kubernetes.io/os":"linux"},"nodeWeight":1,"partition":{"config":"State=UP MaxTime=UNLIMITED","enabled":true},"persistentVolumeClaimRetentionPolicy":{"whenDeleted":"Retain","whenScaled":"Retain"},"priorityClassName":"","replicas":1,"resources":{"limits":{"cpu":1,"memory":"1Gi"}},"updateStrategy":{"rollingUpdate":{"maxUnavailable":"20%"},"type":"RollingUpdate"},"volumeClaimTemplates":[],"volumes":[]}]` |  Slurm NodeSets by object list. |
-| compute.nodesets[0] | string | `{"affinity":{},"enabled":true,"image":{"repository":"","tag":""},"imagePullPolicy":"IfNotPresent","name":"debug","nodeFeatures":[],"nodeGres":"","nodeSelector":{"kubernetes.io/os":"linux"},"nodeWeight":1,"partition":{"config":"State=UP MaxTime=UNLIMITED","enabled":true},"persistentVolumeClaimRetentionPolicy":{"whenDeleted":"Retain","whenScaled":"Retain"},"priorityClassName":"","replicas":1,"resources":{"limits":{"cpu":1,"memory":"1Gi"}},"updateStrategy":{"rollingUpdate":{"maxUnavailable":"20%"},"type":"RollingUpdate"},"volumeClaimTemplates":[],"volumes":[]}` |  Name of NodeSet. Must be unique. |
+| compute.nodesets | list | `[{"affinity":{},"enabled":true,"image":{"repository":"","tag":""},"imagePullPolicy":"IfNotPresent","name":"debug","nodeFeatures":[],"nodeGres":"","nodeSelector":{"kubernetes.io/os":"linux"},"nodeWeight":1,"partition":{"config":"State=UP MaxTime=UNLIMITED","enabled":true},"persistentVolumeClaimRetentionPolicy":{"whenDeleted":"Retain","whenScaled":"Retain"},"priorityClassName":"","replicas":1,"resources":{"limits":{"cpu":1,"memory":"1Gi"}},"tolerations":[],"updateStrategy":{"rollingUpdate":{"maxUnavailable":"20%"},"type":"RollingUpdate"},"volumeClaimTemplates":[],"volumes":[]}]` |  Slurm NodeSets by object list. |
+| compute.nodesets[0] | string | `{"affinity":{},"enabled":true,"image":{"repository":"","tag":""},"imagePullPolicy":"IfNotPresent","name":"debug","nodeFeatures":[],"nodeGres":"","nodeSelector":{"kubernetes.io/os":"linux"},"nodeWeight":1,"partition":{"config":"State=UP MaxTime=UNLIMITED","enabled":true},"persistentVolumeClaimRetentionPolicy":{"whenDeleted":"Retain","whenScaled":"Retain"},"priorityClassName":"","replicas":1,"resources":{"limits":{"cpu":1,"memory":"1Gi"}},"tolerations":[],"updateStrategy":{"rollingUpdate":{"maxUnavailable":"20%"},"type":"RollingUpdate"},"volumeClaimTemplates":[],"volumes":[]}` |  Name of NodeSet. Must be unique. |
 | compute.nodesets[0].affinity | object | `{}` |  Set affinity for Kubernetes Pod scheduling. |
 | compute.nodesets[0].enabled | bool | `true` |  Enables the NodeSet in Slurm. |
 | compute.nodesets[0].image.repository | string | `""` |  Set the image repository to use. |
@@ -52,6 +53,7 @@ Helm Chart for Slurm HPC Workload Manager
 | compute.nodesets[0].priorityClassName | string | `""` |  Set the priority class to use. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass |
 | compute.nodesets[0].replicas | integer | `1` |  Set the number of replicas to deploy. |
 | compute.nodesets[0].resources | object | `{"limits":{"cpu":1,"memory":"1Gi"}}` |  Set container resource requests and limits for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container |
+| compute.nodesets[0].tolerations | list | `[]` |  Configure pod tolerations. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
 | compute.nodesets[0].updateStrategy | object | `{"rollingUpdate":{"maxUnavailable":"20%"},"type":"RollingUpdate"}` |  Set the update strategy configuration. |
 | compute.nodesets[0].updateStrategy.rollingUpdate | object | `{"maxUnavailable":"20%"}` |  Define the rolling update policy. Only used when "updateStrategy.type=RollingUpdate". |
 | compute.nodesets[0].updateStrategy.rollingUpdate.maxUnavailable | string | `"20%"` |  The maximum number of pods that can be unavailable during the update. Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%). Absolute number is calculated from percentage by rounding up. This can not be 0. Defaults to 1. |
@@ -78,6 +80,7 @@ Helm Chart for Slurm HPC Workload Manager
 | controller.priorityClassName | string | `nil` |  Set the priority class to use. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass |
 | controller.replicas | integer | `1` |  Set the number of replicas to deploy. |
 | controller.resources | object | `{}` |  Set container resource requests and limits for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container |
+| controller.tolerations | list | `[]` |  Configure pod tolerations. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
 | fullnameOverride | string | `""` |  Overrides the full name of the release. |
 | imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |
 | imagePullSecrets | list | `[]` |  Set the secrets for image pull. Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
@@ -99,6 +102,7 @@ Helm Chart for Slurm HPC Workload Manager
 | mariadb.primary.persistence.size | string | `"8Gi"` |  |
 | mariadb.primary.persistence.storageClass | string | `"standard"` |  |
 | mariadb.primary.priorityClassName | string | `""` |  |
+| mariadb.primary.tolerations | list | `[]` |  |
 | mariadb.resources | object | `{}` |  |
 | nameOverride | string | `""` |  Overrides the name of the release. |
 | namespaceOverride | string | `""` |  Overrides the namespace of the release. |
@@ -111,6 +115,7 @@ Helm Chart for Slurm HPC Workload Manager
 | restapi.priorityClassName | string | `""` |  Set the priority class to use. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass |
 | restapi.replicas | integer | `1` |  Set the number of replicas to deploy. |
 | restapi.resources | object | `{}` |  Set container resource requests and limits for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container |
+| restapi.tolerations | list | `[]` |  Configure pod tolerations. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
 | slurm-exporter.enabled | bool | `true` |  |
 | slurm-exporter.exporter.enabled | bool | `true` |  |
 | slurm-exporter.exporter.secretName | string | `"slurm-token-exporter"` |  |

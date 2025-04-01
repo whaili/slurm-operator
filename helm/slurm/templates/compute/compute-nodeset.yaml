@@ -132,6 +132,10 @@ spec:
             - name: {{ $vol.name }}
               mountPath: {{ $vol.mountPath | default (printf "/mnt/%s" $vol.name ) }}
             {{- end }}{{- /* range $vol := $nodeset.volumes */}}
+      {{- with $nodeset.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with $nodeset.tolerations */}}
       volumes:
         {{- include "slurm.volumes" $ | nindent 8 }}
         - name: slurm-config

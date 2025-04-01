@@ -90,6 +90,10 @@ spec:
               port: slurmdbd
           volumeMounts:
             {{- include "slurm.volumeMounts" . | nindent 12 }}
+      {{- with .Values.accounting.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with .Values.accounting.tolerations */}}
       volumes:
         {{- include "slurm.volumes" . | nindent 8 }}
         - name: slurm-config
