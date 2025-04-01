@@ -16,6 +16,8 @@ All notable changes to this project will be documented in this file.
 
 ### Removed
 
+- Removed Slurm daemon `startupProbe`.
+
 ## v0.2.0
 
 ### Added

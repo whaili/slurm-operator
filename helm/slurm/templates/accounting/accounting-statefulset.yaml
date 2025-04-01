@@ -85,9 +85,6 @@ spec:
           ports:
             - name: slurmdbd
               containerPort: {{ include "slurm.accounting.port" . }}
-          startupProbe:
-            tcpSocket:
-              port: slurmdbd
           readinessProbe:
             tcpSocket:
               port: slurmdbd

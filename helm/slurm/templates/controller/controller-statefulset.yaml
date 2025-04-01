@@ -107,11 +107,6 @@ spec:
           ports:
             - name: slurmctld
               containerPort: {{ include "slurm.controller.port" . }}
-          startupProbe:
-            exec:
-              command:
-                - scontrol
-                - ping
           readinessProbe:
             exec:
               command:

@@ -110,12 +110,6 @@ spec:
           ports:
             - name: slurmd
               containerPort: {{ include "slurm.compute.port" $ }}
-          startupProbe:
-            exec:
-              command:
-                - scontrol
-                - show
-                - slurmd
           readinessProbe:
             exec:
               command:
