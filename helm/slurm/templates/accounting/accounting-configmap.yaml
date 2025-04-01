@@ -34,7 +34,7 @@ data:
     #
     ### STORAGE ###
     StorageType=accounting_storage/mysql
-    StorageHost={{- include "mariadb.name" . }}
+    StorageHost={{- template "mariadb.primary.fullname" .Subcharts.mariadb }}
     StorageUser={{- .Values.mariadb.auth.username }}
     StoragePass=$MARIADB_PASSWORD
     StorageLoc={{- .Values.mariadb.auth.database }}

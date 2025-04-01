@@ -61,7 +61,7 @@ spec:
             - name: MARIADB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "mariadb.secretName" . }}
+                  name: {{ template "mariadb.secretName" .Subcharts.mariadb }}
                   key: mariadb-password
           command:
             - bash

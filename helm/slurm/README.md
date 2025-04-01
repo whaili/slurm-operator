@@ -88,7 +88,6 @@ Helm Chart for Slurm HPC Workload Manager
 | jwt.hs256.existingSecret | string | `""` |  The existing secret to use otherwise one will be generated. |
 | mariadb.affinity | object | `{}` |  |
 | mariadb.auth.database | string | `"slurm_acct_db"` |  |
-| mariadb.auth.existingSecret | string | `"slurm-mariadb-passwords"` |  |
 | mariadb.auth.username | string | `"slurm"` |  |
 | mariadb.enabled | bool | `true` |  |
 | mariadb.metrics.enabled | bool | `false` |  |

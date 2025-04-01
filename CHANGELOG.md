@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 
 - Changed webhook to allow updates to `NodeSets[].VolumeClaimTemplates`.
 - Changed Slurm daemon `readinessProbe` to use only tcpSocket.
+- Changed Slurm chart to consume the mariadb secret directly.
 
 ### Removed
 

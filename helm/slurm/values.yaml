@@ -601,7 +601,6 @@ mariadb:
   auth:
     username: slurm
     database: slurm_acct_db
-    existingSecret: "slurm-mariadb-passwords"
   tls:
     enabled: false
   tde:
