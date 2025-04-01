@@ -111,11 +111,8 @@ spec:
             - name: slurmd
               containerPort: {{ include "slurm.compute.port" $ }}
           readinessProbe:
-            exec:
-              command:
-                - scontrol
-                - show
-                - slurmd
+            tcpSocket:
+              port: slurmd
           lifecycle:
             preStop:
               exec:
