@@ -24,6 +24,7 @@ development on this project.
     - [Modifying the API Definitions](#modifying-the-api-definitions)
     - [Slurm Version Changed](#slurm-version-changed)
     - [Running the operator locally](#running-the-operator-locally)
+    - [Slurm Cluster](#slurm-cluster)
 
 <!-- mdformat-toc end -->
 
@@ -208,6 +209,22 @@ slurm    true    110s
 
 See [skaffold port-forwarding][skaffold-port-forwarding] to learn how [skaffold]
 automatically detects which services to forward.
+
+### Slurm Cluster
+
+Get into a Slurm pod that can submit workload.
+
+```bash
+kubectl --namespace=slurm exec -it deployments/slurm-login -- bash -l
+kubectl --namespace=slurm exec -it statefulsets/slurm-controller -- bash -l
+```
+
+```bash
+cloud-provider-kind -enable-lb-port-mapping &
+SLURM_LOGIN_PORT="$(kubectl --namespace=slurm get services -l app.kubernetes.io/name=login,app.kubernetes.io/instance=slurm -o jsonpath="{.items[0].status.loadBalancer.ingress[0].ports[0].port}")"
+SLURM_LOGIN_IP="$(kubectl --namespace=slurm get services -l app.kubernetes.io/name=login,app.kubernetes.io/instance=slurm -o jsonpath="{.items[0].status.loadBalancer.ingress[0].ip}")"
+ssh -p "$SLURM_LOGIN_PORT" "${USER}@${SLURM_LOGIN_IP}"
+```
 
 <!-- Links -->
 

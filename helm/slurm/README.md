@@ -86,6 +86,26 @@ Helm Chart for Slurm HPC Workload Manager
 | imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |
 | imagePullSecrets | list | `[]` |  Set the secrets for image pull. Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
 | jwt.hs256.existingSecret | string | `""` |  The existing secret to use otherwise one will be generated. |
+| login.affinity | object | `{}` |  Set affinity for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity |
+| login.enabled | bool | `true` |  Enables login nodes. |
+| login.image.repository | string | `"ghcr.io/slinkyproject/login"` |  Set the image repository to use. |
+| login.image.tag | string | `"24.11-ubuntu24.04"` |  Set the image tag to use. |
+| login.imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |
+| login.nsswitchConf | map | `{"automount":"files sss","ethers":"db files","group":"db files sss","gshadow":"files","hosts":"files dns myhostname","netgroup":"db files sss","networks":"files","passwd":"db files sss","protocols":"db files","rpc":"db files","services":"db files sss","shadow":"db files sss","sudoers":"files sss"}` |  The `/etc/nsswitch.conf` file to use, represented as a map. Ref: https://man7.org/linux/man-pages/man5/nsswitch.conf.5.html |
+| login.priorityClassName | string | `""` |  Set the priority class to use. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass |
+| login.replicas | integer | `1` |  Set the number of replicas to deploy. |
+| login.resources | object | `{}` |  Set container resource requests and limits for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container |
+| login.rootSshAuthorizedKeys | list | `[]` |  The `/root/.ssh/authorized_keys` file to write, represented as a list. |
+| login.service | object | `{"type":"LoadBalancer"}` |  The restapi service configuration. Ref: https://kubernetes.io/docs/concepts/services-networking/service/ |
+| login.serviceNodePort | integer | `32222` |  The external service node port number. Ignored unless `service.type == NodePort`. |
+| login.servicePort | integer | `2222` |  The external service port number. |
+| login.sshdConfig | map | `{"Include":"/etc/ssh/sshd_config.d/*.conf"}` |  The `/etc/ssh/sshd_config` file to use, represented as a map. Ref: https://man.openbsd.org/sshd_config |
+| login.sssdConf.domains | map[map] | `{"DEFAULT":{"auth_provider":"ldap","id_provider":"ldap","ldap_group_search_base":"ou=Groups,dc=example,dc=com","ldap_search_base":"dc=example,dc=com","ldap_uri":"ldap://ldap.example.com","ldap_user_search_base":"ou=Users,dc=example,dc=com"}}` |  The `/etc/sssd/sssd.conf` [domain/$DOMAIN] sections, represented as a map of map. Ref: https://man.archlinux.org/man/sssd.conf.5#DOMAIN_SECTIONS |
+| login.sssdConf.nss | map | `{"filter_groups":"root,slurm","filter_users":"root,slurm"}` |  The `/etc/sssd/sssd.conf` [nss] section, represented as a map. Ref: https://man.archlinux.org/man/sssd.conf.5#NSS_configuration_options |
+| login.sssdConf.pam | map | `{}` |  The `/etc/sssd/sssd.conf` [pam] section, represented as a map. Ref: https://man.archlinux.org/man/sssd.conf.5#PAM_configuration_options |
+| login.sssdConf.sssd | map | `{"config_file_version":2,"domains":"DEFAULT","services":"nss, pam"}` |  The `/etc/sssd/sssd.conf` [sssd] section, represented as a map. Ref: https://man.archlinux.org/man/sssd.conf.5#The_%5Bsssd%5D_section |
+| login.tolerations | list | `[]` |  Configure pod tolerations. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
+| login.volumes | list | `[]` |  List of volumes to be mounted on each login pod. Ref: https://kubernetes.io/docs/concepts/storage/volumes/ |
 | mariadb.affinity | object | `{}` |  |
 | mariadb.auth.database | string | `"slurm_acct_db"` |  |
 | mariadb.auth.username | string | `"slurm"` |  |
@@ -121,13 +141,14 @@ Helm Chart for Slurm HPC Workload Manager
 | restapi.serviceNodePort | integer | `36820` |  The external service node port number. Ignored unless `service.type == NodePort`. |
 | restapi.servicePort | integer | `6820` |  The external service port number. |
 | restapi.tolerations | list | `[]` |  Configure pod tolerations. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
+| sharedConfig.volumes | list | `[]` |  List of volumes to be mounted on each Login and NodeSet pods. Ref: https://kubernetes.io/docs/concepts/storage/volumes/ |
 | slurm-exporter.enabled | bool | `true` |  |
 | slurm-exporter.exporter.enabled | bool | `true` |  |
 | slurm-exporter.exporter.secretName | string | `"slurm-token-exporter"` |  |
 | slurm.auth.existingSecret | string | `""` |  The existing secret to use otherwise one will be generated. |
 | slurm.configFiles | map[string]string | `{}` |  Optional raw Slurm configuration files, as a map. The map key represents the config file by name; the map value represents config file contents as a string. Ref: https://slurm.schedmd.com/man_index.html#configuration_files |
 | slurm.epilogScripts | map[string]string | `{}` |  The Epilog scripts for compute nodesets, as a map. The map key represents the filename; the map value represents the script contents. WARNING: The script must include a shebang (!) so it can be executed correctly by Slurm. Ref: https://slurm.schedmd.com/slurm.conf.html#OPT_Epilog Ref: https://slurm.schedmd.com/prolog_epilog.html Ref: https://en.wikipedia.org/wiki/Shebang_(Unix) |
-| slurm.extraSlurmConf | map[string]string | map[string][]string | `{"CommunicationParameters":["block_null_hash"],"DebugFlags":[],"EnforcePartLimits":"NO","HashPlugin":"hash/k12","LaunchParameters":["enable_nss_slurm","use_interactive_step","ulimit_pam_adopt"],"LogTimeFormat":["iso8601_ms","format_stderr"],"MaxNodeCount":1024,"PrologFlags":"Contain","ReconfigFlags":["KeepPartInfo","KeepPartState"],"ReturnToService":2,"SchedulerParameters":["defer_batch"],"SchedulerType":"sched/backfill","SelectType":"select/cons_tres","SelectTypeParameters":["CR_Core_Memory"],"SlurmSchedLogLevel":1,"SlurmctldDebug":"info","SlurmctldParameters":["enable_configless","enable_stepmgr"],"SlurmdDebug":"info","SlurmdParameters":["contain_spank"]}` |  Extra slurm configuration lines to append to `slurm.conf`, represetned as a string or a map. WARNING: Values can override existing ones. Ref: https://slurm.schedmd.com/slurm.conf.html |
+| slurm.extraSlurmConf | map[string]string | map[string][]string | `{"AuthInfo":["use_client_ids"],"CommunicationParameters":["block_null_hash"],"DebugFlags":[],"EnforcePartLimits":"NO","HashPlugin":"hash/k12","LaunchParameters":["enable_nss_slurm","use_interactive_step","ulimit_pam_adopt"],"LogTimeFormat":["iso8601_ms","format_stderr"],"MaxNodeCount":1024,"PrologFlags":"Contain","ReconfigFlags":["KeepPartInfo","KeepPartState"],"ReturnToService":2,"SchedulerParameters":["defer_batch"],"SchedulerType":"sched/backfill","SelectType":"select/cons_tres","SelectTypeParameters":["CR_Core_Memory"],"SlurmSchedLogLevel":1,"SlurmctldDebug":"info","SlurmctldParameters":["enable_configless","enable_stepmgr"],"SlurmdDebug":"info","SlurmdParameters":["contain_spank"]}` |  Extra slurm configuration lines to append to `slurm.conf`, represetned as a string or a map. WARNING: Values can override existing ones. Ref: https://slurm.schedmd.com/slurm.conf.html |
 | slurm.extraSlurmdbdConf | map[string]string | map[string][]string | `{"ArchiveDir":"/tmp","CommitDelay":1,"CommunicationParameters":[],"DebugFlags":[],"DebugLevel":"info","HashPlugin":"hash/k12","LogTimeFormat":["iso8601_ms","format_stderr"]}` |  Extra slurmdbd configuration lines to append to `slurmdbd.conf`. WARNING: Values can override existing ones. Ref: https://slurm.schedmd.com/slurmdbd.conf.html |
 | slurm.prologScripts | map[string]string | `{}` |  The Prolog scripts for compute nodesets, as a map. The map key represents the filename; the map value represents the script contents. WARNING: The script must include a shebang (!) so it can be executed correctly by Slurm. Ref: https://slurm.schedmd.com/slurm.conf.html#OPT_Prolog Ref: https://slurm.schedmd.com/prolog_epilog.html Ref: https://en.wikipedia.org/wiki/Shebang_(Unix) |
 

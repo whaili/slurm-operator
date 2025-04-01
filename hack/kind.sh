@@ -10,6 +10,7 @@ ROOT_DIR="$(readlink -f "$(dirname "$0")/..")"
 
 function kind::prerequisites() {
 	go install sigs.k8s.io/kind@latest
+	go install sigs.k8s.io/cloud-provider-kind@latest
 }
 
 function sys::check() {

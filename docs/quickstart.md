@@ -88,6 +88,7 @@ slurm-accounting-0                1/1     Running     0             5m00s
 slurm-compute-debug-0             1/1     Running     0             5m00s
 slurm-controller-0                2/2     Running     0             5m00s
 slurm-exporter-7b44b6d856-d86q5   1/1     Running     0             5m00s
+slurm-login-7649457c6f-vtjrm      1/1     Running     0             5m00s
 slurm-mariadb-0                   1/1     Running     0             5m00s
 slurm-restapi-5f75db85d9-67gpl    1/1     Running     0             5m00s
 slurm-token-create-wcsrx          0/3     Completed   0             5m00s
@@ -95,21 +96,25 @@ slurm-token-create-wcsrx          0/3     Completed   0             5m00s
 
 ### Testing
 
-To test Slurm functionality, connect to the controller to use Slurm client
-commands:
+SSH through the login service:
 
 ```sh
-kubectl --namespace=slurm exec -it statefulsets/slurm-controller -- bash --login
+SLURM_LOGIN_IP="$(kubectl get services -n slurm -l app.kubernetes.io/instance=slurm,app.kubernetes.io/name=login -o jsonpath="{.items[0].status.loadBalancer.ingress[0].ip}")"
+## Assuming your public SSH key was configured in `login.rootSshAuthorizedKeys[]`.
+ssh -p 2222 root@${SLURM_LOGIN_IP}
+## Assuming SSSD is configured.
+ssh -p 2222 ${USER}@${SLURM_LOGIN_IP}
 ```
 
-On the controller pod (e.g. host `slurm@slurm-controller-0`), run the following
-commands to quickly test Slurm is functioning:
+Then, from a login pod, run Slurm commands to quickly test that Slurm is
+functioning:
 
 ```sh
 sinfo
 srun hostname
 sbatch --wrap="sleep 60"
 squeue
+sacct
 ```
 
 See [Slurm Commands][slurm-commands] for more details on how to interact with

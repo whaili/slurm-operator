@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - Added `Tolerations[]` to components.
 - Added `controller.persistence.enabled` option.
 - Added Slurm chart restapi service configuration options.
+- Added login nodes to the Slurm chart.
 
 ### Fixed
 

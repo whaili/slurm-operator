@@ -45,6 +45,23 @@ APP VERSION: {{ .Chart.AppVersion }}
 {{ .Chart.Name }} has been installed. Check its status by running:
   $ kubectl --namespace={{ $.Release.Namespace }} get pods -l app.kubernetes.io/instance={{ $.Release.Name }} --watch
 
+{{- if .Values.login.enabled }}
+
+ssh via the Slurm login service:
+  {{- if eq (.Values.login.service.type | default "" | lower) ("LoadBalancer" | lower) }}
+  $ SLURM_LOGIN_IP="$(kubectl get services -n slurm -l app.kubernetes.io/instance={{ $.Release.Name }},app.kubernetes.io/name=login -o jsonpath="{.items[0].status.loadBalancer.ingress[0].ip}")"
+  {{- else if eq (.Values.login.service.type | default "" | lower) ("ExternalName" | lower) }}
+  $ SLURM_LOGIN_IP="$(kubectl get services -n slurm -l app.kubernetes.io/instance={{ $.Release.Name }},app.kubernetes.io/name=login -o jsonpath="{.items[0].spec.externalName})"
+  {{- else }}
+  $ SLURM_LOGIN_IP="$(kubectl get services -n slurm -l app.kubernetes.io/instance={{ $.Release.Name }},app.kubernetes.io/name=login -o jsonpath="{.items[0].spec.clusterIP})"
+  {{- end }}{{- /* if eq (.Values.login.service.type | default "" | lower) ("LoadBalancer" | lower) */}}
+  {{- if eq (.Values.login.service.type | default "" | lower) ("NodePort" | lower) }}
+  $ ssh -p {{ .Values.login.serviceNodePort }} $SLURM_LOGIN_IP
+  {{- else }}
+  $ ssh -p {{ .Values.login.servicePort }} $SLURM_LOGIN_IP
+  {{- end }}{{- /* if eq (.Values.login.service.type | default "" | lower) ("NodePort" | lower) */}}
+{{- end }}{{- /* if .Values.login.enabled */}}
+
 {{- if .Values.restapi.enabled }}
 
 curl the Slurm restapi service:

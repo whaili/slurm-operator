@@ -193,6 +193,7 @@ install-dev: ## Install binaries for development environment.
 	go install golang.org/x/vuln/cmd/govulncheck@latest
 	go install github.com/go-delve/delve/cmd/dlv@latest
 	go install sigs.k8s.io/kind@latest
+	go install sigs.k8s.io/cloud-provider-kind@latest
 
 .PHONY: helm-dependency-update
 helm-dependency-update: ## Update Helm chart dependencies.

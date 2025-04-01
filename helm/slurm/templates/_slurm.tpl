@@ -225,6 +225,27 @@ Define compute log file
 {{- end }}
 
 {{/*
+Determine login image repository
+*/}}
+{{- define "slurm.login.image.repository" -}}
+{{- .Values.login.image.repository | default (printf "%s/sackd" (include "slurm.image.repository" .)) -}}
+{{- end }}
+
+{{/*
+Define login image tag
+*/}}
+{{- define "slurm.login.image.tag" -}}
+{{- .Values.login.image.tag | default (include "slurm.image.tag" .) -}}
+{{- end }}
+
+{{/*
+Determine login image reference (repo:tag)
+*/}}
+{{- define "slurm.login.imageRef" -}}
+{{- printf "%s:%s" (include "slurm.login.image.repository" .) (include "slurm.login.image.tag" .) | quote -}}
+{{- end }}
+
+{{/*
 Define restapi name
 */}}
 {{- define "slurm.restapi.name" -}}
@@ -308,6 +329,30 @@ Define cluster secret name
 {{- end }}
 
 {{/*
+Define login name
+*/}}
+{{- define "slurm.login.name" -}}
+{{ printf "%s-login" .Release.Name }}
+{{- end }}
+
+{{/*
+Define login labels
+*/}}
+{{- define "slurm.login.labels" -}}
+app.kubernetes.io/component: login
+{{ include "slurm.login.selectorLabels" . }}
+{{ include "slurm.labels" . }}
+{{- end }}
+
+{{/*
+Define login selectorLabels
+*/}}
+{{- define "slurm.login.selectorLabels" -}}
+app.kubernetes.io/name: login
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
 Define token name
 */}}
 {{- define "slurm.token.name" -}}
@@ -381,6 +426,13 @@ Define Slurm config name
 */}}
 {{- define "slurm.configMapName" -}}
 {{- printf "%s-config" (.Release.Name) -}}
+{{- end }}
+
+{{/*
+Define user auth name
+*/}}
+{{- define "slurm.userauth.name" -}}
+{{- printf "%s-userauth" (.Release.Name) -}}
 {{- end }}
 
 {{/*
