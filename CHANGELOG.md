@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - Fixed Slurm chart `app.kubernetes.io/instance` labels.
+- Fixed Slurm chart incorrect `imagePullPolicy` being used.
 
 ### Changed
 

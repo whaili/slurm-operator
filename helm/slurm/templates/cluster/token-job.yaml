@@ -48,7 +48,7 @@ spec:
             {{- include "slurm.init.volumeMounts" . | nindent 12 }}
         - name: sackd
           image: {{ include "slurm.authcred.imageRef" . }}
-          imagePullPolicy: {{ include "slurm.imagePullPolicy" . }}
+          imagePullPolicy: {{ .Values.authcred.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
           restartPolicy: Always
           securityContext:
             {{- include "slurm.securityContext" . | nindent 12 }}
