@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - Fixed Slurm chart `app.kubernetes.io/instance` labels.
 - Fixed Slurm chart incorrect `imagePullPolicy` being used.
 - Fixed Slurm chart not using token job `resources` constraints.
+- Fixed Slurm chart not using token job `securityContext` constraints.
 
 ### Changed
 

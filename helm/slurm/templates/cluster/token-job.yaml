@@ -71,6 +71,8 @@ spec:
           resources:
             {{- .Values.authcred.resources | toYaml | nindent 12 }}
           {{- end }}{{- /* if .Values.authcred.resources */}}
+          securityContext:
+            {{- include "slurm.securityContext" . | nindent 12 }}
           env:
             - name: SLURM_USER
               value: {{ include "slurm.user" . }}
@@ -97,6 +99,8 @@ spec:
           resources:
             {{- .Values.authcred.resources | toYaml | nindent 12 }}
           {{- end }}{{- /* if .Values.authcred.resources */}}
+          securityContext:
+            {{- include "slurm.securityContext" . | nindent 12 }}
           env:
             - name: SLURM_USER
               value: {{ include "exporter.user" . }}
