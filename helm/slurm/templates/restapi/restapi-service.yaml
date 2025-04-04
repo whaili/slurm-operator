@@ -12,12 +12,17 @@ metadata:
   labels:
     {{- include "slurm.restapi.labels" . | nindent 4 }}
 spec:
-  clusterIP: None
   selector:
     {{- include "slurm.restapi.selectorLabels" . | nindent 4 }}
+  {{- with .Values.restapi.service }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}{{- /* with .Values.restapi.service */}}
   ports:
     - name: slurmrestd
       protocol: TCP
-      port: {{ include "slurm.restapi.port" . }}
-      targetPort: {{ include "slurm.restapi.port" . }}
+      port: {{ .Values.restapi.servicePort }}
+      targetPort: 6820
+      {{- if eq (.Values.restapi.service.type | default "ClusterIP" | lower) ("NodePort" | lower) }}
+      nodePort: {{ .Values.restapi.serviceNodePort }}
+      {{- end }}{{- /* if eq (.Values.restapi.service.type | default "ClusterIP" | lower) ("NodePort" | lower) */}}
 {{- end }}{{- /* if .Values.restapi.enabled */}}

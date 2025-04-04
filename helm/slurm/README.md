@@ -117,6 +117,9 @@ Helm Chart for Slurm HPC Workload Manager
 | restapi.priorityClassName | string | `""` |  Set the priority class to use. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass |
 | restapi.replicas | integer | `1` |  Set the number of replicas to deploy. |
 | restapi.resources | object | `{}` |  Set container resource requests and limits for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container |
+| restapi.service | object | `{}` |  The restapi service configuration. Ref: https://kubernetes.io/docs/concepts/services-networking/service/ |
+| restapi.serviceNodePort | integer | `36820` |  The external service node port number. Ignored unless `service.type == NodePort`. |
+| restapi.servicePort | integer | `6820` |  The external service port number. |
 | restapi.tolerations | list | `[]` |  Configure pod tolerations. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
 | slurm-exporter.enabled | bool | `true` |  |
 | slurm-exporter.exporter.enabled | bool | `true` |  |

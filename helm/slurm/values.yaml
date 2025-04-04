@@ -716,6 +716,23 @@ restapi:
     # Set the image tag to use.
     tag: 24.11-ubuntu24.04
   #
+  # -- (object)
+  # The restapi service configuration.
+  # Ref: https://kubernetes.io/docs/concepts/services-networking/service/
+  service: {}
+    # type: LoadBalancer
+    # externalIPs: []
+    # externalName: my.slurmrestd.example.com
+  #
+  # -- (integer)
+  # The external service port number.
+  servicePort: 6820
+  #
+  # -- (integer)
+  # The external service node port number.
+  # Ignored unless `service.type == NodePort`.
+  serviceNodePort: 36820
+  #
   # -- (string)
   # Set the priority class to use.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass

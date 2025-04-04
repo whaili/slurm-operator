@@ -29,7 +29,6 @@ spec:
       labels:
         {{- include "slurm.restapi.labels" . | nindent 8 }}
     spec:
-      hostname: {{ include "slurm.restapi.name" . }}
       priorityClassName: {{ .Values.restapi.priorityClassName | default .Values.priorityClassName }}
       automountServiceAccountToken: false
       dnsConfig:
@@ -80,7 +79,7 @@ spec:
             - "0.0.0.0:{{- include "slurm.restapi.port" . }}"
           ports:
             - name: slurmrestd
-              containerPort: {{ include "slurm.restapi.port" . }}
+              containerPort: 6820
           startupProbe:
             tcpSocket:
               port: slurmrestd
