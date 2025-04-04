@@ -48,7 +48,7 @@ APP VERSION: {{ .Chart.AppVersion }}
 Learn more about Slurm:
   - Overview: https://slurm.schedmd.com/overview.html
   - Quickstart: https://slurm.schedmd.com/quickstart.html
-  - Documentaion: https://slurm.schedmd.com/documentation.html
+  - Documentation: https://slurm.schedmd.com/documentation.html
   - Support: https://www.schedmd.com/slurm-support/our-services/
   - File Tickets: https://support.schedmd.com/
 
