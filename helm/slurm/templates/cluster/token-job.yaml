@@ -12,7 +12,6 @@ metadata:
   labels:
     {{- include "slurm.token.labels" . | nindent 4 }}
 spec:
-  ttlSecondsAfterFinished: 0
   template:
     metadata:
       annotations:

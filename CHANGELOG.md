@@ -31,6 +31,7 @@ All notable changes to this project will be documented in this file.
   `map[string][]string`.
 - Changed partition config expression to `map[string]string` or
   `map[string][]string`.
+- Changed Slurm chart to keep token job after completion.
 
 ### Removed
 
