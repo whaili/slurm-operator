@@ -81,6 +81,27 @@ spec:
               {{- end }}
           volumeMounts:
             {{- include "slurm.init.volumeMounts" $ | nindent 12 }}
+        - name: logfile
+          image: {{ include "slurm.authcred.imageRef" $ }}
+          imagePullPolicy: {{ $.Values.authcred.imagePullPolicy | default (include "slurm.imagePullPolicy" $) }}
+          restartPolicy: Always
+          env:
+            - name: SOCKET
+              value: {{ include "slurm.compute.logFile" $ }}
+          command:
+            - bash
+            - -c
+            - |
+              {{- range $.Files.Lines "scripts/socket-logger.sh" }}
+              {{ . }}
+              {{- end }}{{- /* range $.Files.Lines "scripts/socket-logger.sh" */}}
+          {{- if $.Values.authcred.resources }}
+          resources:
+            {{- $.Values.authcred.resources | toYaml | nindent 12 }}
+          {{- end }}{{- /* if $.Values.authcred.resources */}}
+          volumeMounts:
+            - name: slurm-log
+              mountPath: /var/log/slurm
       containers:
         - name: slurmd
           image: {{ $imageRef }}
@@ -127,6 +148,8 @@ spec:
                     scontrol delete nodename=$(hostname);
           volumeMounts:
             {{- include "slurm.volumeMounts" $ | nindent 12 }}
+            - name: slurm-log
+              mountPath: /var/log/slurm
             {{- range $vct := $nodeset.volumeClaimTemplates }}
             - name: {{ $vct.metadata.name }}
               mountPath: {{ $vct.spec.mountPath | default (printf "/mnt/%s" $vct.metadata.name ) }}
@@ -147,6 +170,9 @@ spec:
             sources:
               - secret:
                   name: {{ include "slurm.auth.secretName" $ }}
+        - name: slurm-log
+          emptyDir:
+            medium: Memory
         {{- if $nodeset.volumes }}
         {{- $nodeset.volumes | toYaml | nindent 8 }}
         {{- end }}{{- /* if $nodeset.volumes */}}

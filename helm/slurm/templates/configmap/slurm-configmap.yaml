@@ -44,9 +44,9 @@ data:
     {{- end }}{{- /* if or .Values.slurm.prologScripts .Values.slurm.epilogScripts */}}
     #
     ### LOGGING ###
-    SlurmctldLogFile=/proc/1/fd/1
-    SlurmSchedLogFile=/proc/1/fd/1
-    SlurmdLogFile=/proc/1/fd/1
+    SlurmctldLogFile=/dev/null
+    SlurmSchedLogFile=/dev/null
+    SlurmdLogFile={{- include "slurm.compute.logFile" . }}
     #
     ### PLUGINS & PARAMETERS ###
     AuthType=auth/slurm

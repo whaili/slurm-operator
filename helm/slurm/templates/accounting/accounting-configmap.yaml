@@ -41,7 +41,7 @@ data:
     StoragePort={{- default .Values.mariadb.primary.service.ports.mysql 3306 }}
     #
     ### LOGGING ###
-    LogFile=/proc/1/fd/1
+    LogFile=/dev/null
     {{- with .Values.slurm.slurmdbdConfig }}
     #
     ### EXTRA CONFIG ###

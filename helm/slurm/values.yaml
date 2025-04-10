@@ -80,7 +80,7 @@ slurm:
     ### LOGGING ###
     DebugLevel=info
     #DebugFlags=
-    LogTimeFormat=iso8601_ms
+    LogTimeFormat=iso8601_ms,format_stderr
     #
     # PLUGINS & PARAMETERS
     #CommunicationParameters=
@@ -132,7 +132,7 @@ slurm:
     SlurmSchedLogLevel=1
     SlurmdDebug=info
     #DebugFlags=
-    LogTimeFormat=iso8601_ms
+    LogTimeFormat=iso8601_ms,format_stderr
   #
   # -- (map[string]string)
   # Optional raw Slurm configuration files, as a map.

@@ -218,6 +218,13 @@ Define slurmd capabilities
 {{- end }}
 
 {{/*
+Define compute log file
+*/}}
+{{- define "slurm.compute.logFile" -}}
+{{- print "/var/log/slurm/slurmd.log" -}}
+{{- end }}
+
+{{/*
 Define restapi name
 */}}
 {{- define "slurm.restapi.name" -}}
