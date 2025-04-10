@@ -85,7 +85,13 @@ data:
     {{- $nodesetList = append $nodesetList $nodeset.name }}
     NodeSet={{- $nodeset.name }} Feature={{- $nodeset.name }}
     {{- if $nodeset.partition.enabled }}
-    PartitionName={{- $nodeset.name }} Nodes={{- $nodeset.name }} {{ $nodeset.partition.config }}
+    {{- $nodesetPartitionConfig := list -}}
+    {{- range $key, $val := $nodeset.partition.config }}
+    {{- if $val }}
+    {{- $nodesetPartitionConfig = append $nodesetPartitionConfig (printf "%s=%s" $key (join "," $val)) -}}
+    {{- end }}{{- /* if $val */}}
+    {{- end }}{{- /* range $key, $val := $nodeset.partition.config */}}
+    PartitionName={{- $nodeset.name }} Nodes={{- $nodeset.name }} {{ join " " $nodesetPartitionConfig }}
     {{- end }}{{- /* if $nodeset.partition.enabled */}}
     {{- end }}{{- /* if $nodeset.enabled */}}
     {{- end }}{{- /* range $nodeset := .Values.compute.nodesets */}}
@@ -100,7 +106,13 @@ data:
     {{- fail (printf "partition with name `%s` already exists." $part.name) }}
     {{- end }}{{- /* if has $part.name $partitionList */}}
     {{- $partitionList = append $partitionList $part.name }}
-    PartitionName={{- $part.name }} Nodes={{- join "," $part.nodesets }} {{ $part.config }}
+    {{- $partConfig := list -}}
+    {{- range $key, $val := $part.config }}
+    {{- if $val }}
+    {{- $partConfig = append $partConfig (printf "%s=%s" $key (join "," $val)) -}}
+    {{- end }}{{- /* if $val */}}
+    {{- end }}{{- /* range $key, $val := $part.config */}}
+    PartitionName={{- $part.name }} Nodes={{- join "," $part.nodesets }} {{ join " " $partConfig }}
     {{- end }}{{- /* if and $part.enabled $part.nodesets */}}
     {{- end }}{{- /* range $part := .Values.compute.partitions */}}
     {{- with .Values.slurm.extraSlurmConf }}

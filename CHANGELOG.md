@@ -29,6 +29,8 @@ All notable changes to this project will be documented in this file.
   stdout streams.
 - Changed `slurm.extra*Conf` expression to `map[string]string` or
   `map[string][]string`.
+- Changed partition config expression to `map[string]string` or
+  `map[string][]string`.
 
 ### Removed
 

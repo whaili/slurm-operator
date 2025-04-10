@@ -491,12 +491,12 @@ compute:
         # Enables this NodeSet's partition line to be added in Slurm.
         enabled: true
         #
-        # -- (string)
+        # -- (map[string]string | map[string][]string)
         # Extra Slurm partition configuration appended onto the partition line.
         # Ref: https://slurm.schedmd.com/slurm.conf.html#lbAI
-        config: >-
-          State=UP
-          MaxTime=UNLIMITED
+        config:
+          State: UP
+          MaxTime: UNLIMITED
       #
       # -- (string)
       # Set Slurm node GRES.
@@ -531,13 +531,13 @@ compute:
       nodesets:
         - ALL
       #
-      # -- (string)
+      # -- (map[string]string | map[string][]string)
       # Extra Slurm partition configuration appended onto the partition line.
       # Ref: https://slurm.schedmd.com/slurm.conf.html#lbAI
-      config: >-
-        State=UP
-        Default=YES
-        MaxTime=UNLIMITED
+      config:
+        State: UP
+        Default: "YES"
+        MaxTime: UNLIMITED
 
 #
 # Slurm accounting (slurmdbd) configurations.
