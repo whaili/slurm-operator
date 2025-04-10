@@ -27,6 +27,8 @@ All notable changes to this project will be documented in this file.
 - Changed Slurm chart to consume the mariadb secret directly.
 - Changed how Slurm daemon containers log their logfile, no longer duplicated
   stdout streams.
+- Changed `slurm.extra*Conf` expression to `map[string]string` or
+  `map[string][]string`.
 
 ### Removed
 

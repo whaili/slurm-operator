@@ -45,6 +45,10 @@ data:
     {{- with .Values.slurm.extraSlurmdbdConf }}
     #
     ### EXTRA CONFIG ###
-    {{- . | nindent 4 -}}
+    {{- range $key, $val := . }}
+    {{- if $val }}
+    {{ $key }}={{ $val | join "," }}
+    {{- end }}{{- /* if $val */}}
+    {{- end }}{{- /* range $key, $val := . */}}
     {{- end }}{{- /* with .Values.slurm.extraSlurmdbdConf */}}
 {{- end }}

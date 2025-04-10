@@ -70,69 +70,78 @@ slurm:
     # The existing secret to use otherwise one will be generated.
     existingSecret: ""
   #
-  # -- (string)
+  # -- (map[string]string | map[string][]string)
   # Extra slurmdbd configuration lines to append to `slurmdbd.conf`.
   # WARNING: Values can override existing ones.
   # Ref: https://slurm.schedmd.com/slurmdbd.conf.html
-  extraSlurmdbdConf: |-
-    CommitDelay=1
-    #
+  extraSlurmdbdConf:
+    CommitDelay: 1
     ### LOGGING ###
-    DebugLevel=info
-    #DebugFlags=
-    LogTimeFormat=iso8601_ms,format_stderr
-    #
+    DebugLevel: info
+    DebugFlags: []
+    LogTimeFormat:
+      - iso8601_ms
+      - format_stderr
     # PLUGINS & PARAMETERS
-    #CommunicationParameters=
-    HashPlugin=hash/k12
-    #
+    CommunicationParameters: []
+    HashPlugin: hash/k12
     ### ARCHIVE ###
-    ArchiveDir=/tmp
-    #ArchiveEvents=YES
-    #ArchiveJobs=YES
-    #ArchiveResvs=YES
-    #ArchiveSteps=NO
-    #ArchiveSuspend=NO
-    #ArchiveTXN=NO
-    #ArchiveUsage=NO
-    #
+    ArchiveDir: /tmp
+    #ArchiveEvents: YES
+    #ArchiveJobs: YES
+    #ArchiveResvs: YES
+    #ArchiveSteps: NO
+    #ArchiveSuspend: NO
+    #ArchiveTXN: NO
+    #ArchiveUsage: NO
     ### PURGE ###
-    #PurgeEventAfter=12month
-    #PurgeJobAfter=12month
-    #PurgeResvAfter=2month
-    #PurgeStepAfter=2month
-    #PurgeSuspendAfter=1month
-    #PurgeTXNAfter=12month
-    #PurgeUsageAfter=12month
+    #PurgeEventAfter: 12month
+    #PurgeJobAfter: 12month
+    #PurgeResvAfter: 2month
+    #PurgeStepAfter: 2month
+    #PurgeSuspendAfter: 1month
+    #PurgeTXNAfter: 12month
+    #PurgeUsageAfter: 12month
   #
-  # -- (string)
-  # Extra slurm configuration lines to append to `slurm.conf`.
+  # -- (map[string]string | map[string][]string)
+  # Extra slurm configuration lines to append to `slurm.conf`, represetned as a string or a map.
   # WARNING: Values can override existing ones.
   # Ref: https://slurm.schedmd.com/slurm.conf.html
-  extraSlurmConf: |-
-    MaxNodeCount=1024
-    ReturnToService=2
-    EnforcePartLimits=NO
-    #
+  extraSlurmConf:
+    MaxNodeCount: 1024
+    ReturnToService: 2
+    EnforcePartLimits: "NO"
     ### PLUGINS & PARAMETERS ###
-    SchedulerType=sched/backfill
-    SchedulerParameters=defer_batch
-    SelectType=select/cons_tres
-    SelectTypeParameters=CR_Core_Memory
-    SlurmctldParameters=enable_configless,enable_stepmgr
-    SlurmdParameters=contain_spank
-    CommunicationParameters=block_null_hash
-    LaunchParameters=enable_nss_slurm,use_interactive_step,ulimit_pam_adopt
-    #ReconfigFlags=KeepPartInfo,KeepPartState
-    PrologFlags=Contain
-    HashPlugin=hash/k12
-    #
+    SchedulerType: sched/backfill
+    SchedulerParameters:
+      - defer_batch
+    SelectType: select/cons_tres
+    SelectTypeParameters:
+      - CR_Core_Memory
+    SlurmctldParameters:
+      - enable_configless
+      - enable_stepmgr
+    SlurmdParameters:
+      - contain_spank
+    CommunicationParameters:
+      - block_null_hash
+    LaunchParameters:
+      - enable_nss_slurm
+      - use_interactive_step
+      - ulimit_pam_adopt
+    ReconfigFlags:
+      - KeepPartInfo
+      - KeepPartState
+    PrologFlags: Contain
+    HashPlugin: hash/k12
     ### LOGGING ###
-    SlurmctldDebug=info
-    SlurmSchedLogLevel=1
-    SlurmdDebug=info
-    #DebugFlags=
-    LogTimeFormat=iso8601_ms,format_stderr
+    SlurmctldDebug: info
+    SlurmSchedLogLevel: 1
+    SlurmdDebug: info
+    DebugFlags: []
+    LogTimeFormat:
+      - iso8601_ms
+      - format_stderr
   #
   # -- (map[string]string)
   # Optional raw Slurm configuration files, as a map.
