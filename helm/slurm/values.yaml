@@ -87,7 +87,7 @@ slurm:
     HashPlugin=hash/k12
     #
     ### ARCHIVE ###
-    ArchiveDir=/dev/null
+    ArchiveDir=/tmp
     #ArchiveEvents=YES
     #ArchiveJobs=YES
     #ArchiveResvs=YES
