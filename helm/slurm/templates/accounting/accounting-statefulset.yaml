@@ -64,6 +64,9 @@ spec:
                   name: {{ template "mariadb.secretName" .Subcharts.mariadb }}
                   key: mariadb-password
           command:
+            - tini
+            - -g
+            - --
             - bash
             - -c
             - |

@@ -73,6 +73,9 @@ spec:
             - name: SLURM_USER
               value: {{ include "slurm.user" $ }}
           command:
+            - tini
+            - -g
+            - --
             - bash
             - -c
             - |
@@ -89,6 +92,9 @@ spec:
             - name: SOCKET
               value: {{ include "slurm.compute.logFile" $ }}
           command:
+            - tini
+            - -g
+            - --
             - bash
             - -c
             - |
