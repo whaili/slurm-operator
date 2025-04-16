@@ -87,13 +87,13 @@ slurm:
     HashPlugin: hash/k12
     ### ARCHIVE ###
     ArchiveDir: /tmp
-    #ArchiveEvents: YES
-    #ArchiveJobs: YES
-    #ArchiveResvs: YES
-    #ArchiveSteps: NO
-    #ArchiveSuspend: NO
-    #ArchiveTXN: NO
-    #ArchiveUsage: NO
+    #ArchiveEvents: "YES"
+    #ArchiveJobs: "YES"
+    #ArchiveResvs: "YES"
+    #ArchiveSteps: "NO"
+    #ArchiveSuspend: "NO"
+    #ArchiveTXN: "NO"
+    #ArchiveUsage: "NO"
     ### PURGE ###
     #PurgeEventAfter: 12month
     #PurgeJobAfter: 12month
