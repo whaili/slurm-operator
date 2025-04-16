@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file.
 - Fixed mariadb subchart `innodb_*` configurations for Slurm.
 - Fixed `ArchiveDir` not being a valid value.
 - Fixed `slurm.extraSlurmdbdConf` not being used.
+- Fixed slurmrestd failing to start when accounting is disabled.
 
 ### Changed
 
