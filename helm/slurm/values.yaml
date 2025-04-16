@@ -177,8 +177,9 @@ slurm:
   # Ref: https://slurm.schedmd.com/prolog_epilog.html
   # Ref: https://en.wikipedia.org/wiki/Shebang_(Unix)
   prologScripts: {}
-    # empty: |
+    # 00-empty.sh: |
     #   #!/usr/bin/env bash
+    #   set -euo pipefail
     #   exit 0
   #
   # -- (map[string]string)
@@ -189,8 +190,9 @@ slurm:
   # Ref: https://slurm.schedmd.com/prolog_epilog.html
   # Ref: https://en.wikipedia.org/wiki/Shebang_(Unix)
   epilogScripts: {}
-    # empty: |
+    # 00-empty.sh: |
     #   #!/usr/bin/env bash
+    #   set -euo pipefail
     #   exit 0
 
 #
