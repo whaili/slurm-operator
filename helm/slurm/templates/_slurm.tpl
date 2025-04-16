@@ -445,8 +445,6 @@ Common volumes
     medium: Memory
 - name: run
   emptyDir: {}
-- name: authsocket
-  emptyDir: {}
 {{- end }}
 
 {{/*

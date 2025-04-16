@@ -134,6 +134,8 @@ spec:
             sources:
               - secret:
                   name: {{ include "slurm.auth.secretName" . }}
+        - name: authsocket
+          emptyDir: {}
         {{- if $.Values.login.volumes }}
         {{- toYaml $.Values.login.volumes | nindent 8 }}
         {{- end }}{{- /* if $.Values.login.volumes */}}

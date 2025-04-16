@@ -127,6 +127,8 @@ spec:
                   name: {{ include "slurm.auth.secretName" . }}
               - secret:
                   name: {{ include "slurm.jwt.hs256.secretName" . }}
+        - name: authsocket
+          emptyDir: {}
         {{- if and .Values.controller.persistence.enabled .Values.controller.persistence.existingClaim }}
         - name: {{ include "slurm.controller.statesave.name" . }}
           persistentVolumeClaim:

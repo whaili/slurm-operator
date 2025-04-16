@@ -136,4 +136,6 @@ spec:
             sources:
               - secret:
                   name: {{ include "slurm.auth.secretName" $ }}
+        - name: authsocket
+          emptyDir: {}
 {{- end }}{{- /* if .Values.controller.enabled */}}
