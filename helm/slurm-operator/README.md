@@ -20,7 +20,7 @@ Helm Chart for Slurm HPC Workload Manager Operator
 | operator.clusterWorkers | integer | `1` |  Set the max concurrent workers for the Cluster controller. |
 | operator.enabled | bool | `true` |  Enables the operator. |
 | operator.image.repository | string | `"ghcr.io/slinkyproject/slurm-operator"` |  Sets the image repository to use. |
-| operator.image.tag | string | The Release version. |  Sets the image tag to use. |
+| operator.image.tag | string | The chart Version. |  Sets the image tag to use. |
 | operator.imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |
 | operator.logLevel | string | `"info"` |  Set the log level by string (e.g. error, info, debug) or number (e.g. 1..5). |
 | operator.nodesetWorkers | integer | `1` |  Set the max concurrent workers for the NodeSet controller. |
@@ -33,7 +33,7 @@ Helm Chart for Slurm HPC Workload Manager Operator
 | webhook.affinity | object | `{}` |  Set affinity for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity |
 | webhook.enabled | bool | `true` |  Enables the webhook. |
 | webhook.image.repository | string | `"ghcr.io/slinkyproject/slurm-operator-webhook"` |  Sets the image repository to use. |
-| webhook.image.tag | string | The Release version. |  Sets the image tag to use. |
+| webhook.image.tag | string | The chart Version. |  Sets the image tag to use. |
 | webhook.imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |
 | webhook.logLevel | string | `"info"` |  Set the log level by string (e.g. error, info, debug) or number (e.g. 1..5). |
 | webhook.replicas | integer | `1` |  Set the number of replicas to deploy. |
