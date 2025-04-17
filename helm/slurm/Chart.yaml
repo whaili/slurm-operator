@@ -16,5 +16,5 @@ dependencies:
     condition: mariadb.enabled
   - name: slurm-exporter
     repository: oci://ghcr.io/slinkyproject/charts
-    version: ~0.2.0
+    version: ~0.2.1
     condition: slurm-exporter.enabled
