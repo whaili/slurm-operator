@@ -43,10 +43,10 @@ helm install prometheus prometheus-community/kube-prometheus-stack \
 Download values and install the slurm-operator from OCI package.
 
 ```bash
-curl -L https://raw.githubusercontent.com/SlinkyProject/slurm-operator/refs/tags/v0.1.0/helm/slurm-operator/values.yaml \
+curl -L https://raw.githubusercontent.com/SlinkyProject/slurm-operator/refs/tags/v0.2.1/helm/slurm-operator/values.yaml \
   -o values-operator.yaml
 helm install slurm-operator oci://ghcr.io/slinkyproject/charts/slurm-operator \
-  --values=values-operator.yaml --version=0.1.0 --namespace=slinky --create-namespace
+  --values=values-operator.yaml --version=0.2.1 --namespace=slinky --create-namespace
 ```
 
 Make sure the cluster deployed successfully with:
@@ -68,10 +68,10 @@ slurm-operator-webhook-6fd8d7857d-zcvqh   1/1     Running   0          5m00s
 Download values and install a Slurm cluster from OCI package.
 
 ```bash
-curl -L https://raw.githubusercontent.com/SlinkyProject/slurm-operator/refs/tags/v0.1.0/helm/slurm/values.yaml \
+curl -L https://raw.githubusercontent.com/SlinkyProject/slurm-operator/refs/tags/v0.2.1/helm/slurm/values.yaml \
   -o values-slurm.yaml
 helm install slurm oci://ghcr.io/slinkyproject/charts/slurm \
-  --values=values-slurm.yaml --version=0.1.0 --namespace=slurm --create-namespace
+  --values=values-slurm.yaml --version=0.2.1 --namespace=slurm --create-namespace
 ```
 
 Make sure the slurm cluster deployed successfully with:
