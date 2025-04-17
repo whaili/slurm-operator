@@ -430,16 +430,24 @@ login:
     netgroup: db files sss
     automount: files sss
   #
-  # -- (list)
-  # List of volumes to be mounted on each login pod.
+  # --(list)
+  # List of volume mounts.
   # Ref: https://kubernetes.io/docs/concepts/storage/volumes/
-  volumes: []
+  extraVolumeMounts: []
     # - name: nfs-home
     #   mountPath: /home
-    #   persistentVolumeClaim:
-    #     claimName: nfs-home
     # - name: nfs-data
     #   mountPath: /mnt/data
+  #
+  # --(list)
+  # Define list of pod volumes.
+  # Ref: https://kubernetes.io/docs/concepts/storage/volumes/
+  extraVolumes: []
+    # - name: nfs-home
+    #   nfs:
+    #     server: nfs-server.example.com
+    #     path: /exports/home/
+    # - name: nfs-data
     #   persistentVolumeClaim:
     #     claimName: nfs-data
   #
@@ -623,18 +631,24 @@ compute:
         #       requests:
         #         storage: 1Gi
       #
-      # -- (list)
-      # List of volumes to be mounted on each NodeSet pod.
+      # --(list)
+      # List of volume mounts.
       # Ref: https://kubernetes.io/docs/concepts/storage/volumes/
-      volumes: []
-        # - name: nfs-bin
-        #   mountPath: /usr/local/bin
-        #   nfs:
-        #     server: nfs-server.example.com
-        #     path: /opt/bin
-        #     readOnly: true
+      extraVolumeMounts: []
+        # - name: nfs-home
+        #   mountPath: /home
         # - name: nfs-data
         #   mountPath: /mnt/data
+      #
+      # --(list)
+      # Define list of pod volumes.
+      # Ref: https://kubernetes.io/docs/concepts/storage/volumes/
+      extraVolumes: []
+        # - name: nfs-home
+        #   nfs:
+        #     server: nfs-server.example.com
+        #     path: /exports/home/
+        # - name: nfs-data
         #   persistentVolumeClaim:
         #     claimName: nfs-data
       #

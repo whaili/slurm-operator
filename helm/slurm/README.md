@@ -33,10 +33,12 @@ Helm Chart for Slurm HPC Workload Manager
 | compute.image.repository | string | `"ghcr.io/slinkyproject/slurmd"` |  Set the image repository to use. |
 | compute.image.tag | string | The Release appVersion. |  Set the image tag to use. |
 | compute.imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |
-| compute.nodesets | list | `[{"affinity":{},"enabled":true,"image":{"repository":"","tag":""},"imagePullPolicy":"IfNotPresent","name":"debug","nodeFeatures":[],"nodeGres":"","nodeSelector":{"kubernetes.io/os":"linux"},"nodeWeight":1,"partition":{"config":{"MaxTime":"UNLIMITED","State":"UP"},"enabled":true},"persistentVolumeClaimRetentionPolicy":{"whenDeleted":"Retain","whenScaled":"Retain"},"priorityClassName":"","replicas":1,"resources":{"limits":{"cpu":1,"memory":"1Gi"}},"tolerations":[],"updateStrategy":{"rollingUpdate":{"maxUnavailable":"20%"},"type":"RollingUpdate"},"volumeClaimTemplates":[],"volumes":[]}]` |  Slurm NodeSets by object list. |
-| compute.nodesets[0] | string | `{"affinity":{},"enabled":true,"image":{"repository":"","tag":""},"imagePullPolicy":"IfNotPresent","name":"debug","nodeFeatures":[],"nodeGres":"","nodeSelector":{"kubernetes.io/os":"linux"},"nodeWeight":1,"partition":{"config":{"MaxTime":"UNLIMITED","State":"UP"},"enabled":true},"persistentVolumeClaimRetentionPolicy":{"whenDeleted":"Retain","whenScaled":"Retain"},"priorityClassName":"","replicas":1,"resources":{"limits":{"cpu":1,"memory":"1Gi"}},"tolerations":[],"updateStrategy":{"rollingUpdate":{"maxUnavailable":"20%"},"type":"RollingUpdate"},"volumeClaimTemplates":[],"volumes":[]}` |  Name of NodeSet. Must be unique. |
+| compute.nodesets | list | `[{"affinity":{},"enabled":true,"extraVolumeMounts":[],"extraVolumes":[],"image":{"repository":"","tag":""},"imagePullPolicy":"IfNotPresent","name":"debug","nodeFeatures":[],"nodeGres":"","nodeSelector":{"kubernetes.io/os":"linux"},"nodeWeight":1,"partition":{"config":{"MaxTime":"UNLIMITED","State":"UP"},"enabled":true},"persistentVolumeClaimRetentionPolicy":{"whenDeleted":"Retain","whenScaled":"Retain"},"priorityClassName":"","replicas":1,"resources":{"limits":{"cpu":1,"memory":"1Gi"}},"tolerations":[],"updateStrategy":{"rollingUpdate":{"maxUnavailable":"20%"},"type":"RollingUpdate"},"volumeClaimTemplates":[]}]` |  Slurm NodeSets by object list. |
+| compute.nodesets[0] | string | `{"affinity":{},"enabled":true,"extraVolumeMounts":[],"extraVolumes":[],"image":{"repository":"","tag":""},"imagePullPolicy":"IfNotPresent","name":"debug","nodeFeatures":[],"nodeGres":"","nodeSelector":{"kubernetes.io/os":"linux"},"nodeWeight":1,"partition":{"config":{"MaxTime":"UNLIMITED","State":"UP"},"enabled":true},"persistentVolumeClaimRetentionPolicy":{"whenDeleted":"Retain","whenScaled":"Retain"},"priorityClassName":"","replicas":1,"resources":{"limits":{"cpu":1,"memory":"1Gi"}},"tolerations":[],"updateStrategy":{"rollingUpdate":{"maxUnavailable":"20%"},"type":"RollingUpdate"},"volumeClaimTemplates":[]}` |  Name of NodeSet. Must be unique. |
 | compute.nodesets[0].affinity | object | `{}` |  Set affinity for Kubernetes Pod scheduling. |
 | compute.nodesets[0].enabled | bool | `true` |  Enables the NodeSet in Slurm. |
+| compute.nodesets[0].extraVolumeMounts | list | `[]` |  List of volume mounts. Ref: https://kubernetes.io/docs/concepts/storage/volumes/ |
+| compute.nodesets[0].extraVolumes | list | `[]` |  Define list of pod volumes. Ref: https://kubernetes.io/docs/concepts/storage/volumes/ |
 | compute.nodesets[0].image.repository | string | `""` |  Set the image repository to use. |
 | compute.nodesets[0].image.tag | string | `""` |  Set the image tag to use. |
 | compute.nodesets[0].imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |
@@ -59,7 +61,6 @@ Helm Chart for Slurm HPC Workload Manager
 | compute.nodesets[0].updateStrategy.rollingUpdate.maxUnavailable | string | `"20%"` |  The maximum number of pods that can be unavailable during the update. Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%). Absolute number is calculated from percentage by rounding up. This can not be 0. Defaults to 1. |
 | compute.nodesets[0].updateStrategy.type | string | `"RollingUpdate"` |  Set the update strategy type. Can be either: "RollingUpdate"; "OnDelete". |
 | compute.nodesets[0].volumeClaimTemplates | list | `[]` |  List of PVCs to be created from template and mounted on each NodeSet pod. PVCs are given a unique identity relative to each NodeSet pod. Ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#volume-claim-templates |
-| compute.nodesets[0].volumes | list | `[]` |  List of volumes to be mounted on each NodeSet pod. Ref: https://kubernetes.io/docs/concepts/storage/volumes/ |
 | compute.partitions | list | `[{"config":{"Default":"YES","MaxTime":"UNLIMITED","State":"UP"},"enabled":true,"name":"all","nodesets":["ALL"]}]` |  Slurm Partitions by object list. |
 | compute.partitions[0] | string | `{"config":{"Default":"YES","MaxTime":"UNLIMITED","State":"UP"},"enabled":true,"name":"all","nodesets":["ALL"]}` |  Name of Partition. Must be unique. |
 | compute.partitions[0].config | map[string]string | map[string][]string | `{"Default":"YES","MaxTime":"UNLIMITED","State":"UP"}` |  Extra Slurm partition configuration appended onto the partition line. Ref: https://slurm.schedmd.com/slurm.conf.html#lbAI |
@@ -88,6 +89,8 @@ Helm Chart for Slurm HPC Workload Manager
 | jwt.hs256.existingSecret | string | `""` |  The existing secret to use otherwise one will be generated. |
 | login.affinity | object | `{}` |  Set affinity for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity |
 | login.enabled | bool | `true` |  Enables login nodes. |
+| login.extraVolumeMounts | list | `[]` |  List of volume mounts. Ref: https://kubernetes.io/docs/concepts/storage/volumes/ |
+| login.extraVolumes | list | `[]` |  Define list of pod volumes. Ref: https://kubernetes.io/docs/concepts/storage/volumes/ |
 | login.image.repository | string | `"ghcr.io/slinkyproject/login"` |  Set the image repository to use. |
 | login.image.tag | string | `"24.11-ubuntu24.04"` |  Set the image tag to use. |
 | login.imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |
@@ -105,7 +108,6 @@ Helm Chart for Slurm HPC Workload Manager
 | login.sssdConf.pam | map | `{}` |  The `/etc/sssd/sssd.conf` [pam] section, represented as a map. Ref: https://man.archlinux.org/man/sssd.conf.5#PAM_configuration_options |
 | login.sssdConf.sssd | map | `{"config_file_version":2,"domains":"DEFAULT","services":"nss, pam"}` |  The `/etc/sssd/sssd.conf` [sssd] section, represented as a map. Ref: https://man.archlinux.org/man/sssd.conf.5#The_%5Bsssd%5D_section |
 | login.tolerations | list | `[]` |  Configure pod tolerations. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
-| login.volumes | list | `[]` |  List of volumes to be mounted on each login pod. Ref: https://kubernetes.io/docs/concepts/storage/volumes/ |
 | mariadb.affinity | object | `{}` |  |
 | mariadb.auth.database | string | `"slurm_acct_db"` |  |
 | mariadb.auth.username | string | `"slurm"` |  |

@@ -102,10 +102,9 @@ spec:
               mountPath: /etc/ssh/ssh_host_rsa_key
               subPath: ssh_host_rsa_key
               readOnly: true
-            {{- range $vol := .Values.login.volumes }}
-            - name: {{ $vol.name }}
-              mountPath: {{ $vol.mountPath | default (printf "/mnt/%s" $vol.name ) }}
-            {{- end }}{{- /* range $vol := $.Values.login.volumes */}}
+            {{- with .Values.login.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}{{- /* range $vol := $.Values.login.extraVolumeMounts */}}
       {{- with .Values.login.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
@@ -136,7 +135,7 @@ spec:
                   name: {{ include "slurm.auth.secretName" . }}
         - name: authsocket
           emptyDir: {}
-        {{- if $.Values.login.volumes }}
-        {{- toYaml $.Values.login.volumes | nindent 8 }}
-        {{- end }}{{- /* if $.Values.login.volumes */}}
+        {{- with .Values.login.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}{{- /* with .Values.login.volumes */}}
 {{- end }}{{- /* if .Values.login.enabled */}}

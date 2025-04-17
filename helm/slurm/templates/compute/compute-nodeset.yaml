@@ -155,10 +155,9 @@ spec:
             - name: {{ $vct.metadata.name }}
               mountPath: {{ $vct.spec.mountPath | default (printf "/mnt/%s" $vct.metadata.name ) }}
             {{- end }}{{- /* range $vct := $nodeset.volumeClaimTemplates */}}
-            {{- range $vol := $nodeset.volumes }}
-            - name: {{ $vol.name }}
-              mountPath: {{ $vol.mountPath | default (printf "/mnt/%s" $vol.name ) }}
-            {{- end }}{{- /* range $vol := $nodeset.volumes */}}
+            {{- with $nodeset.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}{{- /* with $nodeset.extraVolumeMounts */}}
       {{- with $nodeset.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
@@ -174,9 +173,9 @@ spec:
         - name: slurm-log
           emptyDir:
             medium: Memory
-        {{- if $nodeset.volumes }}
-        {{- $nodeset.volumes | toYaml | nindent 8 }}
-        {{- end }}{{- /* if $nodeset.volumes */}}
+        {{- with $nodeset.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}{{- /* with $nodeset.extraVolumes */}}
   {{- if $nodeset.volumeClaimTemplates }}
   volumeClaimTemplates:
     {{- $nodeset.volumeClaimTemplates | toYaml | nindent 4 }}
