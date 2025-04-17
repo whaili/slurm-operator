@@ -141,7 +141,6 @@ Helm Chart for Slurm HPC Workload Manager
 | restapi.serviceNodePort | integer | `36820` |  The external service node port number. Ignored unless `service.type == NodePort`. |
 | restapi.servicePort | integer | `6820` |  The external service port number. |
 | restapi.tolerations | list | `[]` |  Configure pod tolerations. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
-| sharedConfig.volumes | list | `[]` |  List of volumes to be mounted on each Login and NodeSet pods. Ref: https://kubernetes.io/docs/concepts/storage/volumes/ |
 | slurm-exporter.enabled | bool | `true` |  |
 | slurm-exporter.exporter.enabled | bool | `true` |  |
 | slurm-exporter.exporter.secretName | string | `"slurm-token-exporter"` |  |

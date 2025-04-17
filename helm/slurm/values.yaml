@@ -195,24 +195,6 @@ slurm:
     #   set -euo pipefail
     #   exit 0
 
-#
-# Shared configurations.
-sharedConfig:
-  #
-  # -- (list)
-  # List of volumes to be mounted on each Login and NodeSet pods.
-  # Ref: https://kubernetes.io/docs/concepts/storage/volumes/
-  volumes: []
-    # - name: nfs-home
-    #   mountPath: /home
-    #   persistentVolumeClaim:
-    #     claimName: nfs-home
-    # - name: nfs-data
-    #   mountPath: /mnt/data
-    #   persistentVolumeClaim:
-    #     claimName: nfs-data
-
-#
 # Slurm authcred (sackd) configurations.
 authcred:
   #
