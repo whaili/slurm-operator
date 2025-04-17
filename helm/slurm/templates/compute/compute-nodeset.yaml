@@ -24,14 +24,14 @@ spec:
   clusterName: {{ include "slurm.cluster.name" $ }}
   replicas: {{ $nodeset.replicas }}
   serviceName: {{ include "slurm.compute.name" $ }}
-  {{- if $nodeset.updateStrategy }}
+  {{- with $nodeset.updateStrategy }}
   updateStrategy:
-    {{- $nodeset.updateStrategy | toYaml | nindent 4 }}
-  {{- end }}{{- /* if $nodeset.updateStrategy */}}
-  {{- if $nodeset.persistentVolumeClaimRetentionPolicy }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}{{- /* with $nodeset.updateStrategy */}}
+  {{- with $nodeset.persistentVolumeClaimRetentionPolicy }}
   persistentVolumeClaimRetentionPolicy:
-    {{- $nodeset.persistentVolumeClaimRetentionPolicy | toYaml | nindent 4 }}
-  {{- end }}{{- /* if $nodeset.persistentVolumeClaimRetentionPolicy */}}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}{{- /* with $nodeset.persistentVolumeClaimRetentionPolicy */}}
   selector:
     matchLabels:
       {{- include "slurm.compute.selectorLabels" $ | nindent 6 }}
@@ -47,23 +47,23 @@ spec:
       automountServiceAccountToken: false
       dnsConfig:
         {{- include "slurm.dnsConfig" $ | nindent 8 }}
-      {{- if $nodeset.nodeSelector }}
+      {{- with $nodeset.nodeSelector }}
       nodeSelector:
-        {{- $nodeset.nodeSelector | toYaml | nindent 8 }}
-      {{- end }}{{- /* if $nodeset.nodeSelector */}}
-      {{- if $nodeset.affinity }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with $nodeset.nodeSelector */}}
+      {{- with $nodeset.affinity }}
       affinity:
-        {{- $nodeset.affinity | toYaml | nindent 8 }}
-      {{- end }}{{- /* if $nodeset.affinity */}}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with $nodeset.affinity */}}
       {{- include "slurm.imagePullSecrets" $ | nindent 6 }}
       initContainers:
         - name: init
           image: {{ $imageRef }}
           imagePullPolicy: {{ $nodeset.imagePullPolicy | default (include "slurm.imagePullPolicy" $) }}
-          {{- if $.Values.authcred.resources }}
+          {{- with $.Values.authcred.resources }}
           resources:
-            {{- $.Values.authcred.resources | toYaml | nindent 12 }}
-          {{- end }}{{- /* if .Values.authcred.resources */}}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}{{- /* with .Values.authcred.resources */}}
           env:
             - name: SLURM_USER
               value: {{ include "slurm.user" $ }}
@@ -96,10 +96,10 @@ spec:
               {{- range $.Files.Lines "scripts/socket-logger.sh" }}
               {{ . }}
               {{- end }}{{- /* range $.Files.Lines "scripts/socket-logger.sh" */}}
-          {{- if $.Values.authcred.resources }}
+          {{- with $.Values.authcred.resources }}
           resources:
-            {{- $.Values.authcred.resources | toYaml | nindent 12 }}
-          {{- end }}{{- /* if $.Values.authcred.resources */}}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}{{- /* with $.Values.authcred.resources */}}
           volumeMounts:
             - name: slurm-log
               mountPath: /var/log/slurm
@@ -176,9 +176,9 @@ spec:
         {{- with $nodeset.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}{{- /* with $nodeset.extraVolumes */}}
-  {{- if $nodeset.volumeClaimTemplates }}
+  {{- with $nodeset.volumeClaimTemplates }}
   volumeClaimTemplates:
-    {{- $nodeset.volumeClaimTemplates | toYaml | nindent 4 }}
-  {{- end }}{{- /* if $nodeset.volumeClaimTemplates */}}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}{{- /* with $nodeset.volumeClaimTemplates */}}
 {{- end }}{{- /* if $nodeset.enabled */}}
 {{- end }}{{- /* range $nodeset := .Values.compute.nodesets */}}

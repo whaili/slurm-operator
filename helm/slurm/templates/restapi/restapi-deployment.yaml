@@ -33,19 +33,19 @@ spec:
       automountServiceAccountToken: false
       dnsConfig:
         {{- include "slurm.dnsConfig" . | nindent 8 }}
-      {{- if .Values.restapi.affinity }}
+      {{- with .Values.restapi.affinity }}
       affinity:
-        {{- .Values.restapi.affinity | toYaml | nindent 8 }}
-      {{- end }}{{- /* if .Values.restapi.affinity */}}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with .Values.restapi.affinity */}}
       {{- include "slurm.imagePullSecrets" . | nindent 6 }}
       initContainers:
         - name: init
           image: {{ include "slurm.authcred.imageRef" . }}
           imagePullPolicy: {{ .Values.authcred.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
-          {{- if .Values.authcred.resources }}
+          {{- with .Values.authcred.resources }}
           resources:
-            {{- .Values.authcred.resources | toYaml | nindent 12 }}
-          {{- end }}{{- /* if .Values.authcred.resources */}}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}{{- /* with .Values.authcred.resources */}}
           env:
             - name: SLURM_USER
               value: {{ include "slurm.user" . }}
@@ -69,10 +69,10 @@ spec:
             runAsNonRoot: true
             runAsUser: 65534 # nobody
             runAsGroup: 65534 # nobody
-          {{- if .Values.restapi.resources }}
+          {{- with .Values.restapi.resources }}
           resources:
-            {{- .Values.restapi.resources | toYaml | nindent 12 }}
-          {{- end }}{{- /* if .Values.restapi.resources */}}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}{{- /* with .Values.restapi.resources */}}
           env:
             - name: SLURM_JWT
               value: daemon

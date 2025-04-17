@@ -26,10 +26,10 @@ spec:
     - name: init
       image: {{ include "slurm.authcred.imageRef" . }}
       imagePullPolicy: {{ .Values.authcred.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
-      {{- if .Values.authcred.resources }}
+      {{- with .Values.authcred.resources }}
       resources:
-        {{- .Values.authcred.resources | toYaml | nindent 12 }}
-      {{- end }}{{- /* if .Values.authcred.resources */}}
+        {{- toYaml . | nindent 12 }}
+      {{- end }}{{- /* with .Values.authcred.resources */}}
       env:
         - name: SLURM_USER
           value: {{ include "slurm.user" . }}
@@ -45,10 +45,10 @@ spec:
     - name: waitctl
       image: {{ include "slurm.authcred.imageRef" . }}
       imagePullPolicy: {{ .Values.authcred.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
-      {{- if .Values.authcred.resources }}
+      {{- with .Values.authcred.resources }}
       resources:
-        {{- .Values.authcred.resources | toYaml | nindent 12 }}
-      {{- end }}{{- /* if .Values.authcred.resources */}}
+        {{- toYaml . | nindent 12 }}
+      {{- end }}{{- /* with .Values.authcred.resources */}}
       securityContext:
         {{- include "slurm.securityContext" $ | nindent 8 }}
       env:
@@ -65,10 +65,10 @@ spec:
     - name: controllertest
       image: {{ include "slurm.authcred.imageRef" . }}
       imagePullPolicy: {{ .Values.authcred.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
-      {{- if .Values.authcred.resources }}
+      {{- with .Values.authcred.resources }}
       resources:
-        {{- .Values.authcred.resources | toYaml | nindent 12 }}
-      {{- end }}{{- /* if .Values.authcred.resources */}}
+        {{- toYaml . | nindent 12 }}
+      {{- end }}{{- /* with .Values.authcred.resources */}}
       securityContext:
         {{- include "slurm.securityContext" $ | nindent 8 }}
       command:

@@ -42,19 +42,19 @@ spec:
       hostname: {{ include "slurm.accounting.name" . }}
       priorityClassName: {{ .Values.accounting.priorityClassName | default .Values.priorityClassName }}
       automountServiceAccountToken: false
-      {{- if .Values.accounting.affinity }}
+      {{- with .Values.accounting.affinity }}
       affinity:
-        {{- .Values.accounting.affinity | toYaml | nindent 8 }}
-      {{- end }}{{- /* if .Values.accounting.affinity */}}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with .Values.accounting.affinity */}}
       {{- include "slurm.imagePullSecrets" $ | nindent 6 }}
       initContainers:
         - name: init
           image: {{ include "slurm.authcred.imageRef" . }}
           imagePullPolicy: {{ .Values.authcred.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
-          {{- if .Values.authcred.resources }}
+          {{- with .Values.authcred.resources }}
           resources:
-            {{- .Values.authcred.resources | toYaml | nindent 12 }}
-          {{- end }}{{- /* if .Values.authcred.resources */}}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}{{- /* with .Values.authcred.resources */}}
           env:
             - name: SLURM_USER
               value: {{ include "slurm.user" . }}
@@ -81,10 +81,10 @@ spec:
           imagePullPolicy: {{ .Values.accounting.imagePullPolicy | default (include "slurm.imagePullPolicy" .) }}
           securityContext:
             {{- include "slurm.securityContext" . | nindent 12 }}
-          {{- if .Values.controller.resources }}
+          {{- with .Values.controller.resources }}
           resources:
-            {{- .Values.accounting.resources | toYaml | nindent 12 }}
-          {{- end }}{{- /* if .Values.controller.resources */}}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}{{- /* with .Values.controller.resources */}}
           ports:
             - name: slurmdbd
               containerPort: {{ include "slurm.accounting.port" . }}
