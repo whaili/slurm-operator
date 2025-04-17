@@ -12,7 +12,7 @@ version: 0.2.0
 dependencies:
   - name: mariadb
     repository: oci://registry-1.docker.io/bitnamicharts
-    version: ~16.3
+    version: ~20.4
     condition: mariadb.enabled
   - name: slurm-exporter
     repository: oci://ghcr.io/slinkyproject/charts
