@@ -68,7 +68,7 @@ spec:
               containerPort: 22
           {{- with .Values.login.resources }}
           resources:
-            {{- toYaml .Values.login.resources | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}{{- /* with .Values.login.resources */}}
           volumeMounts:
             {{- include "slurm.volumeMounts" . | nindent 12 }}
