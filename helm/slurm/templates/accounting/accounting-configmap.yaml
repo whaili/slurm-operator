@@ -42,6 +42,7 @@ data:
     #
     ### LOGGING ###
     LogFile=/dev/null
+    LogTimeFormat=iso8601_ms,format_stderr
     {{- with .Values.slurm.extraSlurmdbdConf }}
     #
     ### EXTRA CONFIG ###

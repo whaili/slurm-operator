@@ -31,6 +31,7 @@ data:
     SlurmdUser=root
     StateSaveLocation={{- include "slurm.controller.statesavePath" . }}
     GresTypes=gpu
+    ReturnToService=2
     MaxNodeCount=1024
     {{- if or .Values.slurm.prologScripts .Values.slurm.epilogScripts }}
     #
@@ -47,6 +48,7 @@ data:
     SlurmctldLogFile=/dev/null
     SlurmSchedLogFile=/dev/null
     SlurmdLogFile={{- include "slurm.compute.logFile" . }}
+    LogTimeFormat=iso8601_ms,format_stderr
     #
     ### PLUGINS & PARAMETERS ###
     AuthType=auth/slurm
@@ -54,9 +56,13 @@ data:
     AuthInfo=use_client_ids
     AuthAltTypes=auth/jwt
     AuthAltParameters=jwt_key={{- include "slurm.jwt.hs256.fullPath" . }}
+    CommunicationParameters=block_null_hash
+    LaunchParameters=enable_nss_slurm,use_interactive_step,ulimit_pam_adopt
     ProctrackType=proctrack/linuxproc
+    SelectTypeParameters=CR_Core_Memory
     SlurmctldParameters=enable_configless,enable_stepmgr
     TaskPlugin=task/affinity
+    PrologFlags=Contain
     #
     ### ACCOUNTING ###
     {{- if .Values.accounting.enabled }}

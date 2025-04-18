@@ -74,76 +74,35 @@ slurm:
   # Extra slurmdbd configuration lines to append to `slurmdbd.conf`.
   # WARNING: Values can override existing ones.
   # Ref: https://slurm.schedmd.com/slurmdbd.conf.html
-  extraSlurmdbdConf:
-    CommitDelay: 1
+  extraSlurmdbdConf: {}
+    # CommitDelay: 1
     ### LOGGING ###
-    DebugLevel: info
-    DebugFlags: []
-    LogTimeFormat:
-      - iso8601_ms
-      - format_stderr
-    # PLUGINS & PARAMETERS
-    CommunicationParameters: []
-    HashPlugin: hash/k12
-    ### ARCHIVE ###
-    ArchiveDir: /tmp
-    #ArchiveEvents: "YES"
-    #ArchiveJobs: "YES"
-    #ArchiveResvs: "YES"
-    #ArchiveSteps: "NO"
-    #ArchiveSuspend: "NO"
-    #ArchiveTXN: "NO"
-    #ArchiveUsage: "NO"
+    # DebugLevel: debug2
+    # DebugFlags: []
     ### PURGE ###
-    #PurgeEventAfter: 12month
-    #PurgeJobAfter: 12month
-    #PurgeResvAfter: 2month
-    #PurgeStepAfter: 2month
-    #PurgeSuspendAfter: 1month
-    #PurgeTXNAfter: 12month
-    #PurgeUsageAfter: 12month
+    # PurgeEventAfter: 12month
+    # PurgeJobAfter: 12month
+    # PurgeResvAfter: 2month
+    # PurgeStepAfter: 2month
+    # PurgeSuspendAfter: 1month
+    # PurgeTXNAfter: 12month
+    # PurgeUsageAfter: 12month
   #
   # -- (map[string]string | map[string][]string)
   # Extra slurm configuration lines to append to `slurm.conf`, represetned as a string or a map.
   # WARNING: Values can override existing ones.
   # Ref: https://slurm.schedmd.com/slurm.conf.html
-  extraSlurmConf:
-    MaxNodeCount: 1024
-    ReturnToService: 2
-    EnforcePartLimits: "NO"
-    ### PLUGINS & PARAMETERS ###
-    AuthInfo:
-      - use_client_ids
-    SchedulerType: sched/backfill
-    SchedulerParameters:
-      - defer_batch
-    SelectType: select/cons_tres
-    SelectTypeParameters:
-      - CR_Core_Memory
-    SlurmctldParameters:
-      - enable_configless
-      - enable_stepmgr
-    SlurmdParameters:
-      - contain_spank
-    CommunicationParameters:
-      - block_null_hash
-    LaunchParameters:
-      - enable_nss_slurm
-      - use_interactive_step
-      - ulimit_pam_adopt
-    ReconfigFlags:
-      - KeepPartInfo
-      - KeepPartState
-    PrologFlags: Contain
-    HashPlugin: hash/k12
+  extraSlurmConf: {}
+    # MinJobAge: 2
+    # MaxNodeCount: 1024
     ### LOGGING ###
-    SlurmctldDebug: info
-    SlurmSchedLogLevel: 1
-    SlurmdDebug: info
-    DebugFlags: []
-    LogTimeFormat:
-      - iso8601_ms
-      - format_stderr
+    # SlurmctldDebug: debug2
+    # SlurmSchedLogLevel: 1
+    # SlurmdDebug: debug2
+    # DebugFlags: []
+    ### PLUGINS & PARAMETERS ###
+    # SchedulerParameters:
+    #   - defer_batch
   #
   # -- (map[string]string)
   # Optional raw Slurm configuration files, as a map.
