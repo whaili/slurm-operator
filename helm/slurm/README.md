@@ -102,7 +102,7 @@ Helm Chart for Slurm HPC Workload Manager
 | login.service | object | `{"type":"LoadBalancer"}` |  The restapi service configuration. Ref: https://kubernetes.io/docs/concepts/services-networking/service/ |
 | login.serviceNodePort | integer | `32222` |  The external service node port number. Ignored unless `service.type == NodePort`. |
 | login.servicePort | integer | `2222` |  The external service port number. |
-| login.sshdConfig | map | `{"Include":"/etc/ssh/sshd_config.d/*.conf"}` |  The `/etc/ssh/sshd_config` file to use, represented as a map. Ref: https://man.openbsd.org/sshd_config |
+| login.sshdConfig | map | `{"Include":"/etc/ssh/sshd_config.d/*.conf","Subsystem":"sftp /usr/libexec/openssh/sftp-server","UsePAM":"yes","X11Forwarding":"yes"}` |  The `/etc/ssh/sshd_config` file to use, represented as a map. Ref: https://man.openbsd.org/sshd_config |
 | login.sssdConf.domains | map[map] | `{"DEFAULT":{"auth_provider":"ldap","id_provider":"ldap","ldap_group_search_base":"ou=Groups,dc=example,dc=com","ldap_search_base":"dc=example,dc=com","ldap_uri":"ldap://ldap.example.com","ldap_user_search_base":"ou=Users,dc=example,dc=com"}}` |  The `/etc/sssd/sssd.conf` [domain/$DOMAIN] sections, represented as a map of map. Ref: https://man.archlinux.org/man/sssd.conf.5#DOMAIN_SECTIONS |
 | login.sssdConf.nss | map | `{"filter_groups":"root,slurm","filter_users":"root,slurm"}` |  The `/etc/sssd/sssd.conf` [nss] section, represented as a map. Ref: https://man.archlinux.org/man/sssd.conf.5#NSS_configuration_options |
 | login.sssdConf.pam | map | `{}` |  The `/etc/sssd/sssd.conf` [pam] section, represented as a map. Ref: https://man.archlinux.org/man/sssd.conf.5#PAM_configuration_options |

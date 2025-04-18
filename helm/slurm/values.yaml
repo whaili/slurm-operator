@@ -370,8 +370,11 @@ login:
   # The `/etc/ssh/sshd_config` file to use, represented as a map.
   # Ref: https://man.openbsd.org/sshd_config
   sshdConfig:
+    # LogLevel: DEBUG3
     Include: "/etc/ssh/sshd_config.d/*.conf"
-    # Subsystem: sftp internal-sftp
+    X11Forwarding: "yes"
+    UsePAM: "yes"
+    Subsystem: sftp /usr/libexec/openssh/sftp-server
   #
   # The `/etc/sssd/sssd.conf` represented by as a map.
   sssdConf:
