@@ -82,10 +82,6 @@ spec:
               mountPath: /root/.ssh/authorized_keys
               subPath: authorized_keys
               readOnly: true
-            - name: ssh-config
-              mountPath: /etc/nsswitchConf.conf
-              subPath: nsswitchConf.conf
-              readOnly: true
             - name: sssd-config
               mountPath: /etc/sssd/sssd.conf
               subPath: sssd.conf

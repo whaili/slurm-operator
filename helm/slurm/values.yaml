@@ -415,24 +415,6 @@ login:
     pam: {}
       # debug_level: 9
   #
-  # --(map)
-  # The `/etc/nsswitch.conf` file to use, represented as a map.
-  # Ref: https://man7.org/linux/man-pages/man5/nsswitch.conf.5.html
-  nsswitchConf:
-    passwd: db files sss
-    group: db files sss
-    shadow: db files sss
-    gshadow: files
-    sudoers: files sss
-    hosts: files dns myhostname
-    networks: files
-    protocols: db files
-    services: db files sss
-    ethers: db files
-    rpc: db files
-    netgroup: db files sss
-    automount: files sss
-  #
   # --(list)
   # List of volume mounts.
   # Ref: https://kubernetes.io/docs/concepts/storage/volumes/

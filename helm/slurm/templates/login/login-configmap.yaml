@@ -20,8 +20,4 @@ data:
     {{- range $key, $value := .Values.login.sshdConfig }}
     {{ $key }} {{ $value }}
     {{- end }}
-  nsswitch.conf: |
-    {{- range $key, $value := .Values.login.nsswitchConf }}
-    {{ $key }}: {{ $value }}
-    {{- end }}{{- /* range $key, $value := .Values.login.nsswitchConf */}}
 {{- end }}{{- /* if .Values.login.enabled */}}

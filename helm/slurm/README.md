@@ -94,7 +94,6 @@ Helm Chart for Slurm HPC Workload Manager
 | login.image.repository | string | `"ghcr.io/slinkyproject/login"` |  Set the image repository to use. |
 | login.image.tag | string | `"24.11-ubuntu24.04"` |  Set the image tag to use. |
 | login.imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |
-| login.nsswitchConf | map | `{"automount":"files sss","ethers":"db files","group":"db files sss","gshadow":"files","hosts":"files dns myhostname","netgroup":"db files sss","networks":"files","passwd":"db files sss","protocols":"db files","rpc":"db files","services":"db files sss","shadow":"db files sss","sudoers":"files sss"}` |  The `/etc/nsswitch.conf` file to use, represented as a map. Ref: https://man7.org/linux/man-pages/man5/nsswitch.conf.5.html |
 | login.priorityClassName | string | `""` |  Set the priority class to use. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass |
 | login.replicas | integer | `1` |  Set the number of replicas to deploy. |
 | login.resources | object | `{}` |  Set container resource requests and limits for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container |
