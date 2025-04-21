@@ -47,6 +47,7 @@ Common labels
 */}}
 {{- define "slurm.labels" -}}
 helm.sh/chart: {{ include "slurm.chart" . }}
+app.kubernetes.io/part-of: slurm
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
