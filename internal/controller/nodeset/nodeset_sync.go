@@ -80,7 +80,6 @@ func (r *NodeSetReconciler) Sync(ctx context.Context, req reconcile.Request) err
 	if err != nil {
 		return err
 	}
-	nodesetPods = kubecontroller.FilterActivePods(logger, nodesetPods)
 
 	if !r.expectations.SatisfiedExpectations(logger, key) || nodeset.DeletionTimestamp != nil {
 		return r.syncStatus(ctx, nodeset, nodesetPods, currentRevision, updateRevision, collisionCount, hash)

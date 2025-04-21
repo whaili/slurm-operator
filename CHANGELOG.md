@@ -25,6 +25,7 @@ All notable changes to this project will be documented in this file.
 - Fixed responsiveness of container scripts responding to termination signals.
 - Fixed login pod resource templating.
 - Fixed NodeSet selectorLabels matching multiple NodeSets.
+- Fixed NodeSet controller only considering active pods when scaling.
 
 ### Changed
 
