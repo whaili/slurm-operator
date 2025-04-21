@@ -19,6 +19,7 @@ metadata:
   name: {{ $name }}
   namespace: {{ include "slurm.namespace" $ }}
   labels:
+    nodeset.slinky.slurm.net/name: {{ $name }}
     {{- include "slurm.compute.labels" $ | nindent 4 }}
 spec:
   clusterName: {{ include "slurm.cluster.name" $ }}
@@ -34,12 +35,14 @@ spec:
   {{- end }}{{- /* with $nodeset.persistentVolumeClaimRetentionPolicy */}}
   selector:
     matchLabels:
+      nodeset.slinky.slurm.net/name: {{ $name }}
       {{- include "slurm.compute.selectorLabels" $ | nindent 6 }}
   template:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: slurmd
       labels:
+        nodeset.slinky.slurm.net/name: {{ $name }}
         {{- include "slurm.compute.labels" $ | nindent 8 }}
     spec:
       hostname: "{{ $nodeset.name }}-"

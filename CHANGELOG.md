@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 - Fixed slurmrestd failing to start when accounting is disabled.
 - Fixed responsiveness of container scripts responding to termination signals.
 - Fixed login pod resource templating.
+- Fixed NodeSet selectorLabels matching multiple NodeSets.
 
 ### Changed
 
