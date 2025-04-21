@@ -205,6 +205,7 @@ Define compute selectorLabels
 */}}
 {{- define "slurm.compute.selectorLabels" -}}
 app.kubernetes.io/name: slurmd
+app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
