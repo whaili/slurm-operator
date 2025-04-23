@@ -454,7 +454,7 @@ Common volumeMounts
 - name: etc-slurm
   mountPath: /etc/slurm
 - name: run
-  mountPath: /var/run
+  mountPath: /run
 {{- end }}
 
 {{/*
