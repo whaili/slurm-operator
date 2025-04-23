@@ -48,3 +48,4 @@ All notable changes to this project will be documented in this file.
 
 - Removed Slurm daemon `startupProbe`.
 - Removed `initContainer` to wait on slurmdbd.
+- Removed login pods service link environment variables.
