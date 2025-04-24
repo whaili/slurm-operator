@@ -187,10 +187,6 @@ authcred:
 # Slurm controller (slurmctld) configurations.
 controller:
   #
-  # -- (bool)
-  # Enables the controller node.
-  enabled: true
-  #
   # -- (integer)
   # Set the number of replicas to deploy.
   replicas: 1

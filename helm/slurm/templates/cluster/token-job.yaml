@@ -3,7 +3,6 @@ SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
 SPDX-License-Identifier: Apache-2.0
 */}}
 
-{{- if .Values.controller.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -139,4 +138,3 @@ spec:
                   name: {{ include "slurm.auth.secretName" $ }}
         - name: authsocket
           emptyDir: {}
-{{- end }}{{- /* if .Values.controller.enabled */}}

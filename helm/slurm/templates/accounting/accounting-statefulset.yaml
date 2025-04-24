@@ -4,9 +4,6 @@ SPDX-License-Identifier: Apache-2.0
 */}}
 
 {{- if .Values.accounting.enabled }}
-{{- if not $.Values.controller.enabled }}
-  {{- fail "Slurm accounting requires `controller.enabled=true`." -}}
-{{- end }}{{- /* if not $.Values.controller.enabled */}}
 {{- if and (not .Values.accounting.external.enabled) (not .Values.mariadb.enabled) }}
   {{- fail "Incompatible configuration: `accounting.enabled=true`; `accounting.external.enabled=false`; `mariadb.enabled=false`. Either set `accounting.enabled=false`, `accounting.external.enabled=true`, or `mariadb.enabled=true`." }}
 {{- end }}{{- /* if and (not .Values.accounting.external.enabled) (not .Values.mariadb.enabled) */}}

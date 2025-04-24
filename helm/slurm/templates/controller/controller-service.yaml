@@ -3,7 +3,6 @@ SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
 SPDX-License-Identifier: Apache-2.0
 */}}
 
-{{- if .Values.controller.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -23,4 +22,3 @@ spec:
       {{- if eq (.Values.controller.service.type | default "ClusterIP" | lower) ("NodePort" | lower) }}
       nodePort: {{ .Values.controller.serviceNodePort }}
       {{- end }}{{- /* if eq (.Values.controller.service.type | default "ClusterIP" | lower) ("NodePort" | lower) */}}
-{{- end }}{{- /* if .Values.controller.enabled */}}

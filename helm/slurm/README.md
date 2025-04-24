@@ -67,7 +67,6 @@ Helm Chart for Slurm HPC Workload Manager
 | compute.partitions[0].enabled | bool | `true` |  Enables the partition in Slurm. |
 | compute.partitions[0].nodesets | list | `["ALL"]` |  NodeSets to put into this Partition by name/key. NOTE: 'ALL' is a Slurm meta value to mean all nodes in the system. |
 | controller.affinity | object | `{}` |  Set affinity for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity |
-| controller.enabled | bool | `true` |  Enables the controller node. |
 | controller.image.repository | string | `"ghcr.io/slinkyproject/slurmctld"` |  Set the image repository to use. |
 | controller.image.tag | string | `"24.11-ubuntu24.04"` |  Set the image tag to use. |
 | controller.imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |

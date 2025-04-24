@@ -3,7 +3,6 @@ SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
 SPDX-License-Identifier: Apache-2.0
 */}}
 
-{{- if .Values.controller.enabled }}
 {{- if gt .Values.controller.replicas 1.0 }}
   {{- fail "Key `controller.replicas` does not support values greater than 1." -}}
 {{- end }}{{- /* if gt .Values.controller.replicas 1.0 */}}
@@ -165,4 +164,3 @@ spec:
           {{- toYaml . | indent 10 }}
         {{- end -}}{{- /* with .Values.controller.persistence.selector */}}
   {{- end -}}{{- /* if and .Values.persistence.enabled (not .Values.controller.persistence.existingClaim) */}}
-{{- end }}{{- /* if .Values.controller.enabled */}}
