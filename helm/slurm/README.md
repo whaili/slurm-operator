@@ -82,6 +82,9 @@ Helm Chart for Slurm HPC Workload Manager
 | controller.priorityClassName | string | `""` |  Set the priority class to use. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass |
 | controller.replicas | integer | `1` |  Set the number of replicas to deploy. |
 | controller.resources | object | `{}` |  Set container resource requests and limits for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container |
+| controller.service | object | `{}` |  The controller service configuration. Ref: https://kubernetes.io/docs/concepts/services-networking/service/ |
+| controller.serviceNodePort | integer | `36817` |  The external service node port number. Ignored unless `service.type == NodePort`. |
+| controller.servicePort | integer | `6817` |  The external service port number. |
 | controller.tolerations | list | `[]` |  Configure pod tolerations. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
 | fullnameOverride | string | `""` |  Overrides the full name of the release. |
 | imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |

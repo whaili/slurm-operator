@@ -18,6 +18,9 @@ spec:
   ports:
     - name: slurmctld
       protocol: TCP
-      port: {{ include "slurm.controller.port" . }}
+      port: {{ .Values.controller.servicePort }}
       targetPort: {{ include "slurm.controller.port" . }}
+      {{- if eq (.Values.controller.service.type | default "ClusterIP" | lower) ("NodePort" | lower) }}
+      nodePort: {{ .Values.controller.serviceNodePort }}
+      {{- end }}{{- /* if eq (.Values.controller.service.type | default "ClusterIP" | lower) ("NodePort" | lower) */}}
 {{- end }}{{- /* if .Values.controller.enabled */}}

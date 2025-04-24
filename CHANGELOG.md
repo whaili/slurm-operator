@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - Added `controller.persistence.enabled` option.
 - Added Slurm chart restapi service configuration options.
 - Added login nodes to the Slurm chart.
+- Added Slurm chart controller service configuration options.
 
 ### Fixed
 
