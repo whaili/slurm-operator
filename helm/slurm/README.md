@@ -79,7 +79,7 @@ Helm Chart for Slurm HPC Workload Manager
 | controller.persistence.selector | object | `{}` |  Selector to match an existing `PersistentVolume`. |
 | controller.persistence.size | string | `"4Gi"` |  Create a `PersistentVolumeClaim` with this storage size. |
 | controller.persistence.storageClass | string | `"standard"` |  Create a `PersistentVolumeClaim` with this storage class. |
-| controller.priorityClassName | string | `nil` |  Set the priority class to use. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass |
+| controller.priorityClassName | string | `""` |  Set the priority class to use. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass |
 | controller.replicas | integer | `1` |  Set the number of replicas to deploy. |
 | controller.resources | object | `{}` |  Set container resource requests and limits for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container |
 | controller.tolerations | list | `[]` |  Configure pod tolerations. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
