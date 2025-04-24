@@ -21,7 +21,7 @@ spec:
     - name: slurmrestd
       protocol: TCP
       port: {{ .Values.restapi.servicePort }}
-      targetPort: 6820
+      targetPort: {{ include "slurm.restapi.port" . }}
       {{- if eq (.Values.restapi.service.type | default "ClusterIP" | lower) ("NodePort" | lower) }}
       nodePort: {{ .Values.restapi.serviceNodePort }}
       {{- end }}{{- /* if eq (.Values.restapi.service.type | default "ClusterIP" | lower) ("NodePort" | lower) */}}

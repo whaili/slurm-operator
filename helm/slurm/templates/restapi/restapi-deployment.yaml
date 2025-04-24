@@ -86,7 +86,7 @@ spec:
             - "0.0.0.0:{{- include "slurm.restapi.port" . }}"
           ports:
             - name: slurmrestd
-              containerPort: 6820
+              containerPort: {{ include "slurm.restapi.port" . }}
           startupProbe:
             tcpSocket:
               port: slurmrestd
