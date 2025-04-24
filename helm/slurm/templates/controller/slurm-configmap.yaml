@@ -24,7 +24,7 @@ data:
     SlurmctldPort={{- include "slurm.controller.port" . }}
     SlurmdPidFile=/var/run/slurmd.pid
     SlurmdPort={{- include "slurm.compute.port" . }}
-    SlurmdSpoolDir=/var/spool/slurmd
+    SlurmdSpoolDir={{- include "slurm.compute.spoolDir" . }}
     SlurmUser={{- include "slurm.user" . }}
     SlurmdUser=root
     StateSaveLocation={{- include "slurm.controller.statesavePath" . }}

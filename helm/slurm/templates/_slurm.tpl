@@ -192,6 +192,13 @@ Define compute port
 {{- end }}
 
 {{/*
+Define compute spool directory
+*/}}
+{{- define "slurm.compute.spoolDir" -}}
+{{- print "/var/spool/slurmd" -}}
+{{- end }}
+
+{{/*
 Define compute labels
 */}}
 {{- define "slurm.compute.labels" -}}
