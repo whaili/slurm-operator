@@ -101,7 +101,7 @@ Helm Chart for Slurm HPC Workload Manager
 | login.replicas | integer | `1` |  Set the number of replicas to deploy. |
 | login.resources | object | `{}` |  Set container resource requests and limits for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container |
 | login.rootSshAuthorizedKeys | list | `[]` |  The `/root/.ssh/authorized_keys` file to write, represented as a list. |
-| login.service | object | `{"type":"LoadBalancer"}` |  The restapi service configuration. Ref: https://kubernetes.io/docs/concepts/services-networking/service/ |
+| login.service | object | `{"type":"LoadBalancer"}` |  The login service configuration. Ref: https://kubernetes.io/docs/concepts/services-networking/service/ |
 | login.serviceNodePort | integer | `32222` |  The external service node port number. Ignored unless `service.type == NodePort`. |
 | login.servicePort | integer | `2222` |  The external service port number. |
 | login.sshdConfig | map | `{"Include":"/etc/ssh/sshd_config.d/*.conf","Subsystem":"sftp /usr/libexec/openssh/sftp-server","UsePAM":"yes","X11Forwarding":"yes"}` |  The `/etc/ssh/sshd_config` file to use, represented as a map. Ref: https://man.openbsd.org/sshd_config |

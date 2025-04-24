@@ -321,7 +321,7 @@ login:
     tag: 24.11-ubuntu24.04
   #
   # -- (object)
-  # The restapi service configuration.
+  # The login service configuration.
   # Ref: https://kubernetes.io/docs/concepts/services-networking/service/
   service:
     type: LoadBalancer
