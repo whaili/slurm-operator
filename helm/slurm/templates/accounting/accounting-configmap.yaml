@@ -15,13 +15,7 @@ data:
   slurmdbd.conf: |
     #
     ### GENERAL ###
-    {{- range $idx := until (int .Values.controller.replicas | default 1) }}
-    {{- if eq $idx 0 }}
-    DbdHost={{- printf "%s-%d" (include "slurm.accounting.name" $) $idx }}
-    {{- else }}{{- /* if eq $idx 0 */}}
-    DbdBackupHost={{- printf "%s-%d" (include "slurm.accounting.name" $) $idx }}
-    {{- end }}{{- /* if eq $idx 0 */}}
-    {{- end }}{{- /* range $idx := until (int .Values.controller.replicas | default 1) */}}
+    DbdHost={{- printf "%s-0" (include "slurm.accounting.name" $) }}
     DbdPort={{- include "slurm.accounting.port" . }}
     PidFile=/var/run/slurmdbd.pid
     SlurmUser={{- include "slurm.user" . }}

@@ -3,9 +3,6 @@ SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
 SPDX-License-Identifier: Apache-2.0
 */}}
 
-{{- if gt .Values.controller.replicas 1.0 }}
-  {{- fail "Key `controller.replicas` does not support values greater than 1." -}}
-{{- end }}{{- /* if gt .Values.controller.replicas 1.0 */}}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -15,7 +12,6 @@ metadata:
     {{- include "slurm.controller.labels" . | nindent 4 }}
 spec:
   podManagementPolicy: Parallel
-  replicas: {{ .Values.controller.replicas | default 1 }}
   revisionHistoryLimit: 0
   serviceName: {{ include "slurm.controller.name" . }}
   selector:

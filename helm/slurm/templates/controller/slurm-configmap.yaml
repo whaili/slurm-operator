@@ -19,9 +19,7 @@ data:
     #
     ### CLUSTER ###
     ClusterName={{- include "slurm.name" . }}
-    {{- range $idx := until (int .Values.controller.replicas) }}
-    SlurmctldHost={{- printf "%s-%d" (include "slurm.controller.name" $) $idx }}
-    {{- end }}{{- /* range $idx := until (int .Values.controller.replicas) */}}
+    SlurmctldHost={{- printf "%s-0" (include "slurm.controller.name" $) }}
     SlurmctldPidFile=/var/run/slurmctld.pid
     SlurmctldPort={{- include "slurm.controller.port" . }}
     SlurmdPidFile=/var/run/slurmd.pid

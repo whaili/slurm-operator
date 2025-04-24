@@ -187,10 +187,6 @@ authcred:
 # Slurm controller (slurmctld) configurations.
 controller:
   #
-  # -- (integer)
-  # Set the number of replicas to deploy.
-  replicas: 1
-  #
   # -- (string)
   # Set the image pull policy.
   imagePullPolicy: IfNotPresent
@@ -671,10 +667,6 @@ accounting:
   # -- (bool)
   # Enables accounting services.
   enabled: true
-  #
-  # -- (integer)
-  # Set the number of replicas to deploy.
-  replicas: 1
   #
   # -- (string)
   # Set the image pull policy.

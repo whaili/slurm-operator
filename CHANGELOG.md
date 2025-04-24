@@ -52,3 +52,4 @@ All notable changes to this project will be documented in this file.
 - Removed `initContainer` to wait on slurmdbd.
 - Removed login pods service link environment variables.
 - Removed `controller.enabled` option.
+- Removed `{accounting,controller}.replicas` option.

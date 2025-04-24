@@ -23,7 +23,6 @@ Helm Chart for Slurm HPC Workload Manager
 | accounting.image.repository | string | `"ghcr.io/slinkyproject/slurmdbd"` |  Set the image repository to use. |
 | accounting.image.tag | string | `"24.11-ubuntu24.04"` |  Set the image tag to use. |
 | accounting.imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |
-| accounting.replicas | integer | `1` |  Set the number of replicas to deploy. |
 | accounting.resources | object | `{}` |  Set container resource requests and limits for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container |
 | accounting.tolerations | list | `[]` |  Configure pod tolerations. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
 | authcred.image.repository | string | `"ghcr.io/slinkyproject/sackd"` |  Set the image repository to use. |
@@ -79,7 +78,6 @@ Helm Chart for Slurm HPC Workload Manager
 | controller.persistence.size | string | `"4Gi"` |  Create a `PersistentVolumeClaim` with this storage size. |
 | controller.persistence.storageClass | string | `"standard"` |  Create a `PersistentVolumeClaim` with this storage class. |
 | controller.priorityClassName | string | `""` |  Set the priority class to use. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass |
-| controller.replicas | integer | `1` |  Set the number of replicas to deploy. |
 | controller.resources | object | `{}` |  Set container resource requests and limits for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container |
 | controller.service | object | `{}` |  The controller service configuration. Ref: https://kubernetes.io/docs/concepts/services-networking/service/ |
 | controller.serviceNodePort | integer | `36817` |  The external service node port number. Ignored unless `service.type == NodePort`. |

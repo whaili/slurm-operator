@@ -7,9 +7,6 @@ SPDX-License-Identifier: Apache-2.0
 {{- if and (not .Values.accounting.external.enabled) (not .Values.mariadb.enabled) }}
   {{- fail "Incompatible configuration: `accounting.enabled=true`; `accounting.external.enabled=false`; `mariadb.enabled=false`. Either set `accounting.enabled=false`, `accounting.external.enabled=true`, or `mariadb.enabled=true`." }}
 {{- end }}{{- /* if and (not .Values.accounting.external.enabled) (not .Values.mariadb.enabled) */}}
-{{- if gt .Values.accounting.replicas 1.0 }}
-  {{- fail "Key `accounting.replicas` does not support values greater than 1." -}}
-{{- end }}{{- /* if gt .Values.accounting.replicas 1.0 */}}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -19,7 +16,6 @@ metadata:
     {{- include "slurm.accounting.labels" . | nindent 4 }}
 spec:
   podManagementPolicy: Parallel
-  replicas: {{ .Values.accounting.replicas | default 1 }}
   revisionHistoryLimit: 0
   serviceName: {{ include "slurm.accounting.name" . }}
   selector:
