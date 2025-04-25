@@ -27,6 +27,7 @@ All notable changes to this project will be documented in this file.
 - Fixed login pod resource templating.
 - Fixed NodeSet selectorLabels matching multiple NodeSets.
 - Fixed NodeSet controller only considering active pods when scaling.
+- Fixed login config file permissions.
 
 ### Changed
 
