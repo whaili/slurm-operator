@@ -116,9 +116,6 @@ spec:
           configMap:
             name: {{ include "slurm.login.name" . }}-config
             items:
-              - key: nsswitch.conf
-                path: nsswitch.conf
-                mode: 0644
               - key: authorized_keys
                 path: authorized_keys
                 mode: 0600
