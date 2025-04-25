@@ -30,6 +30,8 @@ All notable changes to this project will be documented in this file.
 - Fixed NodeSet controller only considering active pods when scaling.
 - Fixed login config file permissions.
 - Fixed incorrect mount top symlinked `/var/run`, instead of `/run`.
+- Fixed regression where slurmd's would not register with all dynamic conf items
+  (e.g. Features, Gres, Weight, etc..).
 
 ### Changed
 

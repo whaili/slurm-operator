@@ -127,11 +127,13 @@ spec:
             - {{ printf "%s:%s" (include "slurm.controller.name" $) (include "slurm.controller.port" $) }}
             - --conf
             - >-
+              {{ print "'" -}}
               Features={{- join "," (prepend (default (list) $nodeset.nodeFeatures) $nodeset.name) }}
               {{- if $nodeset.nodeGres }}
               Gres={{- $nodeset.nodeGres }}
               {{- end }}
               Weight={{- default 1 $nodeset.nodeWeight }}
+              {{- print "'" }}
           ports:
             - name: slurmd
               containerPort: {{ include "slurm.compute.port" $ }}
