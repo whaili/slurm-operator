@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - Added Slurm chart restapi service configuration options.
 - Added login nodes to the Slurm chart.
 - Added Slurm chart controller service configuration options.
+- Added login node capabilities for chroot.
 
 ### Fixed
 
