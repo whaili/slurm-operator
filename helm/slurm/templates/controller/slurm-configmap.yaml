@@ -43,8 +43,8 @@ data:
     {{- end }}{{- /* if or .Values.slurm.prologScripts .Values.slurm.epilogScripts */}}
     #
     ### LOGGING ###
-    SlurmctldLogFile=/dev/null
-    SlurmSchedLogFile=/dev/null
+    SlurmctldLogFile={{- include "slurm.controller.logFile" . }}
+    SlurmSchedLogFile={{- include "slurm.controller.logFile" . }}
     SlurmdLogFile={{- include "slurm.compute.logFile" . }}
     LogTimeFormat=iso8601_ms,format_stderr
     #

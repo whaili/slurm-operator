@@ -105,6 +105,13 @@ Define controller state save path
 {{- end }}
 
 {{/*
+Define controller log file
+*/}}
+{{- define "slurm.controller.logFile" -}}
+{{- print "/var/log/slurm/slurmctld.log" -}}
+{{- end }}
+
+{{/*
 Define accounting name
 */}}
 {{- define "slurm.accounting.name" -}}
