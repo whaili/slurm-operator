@@ -46,6 +46,7 @@ All notable changes to this project will be documented in this file.
 - Changed partition config expression to `map[string]string` or
   `map[string][]string`.
 - Changed slurm-operator chart images tags, omit when equal to the default.
+- Changed `ttlSecondsAfterFinished` to `helm.sh/hook-delete-policy`.
 
 ### Removed
 
