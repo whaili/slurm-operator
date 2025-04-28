@@ -32,6 +32,7 @@ All notable changes to this project will be documented in this file.
 - Fixed incorrect mount top symlinked `/var/run`, instead of `/run`.
 - Fixed regression where slurmd's would not register with all dynamic conf items
   (e.g. Features, Gres, Weight, etc..).
+- Fixed token job helm hook annotation placement.
 
 ### Changed
 

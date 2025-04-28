@@ -10,12 +10,13 @@ metadata:
   namespace: {{ include "slurm.namespace" . }}
   labels:
     {{- include "slurm.token.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
 spec:
   ttlSecondsAfterFinished: 0
   template:
     metadata:
       annotations:
-        helm.sh/hook: post-install,post-upgrade
         kubectl.kubernetes.io/default-container: {{ printf "token-%s" (include "slurm.user" .) }}
       labels:
         {{- include "slurm.token.labels" . | nindent 8 }}
