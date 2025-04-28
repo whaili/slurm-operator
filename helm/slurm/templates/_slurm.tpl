@@ -392,6 +392,30 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
+Define reconfigure name
+*/}}
+{{- define "slurm.reconfigure.name" -}}
+{{ printf "%s-reconfigure" .Release.Name }}
+{{- end }}
+
+{{/*
+Define reconfigure labels
+*/}}
+{{- define "slurm.reconfigure.labels" -}}
+app.kubernetes.io/component: reconfigure
+{{ include "slurm.reconfigure.selectorLabels" . }}
+{{ include "slurm.labels" . }}
+{{- end }}
+
+{{/*
+Define reconfigure selectorLabels
+*/}}
+{{- define "slurm.reconfigure.selectorLabels" -}}
+app.kubernetes.io/name: reconfigure
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
 Define slurm auth secret name
 */}}
 {{- define "slurm.auth.secretName" -}}

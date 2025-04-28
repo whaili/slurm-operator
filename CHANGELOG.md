@@ -47,6 +47,7 @@ All notable changes to this project will be documented in this file.
   `map[string][]string`.
 - Changed slurm-operator chart images tags, omit when equal to the default.
 - Changed `ttlSecondsAfterFinished` to `helm.sh/hook-delete-policy`.
+- Changed reconfigure trigger from a side-car to a job.
 
 ### Removed
 
