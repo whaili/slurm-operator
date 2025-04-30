@@ -49,6 +49,7 @@ All notable changes to this project will be documented in this file.
 - Changed slurm-operator chart images tags, omit when equal to the default.
 - Changed `ttlSecondsAfterFinished` to `helm.sh/hook-delete-policy`.
 - Changed reconfigure trigger from a side-car to a job.
+- Changed `accounting.external` to work with external database.
 
 ### Removed
 

@@ -164,10 +164,21 @@ Determine accounting image reference (repo:tag)
 {{- end }}
 
 {{/*
-Define slurm accounting initContainers
+Define slurm accounting config
 */}}
 {{- define "slurm.accounting.config.name" -}}
 {{- printf "%s-accounting" (.Release.Name) -}}
+{{- end }}
+
+{{/*
+Define slurm accounting database secret
+*/}}
+{{- define "slurm.accounting.secretName" -}}
+{{- if .Values.accounting.external.enabled }}
+  {{- printf "%s-database" (include "slurm.accounting.name" .) }}
+{{- else }}
+  {{- template "mariadb.secretName" .Subcharts.mariadb }}
+{{- end }}
 {{- end }}
 
 {{/*

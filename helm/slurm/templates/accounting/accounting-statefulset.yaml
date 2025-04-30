@@ -7,6 +7,9 @@ SPDX-License-Identifier: Apache-2.0
 {{- if and (not .Values.accounting.external.enabled) (not .Values.mariadb.enabled) }}
   {{- fail "Incompatible configuration: `accounting.enabled=true`; `accounting.external.enabled=false`; `mariadb.enabled=false`. Either set `accounting.enabled=false`, `accounting.external.enabled=true`, or `mariadb.enabled=true`." }}
 {{- end }}{{- /* if and (not .Values.accounting.external.enabled) (not .Values.mariadb.enabled) */}}
+{{- if and .Values.accounting.external.enabled .Values.mariadb.enabled }}
+  {{- fail "Incompatible configuration: `accounting.enabled=true`; `accounting.external.enabled=true`; `mariadb.enabled=true`. Either set `accounting.external.enabled=false`, or `mariadb.enabled=false`." }}
+{{- end }}{{- /* if and .Values.accounting.external.enabled .Values.mariadb.enabled */}}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -54,7 +57,7 @@ spec:
             - name: MARIADB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ template "mariadb.secretName" .Subcharts.mariadb }}
+                  name: {{ include "slurm.accounting.secretName" . }}
                   key: mariadb-password
           command:
             - tini

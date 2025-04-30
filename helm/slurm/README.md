@@ -17,9 +17,12 @@ Helm Chart for Slurm HPC Workload Manager
 |-----|------|---------|-------------|
 | accounting.affinity | object | `{}` |  Set affinity for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity |
 | accounting.enabled | bool | `true` |  Enables accounting services. |
-| accounting.external.enabled | bool | `false` |  Use an external acounting instance (slurmdbd) instead of deploying one. |
-| accounting.external.host | string | `""` |  The external acounting instance (slurmdbd) host. |
-| accounting.external.port | integer | `6819` |  The external acounting instance (slurmdbd) port. |
+| accounting.external.database | string | `"slurm_acct_db"` |  The database context to use. |
+| accounting.external.enabled | bool | `false` |  Use an external database instead of creating one. WARNING: `accounting.external.enabled=true` is mutually exclusive with `mariadb.enabled=true`. |
+| accounting.external.host | string | `""` |  The host or service to communicate with. |
+| accounting.external.password | string | `""` |  The plaintext user password to the database. |
+| accounting.external.port | integer | `3306` |  The database port to use. |
+| accounting.external.user | string | `"slurm"` |  The database user to use. |
 | accounting.image.repository | string | `"ghcr.io/slinkyproject/slurmdbd"` |  Set the image repository to use. |
 | accounting.image.tag | string | `"24.11-ubuntu24.04"` |  Set the image tag to use. |
 | accounting.imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |

@@ -68,13 +68,8 @@ data:
     JobAcctGatherFrequency=task=30
     AccountingStorageTRES=gres/gpu
     AccountingStorageType=accounting_storage/slurmdbd
-    {{- if .Values.accounting.external.enabled }}
-    AccountingStorageHost={{- .Values.accounting.external.host }}
-    AccountingStoragePort={{- .Values.accounting.external.port }}
-    {{- else }}{{- /* if .Values.accounting.external.enabled */}}
     AccountingStorageHost={{- include "slurm.accounting.name" . }}
     AccountingStoragePort={{- include "slurm.accounting.port" . }}
-    {{- end }}{{- /* if .Values.accounting.external.enabled */}}
     {{- else }}{{- /* if .Values.accounting.enabled */}}
     JobAcctGatherType=jobacct_gather/none
     AccountingStorageType=accounting_storage/none

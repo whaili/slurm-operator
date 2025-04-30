@@ -695,6 +695,34 @@ accounting:
     # Set the image tag to use.
     tag: 24.11-ubuntu24.04
   #
+  # Configuration for an external database (e.g. mariadb, mysql).
+  external:
+    #
+    # -- (bool)
+    # Use an external database instead of creating one.
+    # WARNING: `accounting.external.enabled=true` is mutually exclusive with `mariadb.enabled=true`.
+    enabled: false
+    #
+    # -- (string)
+    # The database user to use.
+    user: slurm
+    #
+    # -- (string)
+    # The database context to use.
+    database: slurm_acct_db
+    #
+    # -- (string)
+    # The plaintext user password to the database.
+    password: ""
+    #
+    # -- (string)
+    # The host or service to communicate with.
+    host: ""
+    #
+    # -- (integer)
+    # The database port to use.
+    port: 3306
+  #
   # -- (object)
   # Set affinity for Kubernetes Pod scheduling.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
@@ -715,21 +743,6 @@ accounting:
     # limits:
     #   cpu: 2
     #   memory: 4Gi
-  #
-  # Configuration for an external accounting instance (slurmdbd).
-  external:
-    #
-    # -- (bool)
-    # Use an external acounting instance (slurmdbd) instead of deploying one.
-    enabled: false
-    #
-    # -- (string)
-    # The external acounting instance (slurmdbd) host.
-    host: ""
-    #
-    # -- (integer)
-    # The external acounting instance (slurmdbd) port.
-    port: 6819
 
 #
 # `bitnami/mariadb` subchart configurations.
