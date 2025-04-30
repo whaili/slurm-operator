@@ -108,11 +108,21 @@ slurm:
   # Optional raw Slurm configuration files, as a map.
   # The map key represents the config file by name; the map value represents config file contents as a string.
   # Ref: https://slurm.schedmd.com/man_index.html#configuration_files
-  configFiles: {}
+  configFiles:
     # acct_gather.conf: |
     #   # Ref: https://slurm.schedmd.com/acct_gather.conf.html
     # burst_buffer.conf: |
     #   # Ref: https://slurm.schedmd.com/burst_buffer.conf.html
+    #
+    # Ref: https://slurm.schedmd.com/cgroup.conf.html
+    cgroup.conf: |
+      CgroupPlugin=autodetect
+      IgnoreSystemd=yes
+      EnableControllers=yes
+      ConstrainCores=yes
+      ConstrainRAMSpace=yes
+      ConstrainDevices=yes
+      ConstrainSwapSpace=yes
     # gres.conf: |
     #   # Ref: https://slurm.schedmd.com/gres.conf.html
     # helpers.conf: |
