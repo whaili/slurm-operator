@@ -18,6 +18,7 @@ Run [Slurm] on [Kubernetes], by [SchedMD]. A [Slinky] project.
 - [Kubernetes Operator for Slurm Clusters](#kubernetes-operator-for-slurm-clusters)
   - [Table of Contents](#table-of-contents)
   - [Overview](#overview)
+    - [Slurm Cluster](#slurm-cluster)
   - [Features](#features)
     - [NodeSets](#nodesets)
     - [Slurm](#slurm)
@@ -51,6 +52,16 @@ This project enables the best of both workload managers, unified on Kubernetes.
 <img src="./docs/assets/architecture-operator.svg" alt="Slurm Operator Architecture" width="100%" height="auto" />
 
 For additional architectural notes, see the [architecture] docs.
+
+### Slurm Cluster
+
+Slurm clusters are very flexible and can be configured in various ways. Our
+Slurm helm chart provides a reference implementation that is highly customizable
+and tries to expose everything Slurm has to offer.
+
+<img src="./docs/assets/architecture-slurm.svg" alt="Slurm Architecture" width="100%" height="auto" />
+
+For additional information about Slurm, see the [slurm][slurm-docs] docs.
 
 ## Features
 
@@ -161,6 +172,7 @@ specific language governing permissions and limitations under the License.
 [slurm-arch]: https://slurm.schedmd.com/quickstart.html#arch
 [slurm-containers]: https://slurm.schedmd.com/containers.html
 [slurm-dependency]: https://slurm.schedmd.com/sbatch.html#OPT_dependency
+[slurm-docs]: ./docs/slurm.md
 [slurm-drain]: https://slurm.schedmd.com/scontrol.html#OPT_DRAIN
 [slurm-fairshare]: https://slurm.schedmd.com/fair_tree.html
 [slurm-mpi]: https://slurm.schedmd.com/mpi_guide.html
