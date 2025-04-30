@@ -1,0 +1,2 @@
+[codespell]
+skip = config/crd/**/*.yaml,helm/**/crds/*.yaml

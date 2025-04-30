@@ -216,7 +216,7 @@ func (r *NodeSetReconciler) canAdoptFunc(nodeset *slinkyv1alpha1.NodeSet) func(c
 	})
 }
 
-// sync is the main reconcilation logic.
+// sync is the main reconciliation logic.
 func (r *NodeSetReconciler) sync(
 	ctx context.Context,
 	nodeset *slinkyv1alpha1.NodeSet,
@@ -527,7 +527,7 @@ func (r *NodeSetReconciler) doPodProcessing(
 	logger := log.FromContext(ctx)
 	key := utils.KeyFunc(nodeset)
 
-	// NOTE: we must repect the uncordon and undrain nodes in accordance with updateStrategy
+	// NOTE: we must respect the uncordon and undrain nodes in accordance with updateStrategy
 	// to not fight it given the statefulness of how we cordon and terminate nodeset pods.
 	_, podsToKeep := r.splitUpdatePods(nodeset, pods, hash)
 	uncordonFn := func(i int) error {

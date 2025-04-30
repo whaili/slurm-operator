@@ -57,7 +57,7 @@ func (o ActivePods) Less(i, j int) bool {
 		return podDeletionCost1 < podDeletionCost2
 	}
 
-	// Step: ealier deadline timestamp < later deadline timestamp
+	// Step: earlier deadline timestamp < later deadline timestamp
 	podDeadline1, _ := utils.GetTimeFromAnnotations(pod1.Annotations, slinkyv1alpha1.AnnotationPodDeadline)
 	podDeadline2, _ := utils.GetTimeFromAnnotations(pod2.Annotations, slinkyv1alpha1.AnnotationPodDeadline)
 	if !podDeadline1.Equal(podDeadline2) {

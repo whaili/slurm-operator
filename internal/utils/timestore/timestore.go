@@ -18,7 +18,7 @@ type TimeStore struct {
 	eval func(oldTime, newTime time.Time) bool
 }
 
-// NewDurationStore() returns a time store which will evalute which value to
+// NewDurationStore() returns a time store which will evaluate which value to
 // keep, when multiple are pushed to the same key, based on the eval() function.
 func NewTimeStore(eval func(oldTime, newTime time.Time) bool) *TimeStore {
 	return &TimeStore{eval: eval}

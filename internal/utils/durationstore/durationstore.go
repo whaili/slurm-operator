@@ -18,7 +18,7 @@ type DurationStore struct {
 	eval func(oldDur, newDur time.Duration) bool
 }
 
-// NewDurationStore() returns a duration store which will evalute which value to
+// NewDurationStore() returns a duration store which will evaluate which value to
 // keep, when multiple are pushed to the same key, based on the eval() function.
 func NewDurationStore(eval func(oldDur, newDur time.Duration) bool) *DurationStore {
 	return &DurationStore{eval: eval}
