@@ -152,6 +152,7 @@ Helm Chart for Slurm HPC Workload Manager
 | restapi.servicePort | integer | `6820` |  The external service port number. |
 | restapi.tolerations | list | `[]` |  Configure pod tolerations. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
 | slurm-exporter.enabled | bool | `true` |  |
+| slurm-exporter.exporter.affinity | object | `{}` |  |
 | slurm-exporter.exporter.enabled | bool | `true` |  |
 | slurm-exporter.exporter.secretName | string | `"slurm-token-exporter"` |  |
 | slurm.auth.secretName | string | `""` |  The existing secret containing the slurm.key, otherwise one will be generated. |

@@ -518,25 +518,20 @@ compute:
       # Set affinity for Kubernetes Pod scheduling.
       # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
       affinity: {}
-        # nodeAffinity:
-        #   requiredDuringSchedulingIgnoredDuringExecution:
-        #     nodeSelectorTerms:
-        #       - matchExpressions:
-        #           - key: "kubernetes.io/os"
-        #             operator: In
-        #             values:
-        #               - linux
         # podAntiAffinity:
-        #   requiredDuringSchedulingIgnoredDuringExecution:
-        #     - topologyKey: "kubernetes.io/hostname"
-        #       labelSelector:
-        #         matchExpressions:
-        #           - key: "app.kubernetes.io/name"
-        #             operator: In
-        #             values:
-        #               - slurmctld
-        #               - slurmdbd
-        #               - slurmrestd
+        #   preferredDuringSchedulingIgnoredDuringExecution:
+        #     - weight: 100
+        #       podAffinityTerm:
+        #         topologyKey: kubernetes.io/hostname
+        #         labelSelector:
+        #           matchExpressions:
+        #             - key: app.kubernetes.io/name
+        #               operator: In
+        #               values:
+        #                 - slurmctld
+        #                 - slurmdbd
+        #                 - slurmrestd
+        #                 - mariadb
       #
       # -- (list)
       # Configure pod tolerations.
@@ -750,6 +745,15 @@ accounting:
   # Set affinity for Kubernetes Pod scheduling.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
   affinity: {}
+    # podAffinity:
+    #   requiredDuringSchedulingIgnoredDuringExecution:
+    #     - topologyKey: kubernetes.io/hostname
+    #       labelSelector:
+    #         matchExpressions:
+    #           - key: app.kubernetes.io/name
+    #             operator: In
+    #             values:
+    #               - mariadb
   #
   # -- (list)
   # Configure pod tolerations.
@@ -915,6 +919,16 @@ restapi:
   # Set affinity for Kubernetes Pod scheduling.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
   affinity: {}
+    # podAffinity:
+    #   requiredDuringSchedulingIgnoredDuringExecution:
+    #     - topologyKey: kubernetes.io/hostname
+    #       labelSelector:
+    #         matchExpressions:
+    #           - key: app.kubernetes.io/name
+    #             operator: In
+    #             values:
+    #               - slurmctld
+    #               - slurmdbd
   #
   # -- (list)
   # Configure pod tolerations.
@@ -940,3 +954,13 @@ slurm-exporter:
   exporter:
     enabled: true
     secretName: "slurm-token-exporter"
+    affinity: {}
+      # podAffinity:
+      #   requiredDuringSchedulingIgnoredDuringExecution:
+      #     - topologyKey: kubernetes.io/hostname
+      #       labelSelector:
+      #         matchExpressions:
+      #           - key: app.kubernetes.io/name
+      #             operator: In
+      #             values:
+      #               - slurmrestd
