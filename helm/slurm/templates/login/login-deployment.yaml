@@ -102,6 +102,10 @@ spec:
             {{- with .Values.login.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}{{- /* range $vol := $.Values.login.extraVolumeMounts */}}
+      {{- with .Values.accounting.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with .Values.accounting.nodeSelector */}}
       {{- with .Values.login.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}

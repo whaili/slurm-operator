@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - Added Slurm chart controller service configuration options.
 - Added login node capabilities for chroot.
 - Added `cgroup.conf` as configurable and cgroups is enabled by default.
+- Added `nodeSelector` options to all Slurm components.
 
 ### Fixed
 

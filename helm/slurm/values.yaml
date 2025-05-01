@@ -234,6 +234,12 @@ controller:
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass
   priorityClassName: ""
   #
+  # -- (map)
+  # Selector which must match a node's labels for the pod to be scheduled on that node.
+  # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
+  nodeSelector:
+    kubernetes.io/os: linux
+  #
   # -- (object)
   # Set affinity for Kubernetes Pod scheduling.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
@@ -418,6 +424,12 @@ login:
   # Set the priority class to use.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass
   priorityClassName: ""
+  #
+  # -- (map)
+  # Selector which must match a node's labels for the pod to be scheduled on that node.
+  # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
+  nodeSelector:
+    kubernetes.io/os: linux
   #
   # -- (object)
   # Set affinity for Kubernetes Pod scheduling.
@@ -728,6 +740,12 @@ accounting:
     # The database port to use.
     port: 3306
   #
+  # -- (map)
+  # Selector which must match a node's labels for the pod to be scheduled on that node.
+  # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
+  nodeSelector:
+    kubernetes.io/os: linux
+  #
   # -- (object)
   # Set affinity for Kubernetes Pod scheduling.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
@@ -833,6 +851,8 @@ mariadb:
     enabled: false
     serviceMonitor:
       enabled: false
+  nodeSelector:
+    kubernetes.io/os: linux
   affinity: {}
   resources: {}
 
@@ -884,6 +904,12 @@ restapi:
   # Set the priority class to use.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass
   priorityClassName: ""
+  #
+  # -- (map)
+  # Selector which must match a node's labels for the pod to be scheduled on that node.
+  # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
+  nodeSelector:
+    kubernetes.io/os: linux
   #
   # -- (object)
   # Set affinity for Kubernetes Pod scheduling.

@@ -38,6 +38,10 @@ spec:
       hostname: {{ include "slurm.accounting.name" . }}
       priorityClassName: {{ .Values.accounting.priorityClassName | default .Values.priorityClassName }}
       automountServiceAccountToken: false
+      {{- with .Values.accounting.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with .Values.accounting.nodeSelector */}}
       {{- with .Values.accounting.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
