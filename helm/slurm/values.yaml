@@ -508,14 +508,6 @@ compute:
       # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass
       priorityClassName: ""
       #
-      # -- (object)
-      # Set container resource requests and limits for Kubernetes Pod scheduling.
-      # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
-      resources:
-        limits:
-          cpu: 1
-          memory: 1Gi
-      #
       # -- (map)
       # Selector which must match a node's labels for the pod to be scheduled on that node.
       # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
@@ -550,6 +542,14 @@ compute:
       # Configure pod tolerations.
       # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
       tolerations: []
+      #
+      # -- (object)
+      # Set container resource requests and limits for Kubernetes Pod scheduling.
+      # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
+      resources: {}
+        # limits:
+        #   cpu: 1
+        #   memory: 1Gi
       #
       # -- (object)
       # Set the update strategy configuration.

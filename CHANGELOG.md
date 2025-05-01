@@ -52,6 +52,7 @@ All notable changes to this project will be documented in this file.
 - Changed reconfigure trigger from a side-car to a job.
 - Changed `accounting.external` to work with external database.
 - Changed fields `existingSecret` to `secretName`.
+- Changed `compute.nodesets[].resources` to allow empty resources.
 
 ### Removed
 

@@ -112,12 +112,10 @@ spec:
               add:
                 {{- include "slurm.compute.capabilities" $ | nindent 16 }}
           imagePullPolicy: {{ $nodeset.imagePullPolicy | default (include "slurm.imagePullPolicy" $) }}
-          {{- if not $nodeset.resources }}
-            {{- fail "Slurm compute nodes require resources spec." -}}
-          {{- else }}{{- /* if not $nodeset.resources */}}
+          {{- with $nodeset.resources }}
           resources:
-            {{- $nodeset.resources | toYaml | nindent 12 }}
-          {{- end }}{{- /* if not $nodeset.resources */}}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}{{- /* with $nodeset.resources */}}
           args:
             - -Z
             - --conf-server
