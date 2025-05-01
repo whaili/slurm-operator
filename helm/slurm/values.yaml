@@ -642,20 +642,14 @@ compute:
           State: UP
           MaxTime: UNLIMITED
       #
-      # -- (string)
-      # Set Slurm node GRES.
-      # Ref: https://slurm.schedmd.com/slurm.conf.html#OPT_Gres_1
-      nodeGres: ""
-      #
-      # -- (list)
-      # Set Slurm node Features as a list(string).
-      # Ref: https://slurm.schedmd.com/slurm.conf.html#OPT_Features
-      nodeFeatures: []
-      #
-      # -- (string)
-      # Set Slurm node weight for Slurm scheduling.
-      # Ref: https://slurm.schedmd.com/slurm.conf.html#OPT_Weight
-      nodeWeight: 1
+      # --(map[string]string || map[string][]string)
+      # Extra Slurm node configuration appended into the --conf arguments.
+      # WARNING: Values can override existing ones.
+      # Ref: https://slurm.schedmd.com/slurm.conf.html#lbAE
+      nodeConfig: {}
+        # Features: []
+        # Gres: []
+        # Weight: 1
   #
   # -- (list)
   # Slurm Partitions by object list.

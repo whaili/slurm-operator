@@ -276,6 +276,34 @@ Returns the parsed resource limits for POD_MEMORY, in Megabytes.
 {{- end -}}
 
 {{/*
+Returns the --conf line given the NodeSet.
+Ref: https://slurm.schedmd.com/slurmd.html#OPT_conf-%3Cnode-parameters%3E
+Ref: https://slurm.schedmd.com/slurm.conf.html#SECTION_NODE-CONFIGURATION
+*/}}
+{{- define "slurm.compute.conf" -}}
+{{- $confList := list -}}
+{{- $featureList := list .name -}}
+{{- $featureKeyList := list "features" "feature" -}}
+{{- range $key, $val := .nodeConfig -}}
+  {{- if has (lower $key) $featureKeyList -}}
+    {{- if typeIs "string" $val -}}
+      {{- $featureList = concat $featureList (list $val) -}}
+    {{- else -}}
+      {{- $featureList = concat $featureList $val -}}
+    {{- end -}}
+  {{- else -}}
+    {{- if $val -}}
+      {{- $item := printf "%s=%s" $key ($val | join ",") -}}
+      {{- $confList = append $confList $item -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- $item := printf "Features=%s" (join "," $featureList) -}}
+{{- $confList = prepend $confList $item -}}
+{{- printf "'%s'" (join " " $confList) | quote -}}
+{{- end -}}
+
+{{/*
 Determine login image repository
 */}}
 {{- define "slurm.login.image.repository" -}}

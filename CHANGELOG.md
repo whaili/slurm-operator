@@ -54,6 +54,7 @@ All notable changes to this project will be documented in this file.
 - Changed `accounting.external` to work with external database.
 - Changed fields `existingSecret` to `secretName`.
 - Changed `compute.nodesets[].resources` to allow empty resources.
+- Changed how `compute.nodeset[]` expresses gres, weight, and features.
 
 ### Removed
 
