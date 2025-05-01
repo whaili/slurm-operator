@@ -30,14 +30,6 @@ spec:
     spec:
       priorityClassName: {{ .Values.controller.priorityClassName | default .Values.priorityClassName }}
       automountServiceAccountToken: false
-      {{- with .Values.controller.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}{{- /* with .Values.controller.nodeSelector */}}
-      {{- with .Values.controller.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}{{- /* with .Values.controller.affinity */}}
       {{- include "slurm.imagePullSecrets" . | nindent 6 }}
       initContainers:
         - name: init
@@ -110,6 +102,14 @@ spec:
               mountPath: /var/log/slurm
             - name: {{ include "slurm.controller.statesave.name" . }}
               mountPath: {{ include "slurm.controller.statesavePath" . }}
+      {{- with .Values.controller.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with .Values.controller.nodeSelector */}}
+      {{- with .Values.controller.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with .Values.controller.affinity */}}
       {{- with .Values.controller.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}

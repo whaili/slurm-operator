@@ -38,14 +38,6 @@ spec:
       hostname: {{ include "slurm.accounting.name" . }}
       priorityClassName: {{ .Values.accounting.priorityClassName | default .Values.priorityClassName }}
       automountServiceAccountToken: false
-      {{- with .Values.accounting.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}{{- /* with .Values.accounting.nodeSelector */}}
-      {{- with .Values.accounting.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}{{- /* with .Values.accounting.affinity */}}
       {{- include "slurm.imagePullSecrets" $ | nindent 6 }}
       initContainers:
         - name: init
@@ -93,6 +85,14 @@ spec:
               port: slurmdbd
           volumeMounts:
             {{- include "slurm.volumeMounts" . | nindent 12 }}
+      {{- with .Values.accounting.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with .Values.accounting.nodeSelector */}}
+      {{- with .Values.accounting.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with .Values.accounting.affinity */}}
       {{- with .Values.accounting.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}

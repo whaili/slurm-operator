@@ -47,14 +47,6 @@ spec:
       automountServiceAccountToken: false
       dnsConfig:
         {{- include "slurm.dnsConfig" $ | nindent 8 }}
-      {{- with $nodeset.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}{{- /* with $nodeset.nodeSelector */}}
-      {{- with $nodeset.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}{{- /* with $nodeset.affinity */}}
       {{- include "slurm.imagePullSecrets" $ | nindent 6 }}
       initContainers:
         - name: init
@@ -160,6 +152,14 @@ spec:
             {{- with $nodeset.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}{{- /* with $nodeset.extraVolumeMounts */}}
+      {{- with $nodeset.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with $nodeset.nodeSelector */}}
+      {{- with $nodeset.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with $nodeset.affinity */}}
       {{- with $nodeset.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
