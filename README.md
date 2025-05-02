@@ -33,11 +33,6 @@ Run [Slurm] on [Kubernetes], by [SchedMD]. A [Slinky] project.
 
 ## Overview
 
-This project contains a [Kubernetes] operator to deploy and manage certain
-components of [Slurm] clusters. This repository implements [custom-controllers]
-and [custom resource definitions (CRDs)][crds] designed for the lifecycle
-(creation, upgrade, graceful shutdown) of Slurm clusters.
-
 [Slurm] and [Kubernetes] are workload managers originally designed for different
 kinds of workloads. In broad strokes: Kubernetes excels at scheduling workloads
 that typically run for an indefinite amount of time, with potentially vague
@@ -48,6 +43,10 @@ requirements and topology, on multiple nodes, with strict policy, but its
 resource pool is known.
 
 This project enables the best of both workload managers, unified on Kubernetes.
+It contains a [Kubernetes] operator to deploy and manage certain components of
+[Slurm] clusters. This repository implements [custom-controllers] and
+[custom resource definitions (CRDs)][crds] designed for the lifecycle (creation,
+upgrade, graceful shutdown) of Slurm clusters.
 
 <img src="./docs/assets/architecture-operator.svg" alt="Slurm Operator Architecture" width="100%" height="auto" />
 
