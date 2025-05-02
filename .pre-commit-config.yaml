@@ -50,8 +50,7 @@ repos:
     rev: v2.4.1
     hooks:
       - id: codespell
-        exclude_types: [jpeg, png, png, svg]
-        args: [--check-filenames, --write-changes]
+        args: [--write-changes]
   - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
     rev: 0.2.3
     hooks:
