@@ -95,6 +95,8 @@ Slurm is a full featured HPC workload manager. To highlight a few features:
   preemption, and resource limits.
 - [**Fairshare**][slurm-fairshare]: distribute resources equitably among users
   and accounts based on historical usage.
+- [**Node Health Check**][slurm-healthcheck]: periodically check node health via
+  script.
 
 ## Limitations
 
@@ -174,6 +176,7 @@ specific language governing permissions and limitations under the License.
 [slurm-docs]: ./docs/slurm.md
 [slurm-drain]: https://slurm.schedmd.com/scontrol.html#OPT_DRAIN
 [slurm-fairshare]: https://slurm.schedmd.com/fair_tree.html
+[slurm-healthcheck]: https://slurm.schedmd.com/slurm.conf.html#OPT_HealthCheckProgram
 [slurm-mpi]: https://slurm.schedmd.com/mpi_guide.html
 [slurm-preempt]: https://slurm.schedmd.com/preempt.html
 [slurm-priority]: https://slurm.schedmd.com/priority_multifactor.html
