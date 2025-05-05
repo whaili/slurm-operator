@@ -33,12 +33,18 @@ spec:
           image: {{ include "slurm-operator.operator.imageRef" . }}
           imagePullPolicy: {{ include "slurm-operator.imagePullPolicy" . }}
           args:
+            {{- with .Values.operator.clusterWorkers }}
             - --cluster-workers
-            - {{ default 1 .Values.operator.clusterWorkers | quote }}
+            - {{ . | quote }}
+            {{- end }}{{- /* with .Values.operator.clusterWorkers */}}
+            {{- with .Values.operator.nodesetWorkers }}
             - --nodeset-workers
-            - {{ default 1 .Values.operator.nodesetWorkers | quote }}
+            - {{ . | quote }}
+            {{- end }}{{- /* with .Values.operator.nodesetWorkers */}}
+            {{- with .Values.operator.logLevel }}
             - --zap-log-level
-            - {{ default "info" .Values.operator.logLevel | quote }}
+            - {{ . | quote }}
+            {{- end }}{{- /* with .Values.operator.logLevel */}}
           livenessProbe:
             httpGet:
               path: /healthz
