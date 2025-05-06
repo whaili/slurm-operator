@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - Added `cgroup.conf` as configurable and cgroups is enabled by default.
 - Added `nodeSelector` options to all Slurm components.
 - Added `compute.nodesets[].useResourceLimits` option.
+- Added tolerations and affinity to reconfigure and token jobs.
 
 ### Fixed
 
