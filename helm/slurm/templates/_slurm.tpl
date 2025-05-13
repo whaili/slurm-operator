@@ -253,6 +253,29 @@ Define compute log file
 {{- end }}
 
 {{/*
+Returns the parsed resource limits for POD_CPUS.
+*/}}
+{{- define "slurm.compute.podCpus" -}}
+{{- $out := 0 -}}
+{{- with .resources }}{{- with .limits }}{{- with .cpu }}
+  {{- $out = include "resource-quantity" . | float64 | ceil | int -}}
+{{- end }}{{- end }}{{- end }}
+{{- print $out -}}
+{{- end -}}
+
+{{/*
+Returns the parsed resource limits for POD_MEMORY, in Megabytes.
+*/}}
+{{- define "slurm.compute.podMemory" -}}
+{{- $out := 0 -}}
+{{- with .resources }}{{- with .limits }}{{- with .memory }}
+  {{- $megabytes := (include "resource-quantity" "1M") | float64 -}}
+  {{- $out = divf (include "resource-quantity" . | float64) $megabytes | ceil | int -}}
+{{- end }}{{- end }}{{- end }}
+{{- print $out -}}
+{{- end -}}
+
+{{/*
 Determine login image repository
 */}}
 {{- define "slurm.login.image.repository" -}}

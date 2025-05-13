@@ -108,6 +108,13 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}{{- /* with $nodeset.resources */}}
+          {{- if $nodeset.useResourceLimits }}
+          env:
+            - name: POD_CPUS
+              value: {{ include "slurm.compute.podCpus" $nodeset | toString | quote }}
+            - name: POD_MEMORY
+              value: {{ include "slurm.compute.podMemory" $nodeset | toString | quote }}
+          {{- end }}{{- /* if $nodeset.useResourceLimits */}}
           args:
             - -Z
             - --conf-server

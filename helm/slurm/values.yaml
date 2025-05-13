@@ -546,6 +546,10 @@ compute:
         #   cpu: 1
         #   memory: 1Gi
       #
+      # -- (bool)
+      # Enable to propagate the pod `resources.limits` into slurmd.
+      useResourceLimits: true
+      #
       # -- (object)
       # Set the update strategy configuration.
       updateStrategy:
