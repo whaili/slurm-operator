@@ -50,6 +50,7 @@ All notable changes to this project will be documented in this file.
 - Changed `ttlSecondsAfterFinished` to `helm.sh/hook-delete-policy`.
 - Changed reconfigure trigger from a side-car to a job.
 - Changed `accounting.external` to work with external database.
+- Changed fields `existingSecret` to `secretName`.
 
 ### Removed
 

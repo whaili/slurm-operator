@@ -432,8 +432,8 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 Define slurm auth secret name
 */}}
 {{- define "slurm.auth.secretName" -}}
-{{- if ((.Values.slurm).auth).existingSecret -}}
-  {{- printf "%s" (tpl .Values.slurm.auth.existingSecret $) -}}
+{{- if ((.Values.slurm).auth).secretName -}}
+  {{- printf "%s" (tpl .Values.slurm.auth.secretName $) -}}
 {{- else -}}
   {{- printf "%s-auth-key" (.Release.Name) -}}
 {{- end -}}
@@ -459,8 +459,8 @@ Define slurm mountPath
 Define slurm jwt hs256 secret name
 */}}
 {{- define "slurm.jwt.hs256.secretName" -}}
-{{- if ((.Values.jwt).hs256).existingSecret -}}
-  {{- printf "%s" (tpl .Values.jwt.hs256.existingSecret $) -}}
+{{- if ((.Values.jwt).hs256).secretName -}}
+  {{- printf "%s" (tpl .Values.jwt.hs256.secretName $) -}}
 {{- else -}}
   {{- printf "%s-jwt-key" (.Release.Name) -}}
 {{- end -}}

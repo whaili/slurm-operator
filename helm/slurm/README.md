@@ -90,7 +90,7 @@ Helm Chart for Slurm HPC Workload Manager
 | fullnameOverride | string | `""` |  Overrides the full name of the release. |
 | imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |
 | imagePullSecrets | list | `[]` |  Set the secrets for image pull. Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
-| jwt.hs256.existingSecret | string | `""` |  The existing secret to use otherwise one will be generated. |
+| jwt.hs256.secretName | string | `""` |  The existing secret containing the jwt_hs256.key, otherwise one will be generated. |
 | login.affinity | object | `{}` |  Set affinity for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity |
 | login.enabled | bool | `true` |  Enables login nodes. |
 | login.extraVolumeMounts | list | `[]` |  List of volume mounts. Ref: https://kubernetes.io/docs/concepts/storage/volumes/ |
@@ -149,7 +149,7 @@ Helm Chart for Slurm HPC Workload Manager
 | slurm-exporter.enabled | bool | `true` |  |
 | slurm-exporter.exporter.enabled | bool | `true` |  |
 | slurm-exporter.exporter.secretName | string | `"slurm-token-exporter"` |  |
-| slurm.auth.existingSecret | string | `""` |  The existing secret to use otherwise one will be generated. |
+| slurm.auth.secretName | string | `""` |  The existing secret containing the slurm.key, otherwise one will be generated. |
 | slurm.configFiles | map[string]string | `{"cgroup.conf":"CgroupPlugin=autodetect\nIgnoreSystemd=yes\nEnableControllers=yes\nConstrainCores=yes\nConstrainRAMSpace=yes\nConstrainDevices=yes\nConstrainSwapSpace=yes\n"}` |  Optional raw Slurm configuration files, as a map. The map key represents the config file by name; the map value represents config file contents as a string. Ref: https://slurm.schedmd.com/man_index.html#configuration_files |
 | slurm.epilogScripts | map[string]string | `{}` |  The Epilog scripts for compute nodesets, as a map. The map key represents the filename; the map value represents the script contents. WARNING: The script must include a shebang (!) so it can be executed correctly by Slurm. Ref: https://slurm.schedmd.com/slurm.conf.html#OPT_Epilog Ref: https://slurm.schedmd.com/prolog_epilog.html Ref: https://en.wikipedia.org/wiki/Shebang_(Unix) |
 | slurm.extraSlurmConf | map[string]string | map[string][]string | `{}` |  Extra slurm configuration lines to append to `slurm.conf`, represetned as a string or a map. WARNING: Values can override existing ones. Ref: https://slurm.schedmd.com/slurm.conf.html |

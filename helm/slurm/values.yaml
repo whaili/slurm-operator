@@ -56,8 +56,8 @@ jwt:
   hs256:
     #
     # -- (string)
-    # The existing secret to use otherwise one will be generated.
-    existingSecret: ""
+    # The existing secret containing the jwt_hs256.key, otherwise one will be generated.
+    secretName: ""
 
 #
 # Slurm configurations.
@@ -67,8 +67,8 @@ slurm:
   auth:
     #
     # -- (string)
-    # The existing secret to use otherwise one will be generated.
-    existingSecret: ""
+    # The existing secret containing the slurm.key, otherwise one will be generated.
+    secretName: ""
   #
   # -- (map[string]string | map[string][]string)
   # Extra slurmdbd configuration lines to append to `slurmdbd.conf`.
