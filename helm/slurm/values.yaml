@@ -713,7 +713,12 @@ accounting:
     #
     # -- (string)
     # The plaintext user password to the database.
+    # NOTE: ignored when secretName is not empty.
     password: ""
+    #
+    # -- (string)
+    # The existing secret containing the user password to the database.
+    secretName: ""
     #
     # -- (string)
     # The host or service to communicate with.

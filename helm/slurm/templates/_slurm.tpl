@@ -174,7 +174,9 @@ Define slurm accounting config
 Define slurm accounting database secret
 */}}
 {{- define "slurm.accounting.secretName" -}}
-{{- if .Values.accounting.external.enabled }}
+{{- if and .Values.accounting.external.enabled .Values.accounting.external.secretName }}
+  {{- print .Values.accounting.external.secretName }}
+{{- else if and .Values.accounting.external.enabled }}
   {{- printf "%s-database" (include "slurm.accounting.name" .) }}
 {{- else }}
   {{- template "mariadb.secretName" .Subcharts.mariadb }}
