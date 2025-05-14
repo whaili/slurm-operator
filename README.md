@@ -84,7 +84,8 @@ Slurm is a full featured HPC workload manager. To highlight a few features:
   executed by select users and/or select accounts.
 - [**Job Dependencies**][slurm-dependency]: defer the start of jobs until the
   specified dependencies have been satisfied.
-- [**Job Containers**][slurm-containers]: launch jobs which run a container.
+- [**Job Containers**][slurm-containers]: jobs which run an unprivileged OCI
+  container bundle.
 - [**MPI**][slurm-mpi]: launch parallel MPI jobs, supports various MPI
   implementations.
 - [**Priority**][slurm-priority]: assigns priorities to jobs upon submission and
