@@ -104,3 +104,15 @@ Ref: https://github.com/helm/helm/issues/11376#issuecomment-1256831105
 {{- end -}}
 {{- mulf (float64 $value) $unit -}}
 {{- end -}}
+
+{{/*
+Expand a map in a uniform method.
+Handles map[string]string and map[string][]string
+*/}}
+{{- define "expand-map" -}}
+{{- range $key, $val := . -}}
+  {{- if $val -}}
+    {{- printf "%s=%s\n" $key ($val | join ",") -}}
+  {{- end -}}
+{{- end -}}
+{{- end -}}
