@@ -20,7 +20,7 @@ repos:
         pass_filenames: false
         stages: [commit-msg]
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
       - id: check-merge-conflict
       - id: check-executables-have-shebangs
@@ -37,7 +37,7 @@ repos:
         exclude: helm/.*/README.md$
       - id: detect-private-key
   - repo: https://github.com/executablebooks/mdformat
-    rev: 0.7.17
+    rev: 0.7.22
     hooks:
       - id: mdformat
         args:
@@ -61,7 +61,7 @@ repos:
           - --offset=2
         exclude: (config|helm)/.*\.(yaml|yml)
   - repo: https://github.com/norwoodj/helm-docs
-    rev: v1.13.1
+    rev: v1.14.2
     hooks:
       - id: helm-docs
         args:
