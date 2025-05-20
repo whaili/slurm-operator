@@ -399,6 +399,15 @@ login:
     pam: {}
       # debug_level: 9
   #
+  # -- (object)
+  # The security context given to the container.
+  # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
+  securityContext:
+    privileged: false
+    capabilities:
+      add:
+        - SYS_CHROOT
+  #
   # --(list)
   # List of volume mounts.
   # Ref: https://kubernetes.io/docs/concepts/storage/volumes/

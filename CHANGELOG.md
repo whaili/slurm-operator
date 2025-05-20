@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 - Added `nodeSelector` options to all Slurm components.
 - Added `compute.nodesets[].useResourceLimits` option.
 - Added tolerations and affinity to reconfigure and token jobs.
+- Added `login.securityContext` option.
 
 ### Fixed
 

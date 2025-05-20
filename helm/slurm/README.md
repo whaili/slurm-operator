@@ -104,6 +104,7 @@ Helm Chart for Slurm HPC Workload Manager
 | login.replicas | integer | `1` |  Set the number of replicas to deploy. |
 | login.resources | object | `{}` |  Set container resource requests and limits for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container |
 | login.rootSshAuthorizedKeys | list | `[]` |  The `/root/.ssh/authorized_keys` file to write, represented as a list. |
+| login.securityContext | object | `{"capabilities":{"add":["SYS_CHROOT"]},"privileged":false}` |  The security context given to the container. Ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container |
 | login.service | object | `{"type":"LoadBalancer"}` |  The login service configuration. Ref: https://kubernetes.io/docs/concepts/services-networking/service/ |
 | login.serviceNodePort | integer | `32222` |  The external service node port number. Ignored unless `service.type == NodePort`. |
 | login.servicePort | integer | `2222` |  The external service port number. |
