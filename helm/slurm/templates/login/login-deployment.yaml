@@ -69,6 +69,12 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}{{- /* with .Values.login.resources */}}
+          readinessProbe:
+            exec:
+              command:
+                - test
+                - -S
+                - /run/slurm/sack.socket
           volumeMounts:
             {{- include "slurm.volumeMounts" . | nindent 12 }}
             - name: authsocket
