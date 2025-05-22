@@ -37,6 +37,8 @@ All notable changes to this project will be documented in this file.
 - Fixed regression where slurmd's would not register with all dynamic conf items
   (e.g. Features, Gres, Weight, etc..).
 - Fixed operator and operator-webhook not using affinity in values.yaml.
+- Fixed nodeset controller failing to apply a rolling update when there are too
+  many unhealthy pods.
 
 ### Changed
 

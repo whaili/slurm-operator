@@ -1584,6 +1584,42 @@ func TestNodeSetReconciler_syncRollingUpdate(t *testing.T) {
 				wantErr: false,
 			}
 		}(),
+		func() testCaseFields {
+			nodeset := newNodeSet("foo", clusterName, 2)
+			nodeset.Spec.UpdateStrategy.Type = slinkyv1alpha1.RollingUpdateNodeSetStrategyType
+			nodeset.Spec.UpdateStrategy.RollingUpdate = &slinkyv1alpha1.RollingUpdateNodeSetStrategy{
+				MaxUnavailable: ptr.To(intstr.FromString("10%")),
+			}
+			pod1 := nodesetutils.NewNodeSetPod(nodeset, 0, "")
+			makePodHealthy(pod1)
+			pod2 := nodesetutils.NewNodeSetPod(nodeset, 1, "")
+			k8sclient := fake.NewFakeClient(nodeset, pod1, pod2)
+			slurmNodeList := &slurmtypes.V0041NodeList{
+				Items: []slurmtypes.V0041Node{
+					{
+						V0041Node: v0041.V0041Node{
+							Name:  ptr.To(nodesetutils.GetNodeName(pod1)),
+							State: ptr.To([]v0041.V0041NodeState{v0041.V0041NodeStateIDLE}),
+						},
+					},
+				},
+			}
+			slurmClient := newFakeClientList(sinterceptor.Funcs{}, slurmNodeList)
+			return testCaseFields{
+				name: "update, with unhealthy",
+				fields: fields{
+					Client:        k8sclient,
+					SlurmClusters: newSlurmClusters(clusterName, slurmClient),
+				},
+				args: args{
+					ctx:     context.TODO(),
+					nodeset: nodeset,
+					pods:    []*corev1.Pod{pod1, pod2},
+					hash:    hash,
+				},
+				wantErr: false,
+			}
+		}(),
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
