@@ -53,6 +53,10 @@ spec:
             httpGet:
               path: /readyz
               port: 8081
+      {{- with .Values.operator.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with .Values.operator.affinity */}}
       {{- with .Values.operator.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
