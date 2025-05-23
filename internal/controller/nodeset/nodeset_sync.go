@@ -529,7 +529,7 @@ func (r *NodeSetReconciler) doPodProcessing(
 
 	// NOTE: we must respect the uncordon and undrain nodes in accordance with updateStrategy
 	// to not fight it given the statefulness of how we cordon and terminate nodeset pods.
-	_, podsToKeep := r.splitUpdatePods(nodeset, pods, hash)
+	_, podsToKeep := r.splitUpdatePods(ctx, nodeset, pods, hash)
 	uncordonFn := func(i int) error {
 		pod := podsToKeep[i]
 		return r.makePodUncordonAndUndrain(ctx, nodeset, pod)
@@ -683,7 +683,7 @@ func (r *NodeSetReconciler) syncRollingUpdate(
 ) error {
 	logger := log.FromContext(ctx)
 
-	podsToDelete, _ := r.splitUpdatePods(nodeset, pods, hash)
+	podsToDelete, _ := r.splitUpdatePods(ctx, nodeset, pods, hash)
 	if len(podsToDelete) > 0 {
 		logger.Info("Scale-in pods for Rolling Update",
 			"nodeset", klog.KObj(nodeset), "delete", len(podsToDelete))
@@ -697,10 +697,13 @@ func (r *NodeSetReconciler) syncRollingUpdate(
 
 // splitUpdatePods returns two pod lists based on UpdateStrategy type.
 func (r *NodeSetReconciler) splitUpdatePods(
+	ctx context.Context,
 	nodeset *slinkyv1alpha1.NodeSet,
 	pods []*corev1.Pod,
 	hash string,
 ) (podsToDelete, podsToKeep []*corev1.Pod) {
+	logger := log.FromContext(ctx)
+
 	switch nodeset.Spec.UpdateStrategy.Type {
 	case slinkyv1alpha1.OnDeleteNodeSetStrategyType:
 		return nil, nil
@@ -723,6 +726,10 @@ func (r *NodeSetReconciler) splitUpdatePods(
 		copy(remainingPods, newPods)
 		remainingPods = append(remainingPods, remainingOldPods...)
 
+		logger.V(1).Info("calculated pod lists for update",
+			"maxUnavailable", maxUnavailable,
+			"updatePods", len(podsToDelete),
+			"remainingPods", len(remainingPods))
 		return podsToDelete, remainingPods
 	default:
 		return nil, nil

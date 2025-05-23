@@ -1604,6 +1604,7 @@ func TestNodeSetReconciler_splitUpdatePods(t *testing.T) {
 		Client client.Client
 	}
 	type args struct {
+		ctx     context.Context
 		nodeset *slinkyv1alpha1.NodeSet
 		pods    []*corev1.Pod
 		hash    string
@@ -1621,6 +1622,7 @@ func TestNodeSetReconciler_splitUpdatePods(t *testing.T) {
 				Client: fake.NewFakeClient(),
 			},
 			args: args{
+				ctx: context.TODO(),
 				nodeset: func() *slinkyv1alpha1.NodeSet {
 					nodeset := newNodeSet("foo", clusterName, 0)
 					nodeset.Spec.UpdateStrategy.Type = slinkyv1alpha1.OnDeleteNodeSetStrategyType
@@ -1668,6 +1670,7 @@ func TestNodeSetReconciler_splitUpdatePods(t *testing.T) {
 				Client: fake.NewFakeClient(),
 			},
 			args: args{
+				ctx: context.TODO(),
 				nodeset: func() *slinkyv1alpha1.NodeSet {
 					nodeset := newNodeSet("foo", clusterName, 0)
 					nodeset.Spec.UpdateStrategy.Type = slinkyv1alpha1.RollingUpdateNodeSetStrategyType
@@ -1716,7 +1719,7 @@ func TestNodeSetReconciler_splitUpdatePods(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := newNodeSetController(tt.fields.Client, nil)
-			gotPodsToDelete, gotPodsToKeep := r.splitUpdatePods(tt.args.nodeset, tt.args.pods, tt.args.hash)
+			gotPodsToDelete, gotPodsToKeep := r.splitUpdatePods(tt.args.ctx, tt.args.nodeset, tt.args.pods, tt.args.hash)
 
 			gotPodsToDeleteOrdered := make([]string, len(gotPodsToDelete))
 			for i := range gotPodsToDelete {
