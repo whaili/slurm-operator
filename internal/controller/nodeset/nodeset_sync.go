@@ -388,7 +388,7 @@ func (r *NodeSetReconciler) doPodScaleOut(
 	if skippedPods := numCreate - successfulCreations; skippedPods > 0 {
 		logger.V(2).Info("Slow-start failure. Skipping creation of pods, decrementing expectations",
 			"podsSkipped", skippedPods, "kind", slinkyv1alpha1.NodeSetGVK, "nodeset", klog.KObj(nodeset))
-		for i := 0; i < skippedPods; i++ {
+		for range skippedPods {
 			// Decrement the expected number of creates because the informer won't observe this pod
 			r.expectations.CreationObserved(logger, key)
 		}

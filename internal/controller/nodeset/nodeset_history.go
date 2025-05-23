@@ -58,7 +58,7 @@ func (r *NodeSetReconciler) truncateHistory(
 	}
 	// delete any non-live history to maintain the revision limit.
 	history = history[:(historyLen - historyLimit)]
-	for i := 0; i < len(history); i++ {
+	for i := range history {
 		if err := r.historyControl.DeleteControllerRevision(history[i]); err != nil {
 			return err
 		}

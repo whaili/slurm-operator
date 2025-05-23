@@ -161,10 +161,10 @@ func TestSortingActivePods(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			numPods := len(test.pods)
 
-			for i := 0; i < 20; i++ {
+			for range 20 {
 				idx := rand.Perm(numPods)
 				randomizedPods := make([]*corev1.Pod, numPods)
-				for j := 0; j < numPods; j++ {
+				for j := range numPods {
 					randomizedPods[j] = &test.pods[idx[j]]
 				}
 
