@@ -93,7 +93,7 @@ Helm Chart for Slurm HPC Workload Manager
 | imagePullSecrets | list | `[]` |  Set the secrets for image pull. Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
 | jwt.hs256.secretName | string | `""` |  The existing secret containing the jwt_hs256.key, otherwise one will be generated. |
 | login.affinity | object | `{}` |  Set affinity for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity |
-| login.enabled | bool | `true` |  Enables login nodes. |
+| login.enabled | bool | `false` |  Enables login nodes. |
 | login.extraVolumeMounts | list | `[]` |  List of volume mounts. Ref: https://kubernetes.io/docs/concepts/storage/volumes/ |
 | login.extraVolumes | list | `[]` |  Define list of pod volumes. Ref: https://kubernetes.io/docs/concepts/storage/volumes/ |
 | login.image.repository | string | `"ghcr.io/slinkyproject/login"` |  Set the image repository to use. |

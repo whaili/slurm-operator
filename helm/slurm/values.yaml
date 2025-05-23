@@ -307,7 +307,7 @@ login:
   #
   # -- (bool)
   # Enables login nodes.
-  enabled: true
+  enabled: false
   #
   # -- (integer)
   # Set the number of replicas to deploy.

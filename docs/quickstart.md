@@ -88,7 +88,6 @@ slurm-accounting-0                1/1     Running     0             5m00s
 slurm-compute-debug-0             1/1     Running     0             5m00s
 slurm-controller-0                2/2     Running     0             5m00s
 slurm-exporter-7b44b6d856-d86q5   1/1     Running     0             5m00s
-slurm-login-7649457c6f-vtjrm      1/1     Running     0             5m00s
 slurm-mariadb-0                   1/1     Running     0             5m00s
 slurm-restapi-5f75db85d9-67gpl    1/1     Running     0             5m00s
 ```
