@@ -18,16 +18,11 @@ metadata:
   labels:
     {{- include "slurm.accounting.labels" . | nindent 4 }}
 spec:
-  podManagementPolicy: Parallel
   revisionHistoryLimit: 0
   serviceName: {{ include "slurm.accounting.name" . }}
   selector:
     matchLabels:
       {{- include "slurm.accounting.selectorLabels" . | nindent 6 }}
-  updateStrategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
   template:
     metadata:
       annotations:

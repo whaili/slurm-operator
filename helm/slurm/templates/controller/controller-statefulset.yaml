@@ -11,16 +11,11 @@ metadata:
   labels:
     {{- include "slurm.controller.labels" . | nindent 4 }}
 spec:
-  podManagementPolicy: Parallel
   revisionHistoryLimit: 0
   serviceName: {{ include "slurm.controller.name" . }}
   selector:
     matchLabels:
       {{- include "slurm.controller.selectorLabels" . | nindent 6 }}
-  updateStrategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
   template:
     metadata:
       annotations:
