@@ -183,7 +183,7 @@ spec:
         {{- end }}{{- /* with $nodeset.extraVolumes */}}
   {{- with $nodeset.volumeClaimTemplates }}
   volumeClaimTemplates:
-    {{- toYaml . | nindent 4 }}
+    {{- toYaml (omit . "mountPath") | nindent 4 }}
   {{- end }}{{- /* with $nodeset.volumeClaimTemplates */}}
 {{- end }}{{- /* if $nodeset.enabled */}}
 {{- end }}{{- /* range $nodeset := .Values.compute.nodesets */}}
