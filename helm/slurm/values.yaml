@@ -267,7 +267,7 @@ controller:
     #
     # -- (bool)
     # Enables save-state persistence.
-    enabled: false
+    enabled: true
     #
     # -- (string)
     # Name of an existing `PersistentVolumeClaim` to use instead of creating one from definition.

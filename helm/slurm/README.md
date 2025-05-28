@@ -76,7 +76,7 @@ Helm Chart for Slurm HPC Workload Manager
 | controller.nodeSelector | map | `{"kubernetes.io/os":"linux"}` |  Selector which must match a node's labels for the pod to be scheduled on that node. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector |
 | controller.persistence.accessModes | list | `["ReadWriteOnce"]` |  Create a `PersistentVolumeClaim` with these access modes. |
 | controller.persistence.annotations | object | `{}` |  Create a `PersistentVolumeClaim` with these annotations. |
-| controller.persistence.enabled | bool | `false` |  Enables save-state persistence. |
+| controller.persistence.enabled | bool | `true` |  Enables save-state persistence. |
 | controller.persistence.existingClaim | string | `""` |  Name of an existing `PersistentVolumeClaim` to use instead of creating one from definition. NOTE: When not empty, the other persistence fields will be ignored. |
 | controller.persistence.labels | object | `{}` |  Create a `PersistentVolumeClaim` with these labels. |
 | controller.persistence.selector | object | `{}` |  Selector to match an existing `PersistentVolume`. |
