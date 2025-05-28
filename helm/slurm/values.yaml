@@ -404,9 +404,9 @@ login:
   # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
   securityContext:
     privileged: false
-    capabilities:
-      add:
-        - SYS_CHROOT
+    # capabilities:
+    #   add:
+    #     - SYS_CHROOT
   #
   # --(list)
   # List of volume mounts.
