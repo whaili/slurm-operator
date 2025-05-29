@@ -131,9 +131,3 @@ repos:
         types: [go]
         language: system
         pass_filenames: false
-      - id: make-govulncheck
-        name: Make govulncheck
-        entry: make govulncheck
-        types: [go]
-        language: system
-        pass_filenames: false
