@@ -155,6 +155,7 @@ CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen-$(CONTROLLER_TOOLS_VERSION)
 ENVTEST ?= $(LOCALBIN)/setup-envtest-$(ENVTEST_VERSION)
 GOVULNCHECK ?= $(LOCALBIN)/govulncheck-$(GOVULNCHECK_VERSION)
 GOLANGCI_LINT ?= $(LOCALBIN)/golangci-lint-$(GOLANGCI_LINT_VERSION)
+HELM_DOCS ?= $(LOCALBIN)/helm-docs-$(HELM_DOCS_VERSION)
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.4.3
@@ -164,6 +165,7 @@ ENVTEST_K8S_VERSION ?= $(shell go list -m -f "{{ .Version }}" k8s.io/api | awk -
 ENVTEST_VERSION ?= $(shell go list -m -f "{{ .Version }}" sigs.k8s.io/controller-runtime | awk -F'[v.]' '{printf "release-%d.%d", $$2, $$3}')
 GOVULNCHECK_VERSION ?= latest
 GOLANGCI_LINT_VERSION ?= v2.1.6
+HELM_DOCS_VERSION ?= v1.14.2
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
@@ -191,6 +193,11 @@ $(GOLANGCI_LINT): $(LOCALBIN)
 	wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $(LOCALBIN) $(GOLANGCI_LINT_VERSION)
 	mv $(LOCALBIN)/golangci-lint $(GOLANGCI_LINT)
 
+.PHONY: helm-docs-bin
+helm-docs-bin: $(HELM_DOCS) ## Download helm-docs locally if necessary.
+$(HELM_DOCS): $(LOCALBIN)
+	$(call go-install-tool,$(HELM_DOCS),github.com/norwoodj/helm-docs/cmd/helm-docs,$(HELM_DOCS_VERSION))
+
 .PHONY: operator-sdk
 OPERATOR_SDK ?= $(LOCALBIN)/operator-sdk
 operator-sdk: ## Download operator-sdk locally if necessary.
@@ -212,13 +219,16 @@ endif
 
 .PHONY: install-dev
 install-dev: ## Install binaries for development environment.
-	go install github.com/norwoodj/helm-docs/cmd/helm-docs@latest
 	go install github.com/go-delve/delve/cmd/dlv@latest
 	go install sigs.k8s.io/kind@latest
 	go install sigs.k8s.io/cloud-provider-kind@latest
 
 .PHONY: helm-validate
 helm-validate: helm-dependency-update helm-lint ## Validate Helm charts.
+
+.PHONY: helm-docs
+helm-docs: helm-docs-bin ## Run helm-docs.
+	$(HELM_DOCS) --chart-search-root=helm
 
 .PHONY: helm-lint
 helm-lint: ## Lint Helm charts.
