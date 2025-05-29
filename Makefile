@@ -78,7 +78,6 @@ clean: ## Clean executable files.
 	@ chmod -R -f u+w bin/ || true # make test installs files without write permissions.
 	rm -rf bin/
 	rm -rf vendor/
-	rm -f govulnreport.txt
 	rm -f cover.out cover.html
 	rm -f *.tgz
 
@@ -255,7 +254,7 @@ vet: ## Run go vet against code.
 
 .PHONY: govulncheck
 govulncheck: govulncheck-bin ## Run govulncheck
-	$(GOVULNCHECK) ./... > govulnreport.txt 2>&1 || echo "Found vulnerabilities.  Details in govulnreport.txt"
+	$(GOVULNCHECK) ./...
 
 CODECOV_PERCENT ?= 74.0
 
@@ -272,9 +271,6 @@ test: envtest ## Run tests.
 			echo "Total test coverage ($${percentage}%) is less than the coverage threshold ($(CODECOV_PERCENT)%)."; \
 			exit 1; \
 		fi
-
-.PHONY: audit  # TODO: add in get-u after libraries have been updated
-audit: fmt tidy vet vuln-check ## Run testing tools
 
 .PHONY: helmtest
 helmtest:

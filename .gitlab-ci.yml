@@ -49,7 +49,14 @@ test:
     expire_in: 7 days
     paths:
       - cover.html
-      - govulnreport.txt
+
+audit:
+  stage: test
+  extends: .docker
+  script:
+    - make vet
+    - make govulncheck
+  allow_failure: true
 
 include:
   - template: Jobs/Secret-Detection.gitlab-ci.yml
