@@ -116,19 +116,22 @@ repos:
         entry: make manifests
         types: [go]
         language: system
-        files: \.go$
         pass_filenames: false
       - id: make-generate
         name: Make Generate
         entry: make generate
         types: [go]
         language: system
-        files: \.go$
         pass_filenames: false
       - id: make-tests
         name: Make Tests
         entry: make test
         types: [go]
         language: system
-        files: \.go$
+        pass_filenames: false
+      - id: make-govulncheck
+        name: Make govulncheck
+        entry: make govulncheck
+        types: [go]
+        language: system
         pass_filenames: false
