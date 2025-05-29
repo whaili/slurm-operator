@@ -41,7 +41,6 @@ test:
     - set -euo pipefail
     - apk update && apk upgrade
     - apk add --no-cache shellcheck shfmt pre-commit
-    - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
     - go install github.com/norwoodj/helm-docs/cmd/helm-docs@latest
     - pre-commit run --verbose --all-files --show-diff-on-failure
   coverage: /total:\s+\(statements\)\s+\d+.\d+%/

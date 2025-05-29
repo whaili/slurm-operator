@@ -154,6 +154,7 @@ KUSTOMIZE ?= $(LOCALBIN)/kustomize-$(KUSTOMIZE_VERSION)
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen-$(CONTROLLER_TOOLS_VERSION)
 ENVTEST ?= $(LOCALBIN)/setup-envtest-$(ENVTEST_VERSION)
 GOVULNCHECK ?= $(LOCALBIN)/govulncheck-$(GOVULNCHECK_VERSION)
+GOLANGCI_LINT ?= $(LOCALBIN)/golangci-lint-$(GOLANGCI_LINT_VERSION)
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.4.3
@@ -162,6 +163,7 @@ CONTROLLER_TOOLS_VERSION ?= v0.16.4
 ENVTEST_K8S_VERSION ?= $(shell go list -m -f "{{ .Version }}" k8s.io/api | awk -F'[v.]' '{printf "1.%d", $$3}')
 ENVTEST_VERSION ?= $(shell go list -m -f "{{ .Version }}" sigs.k8s.io/controller-runtime | awk -F'[v.]' '{printf "release-%d.%d", $$2, $$3}')
 GOVULNCHECK_VERSION ?= latest
+GOLANGCI_LINT_VERSION ?= v2.1.6
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
@@ -182,6 +184,12 @@ $(ENVTEST): $(LOCALBIN)
 govulncheck-bin: $(GOVULNCHECK) ## Download govulncheck locally if necessary.
 $(GOVULNCHECK): $(LOCALBIN)
 	$(call go-install-tool,$(GOVULNCHECK),golang.org/x/vuln/cmd/govulncheck,$(GOVULNCHECK_VERSION))
+
+.PHONY: golangci-lint-bin
+golangci-lint-bin: $(GOLANGCI_LINT) ## Download golangci-lint locally if necessary.
+$(GOLANGCI_LINT): $(LOCALBIN)
+	wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $(LOCALBIN) $(GOLANGCI_LINT_VERSION)
+	mv $(LOCALBIN)/golangci-lint $(GOLANGCI_LINT)
 
 .PHONY: operator-sdk
 OPERATOR_SDK ?= $(LOCALBIN)/operator-sdk
@@ -204,7 +212,6 @@ endif
 
 .PHONY: install-dev
 install-dev: ## Install binaries for development environment.
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 	go install github.com/norwoodj/helm-docs/cmd/helm-docs@latest
 	go install github.com/go-delve/delve/cmd/dlv@latest
 	go install sigs.k8s.io/kind@latest
@@ -255,6 +262,16 @@ vet: ## Run go vet against code.
 .PHONY: govulncheck
 govulncheck: govulncheck-bin ## Run govulncheck
 	$(GOVULNCHECK) ./...
+
+# https://github.com/golangci/golangci-lint/blob/main/.pre-commit-hooks.yaml
+.PHONY: golangci-lint
+golangci-lint: golangci-lint-bin ## Run golangci-lint.
+	$(GOLANGCI_LINT) run --new-from-rev HEAD --fix
+
+# https://github.com/golangci/golangci-lint/blob/main/.pre-commit-hooks.yaml
+.PHONY: golangci-lint-fmt
+golangci-lint-fmt: golangci-lint-bin ## Run golangci-lint fmt.
+	$(GOLANGCI_LINT) fmt
 
 CODECOV_PERCENT ?= 74.0
 
