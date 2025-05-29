@@ -47,7 +47,8 @@ group "default" {
 
 target "operator" {
   inherits = ["_common"]
-  dockerfile = "build/Dockerfile.operator"
+  dockerfile = "Dockerfile"
+  target = "manager"
   labels = {
     # Ref: https://github.com/opencontainers/image-spec/blob/v1.0/annotations.md
     "org.opencontainers.image.title" = "Slurm Operator"
@@ -66,7 +67,8 @@ target "operator" {
 
 target "webhook" {
   inherits = ["_common"]
-  dockerfile = "build/Dockerfile.webhook"
+  dockerfile = "Dockerfile"
+  target = "webhook"
   labels = {
     # Ref: https://github.com/opencontainers/image-spec/blob/v1.0/annotations.md
     "org.opencontainers.image.title" = "Slurm Operator Webhook"
