@@ -65,12 +65,12 @@ REGISTRY ?= slinky.slurm.net
 
 .PHONY: build
 build: ## Build container images.
-	$(foreach dockerfile, $(wildcard ./build/**/Dockerfile), $(MAKE) docker-build IMG="$(REGISTRY)/$(shell basename "$(shell dirname "${dockerfile}")"):$(VERSION)" DOCKERFILE_PATH="${dockerfile}" ;)
+	REGISTRY=$(REGISTRY) VERSION=$(VERSION) docker buildx bake
 	$(foreach chart, $(wildcard ./helm/**/Chart.yaml), helm package --dependency-update helm/$(shell basename "$(shell dirname "${chart}")") ;)
 
 .PHONY: push
 push: build ## Push container images.
-	$(foreach dockerfile, $(wildcard ./build/**/Dockerfile), $(MAKE) docker-push IMG="$(REGISTRY)/$(shell basename "$(shell dirname "${dockerfile}")"):$(VERSION)" DOCKERFILE_PATH="${dockerfile}" ;)
+	REGISTRY=$(REGISTRY) VERSION=$(VERSION) docker buildx bake --push
 	$(foreach chart, $(wildcard ./*.tgz), helm push ${chart} oci://$(REGISTRY)/charts ;)
 
 .PHONY: clean

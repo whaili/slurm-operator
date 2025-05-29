@@ -12,11 +12,11 @@ profiles:
         - image: slinky.slurm.net/slurm-operator
           context: ../../
           docker:
-            dockerfile: ./build/slurm-operator/Dockerfile
+            dockerfile: ./build/Dockerfile.operator
         - image: slinky.slurm.net/slurm-operator-webhook
           context: ../../
           docker:
-            dockerfile: ./build/slurm-operator-webhook/Dockerfile
+            dockerfile: ./build/Dockerfile.webhook
     deploy:
       helm:
         releases:

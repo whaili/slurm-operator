@@ -33,26 +33,6 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o we
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
 FROM gcr.io/distroless/static:nonroot
 
-# OCI Annotations
-# https://github.com/opencontainers/image-spec/blob/v1.0/annotations.md
-LABEL org.opencontainers.image.authors="slinky@schedmd.com" \
-      org.opencontainers.image.title="Slurm Operator Webhook" \
-      org.opencontainers.image.description="Kubernetes Operator Webhook for Slurm" \
-      org.opencontainers.image.documentation="https://github.com/SlinkyProject/slurm-operator" \
-      org.opencontainers.image.license="Apache-2.0" \
-      org.opencontainers.image.vendor="SchedMD LLC." \
-      org.opencontainers.image.version="v0.2.0" \
-      org.opencontainers.image.source="https://github.com/SlinkyProject/slurm-operator"
-
-# HasRequiredLabel requirement from Red Hat OpenShift Software Certification
-# https://access.redhat.com/documentation/en-us/red_hat_software_certification/2024/html/red_hat_openshift_software_certification_policy_guide/assembly-requirements-for-container-images_openshift-sw-cert-policy-introduction#con-image-metadata-requirements_openshift-sw-cert-policy-container-images
-LABEL name="Slurm Operator Webhook" \
-      summary="Kubernetes Operator Webhook for Slurm " \
-      description="Kubernetes Operator Webhook for Slurm" \
-      vendor="SchedMD LLC." \
-      version="v0.2.0" \
-      release="https://github.com/SlinkyProject/slurm-operator"
-
 WORKDIR /
 COPY --from=builder /workspace/webhook .
 USER 65532:65532
