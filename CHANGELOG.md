@@ -40,6 +40,7 @@ All notable changes to this project will be documented in this file.
 - Fixed operator and operator-webhook not using affinity in values.yaml.
 - Fixed nodeset controller failing to apply a rolling update when there are too
   many unhealthy pods.
+- Fixed update strategies employing `Recreate` when unnecessary.
 
 ### Changed
 
