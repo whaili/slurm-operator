@@ -154,6 +154,7 @@ KUBECTL ?= kubectl
 KUSTOMIZE ?= $(LOCALBIN)/kustomize-$(KUSTOMIZE_VERSION)
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen-$(CONTROLLER_TOOLS_VERSION)
 ENVTEST ?= $(LOCALBIN)/setup-envtest-$(ENVTEST_VERSION)
+GOVULNCHECK ?= $(LOCALBIN)/govulncheck-$(GOVULNCHECK_VERSION)
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.4.3
@@ -161,6 +162,7 @@ CONTROLLER_TOOLS_VERSION ?= v0.16.4
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION ?= $(shell go list -m -f "{{ .Version }}" k8s.io/api | awk -F'[v.]' '{printf "1.%d", $$3}')
 ENVTEST_VERSION ?= $(shell go list -m -f "{{ .Version }}" sigs.k8s.io/controller-runtime | awk -F'[v.]' '{printf "release-%d.%d", $$2, $$3}')
+GOVULNCHECK_VERSION ?= latest
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
@@ -176,6 +178,11 @@ $(CONTROLLER_GEN): $(LOCALBIN)
 envtest: $(ENVTEST) ## Download setup-envtest locally if necessary.
 $(ENVTEST): $(LOCALBIN)
 	$(call go-install-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest,$(ENVTEST_VERSION))
+
+.PHONY: govulncheck-bin
+govulncheck-bin: $(GOVULNCHECK) ## Download govulncheck locally if necessary.
+$(GOVULNCHECK): $(LOCALBIN)
+	$(call go-install-tool,$(GOVULNCHECK),golang.org/x/vuln/cmd/govulncheck,$(GOVULNCHECK_VERSION))
 
 .PHONY: operator-sdk
 OPERATOR_SDK ?= $(LOCALBIN)/operator-sdk
@@ -200,7 +207,6 @@ endif
 install-dev: ## Install binaries for development environment.
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 	go install github.com/norwoodj/helm-docs/cmd/helm-docs@latest
-	go install golang.org/x/vuln/cmd/govulncheck@latest
 	go install github.com/go-delve/delve/cmd/dlv@latest
 	go install sigs.k8s.io/kind@latest
 	go install sigs.k8s.io/cloud-provider-kind@latest
@@ -247,6 +253,10 @@ get-u: ## Run `go get -u`
 vet: ## Run go vet against code.
 	go vet ./...
 
+.PHONY: govulncheck
+govulncheck: govulncheck-bin ## Run govulncheck
+	$(GOVULNCHECK) ./... > govulnreport.txt 2>&1 || echo "Found vulnerabilities.  Details in govulnreport.txt"
+
 CODECOV_PERCENT ?= 74.0
 
 .PHONY: test
@@ -263,13 +273,8 @@ test: envtest ## Run tests.
 			exit 1; \
 		fi
 
-.PHONY: vuln-scan
-vuln-scan: ## Run vulnerability scanning tool
-	GOBIN=$(LOCALBIN) go install golang.org/x/vuln/cmd/govulncheck@latest
-	govulncheck ./... > govulnreport.txt 2>&1 || echo "Found vulnerabilities.  Details in govulnreport.txt"
-
 .PHONY: audit  # TODO: add in get-u after libraries have been updated
-audit: fmt tidy vet vuln-scan ## Run testing tools
+audit: fmt tidy vet vuln-check ## Run testing tools
 
 .PHONY: helmtest
 helmtest:
