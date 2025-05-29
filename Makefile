@@ -196,6 +196,13 @@ install-dev: ## Install binaries for development environment.
 	go install sigs.k8s.io/kind@latest
 	go install sigs.k8s.io/cloud-provider-kind@latest
 
+.PHONY: helm-validate
+helm-validate: helm-dependency-update helm-lint ## Validate Helm charts.
+
+.PHONY: helm-lint
+helm-lint: ## Lint Helm charts.
+	find "helm/" -depth -mindepth 1 -maxdepth 1 -type d -print0 | xargs -0r -n1 helm lint --strict
+
 .PHONY: helm-dependency-update
 helm-dependency-update: ## Update Helm chart dependencies.
 	find "helm/" -depth -mindepth 1 -maxdepth 1 -type d -print0 | xargs -0r -n1 helm dependency update

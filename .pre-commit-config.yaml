@@ -88,6 +88,13 @@ repos:
       - id: go-build-mod
   - repo: local
     hooks:
+      - id: make-helm-validate
+        name: Make Helm Validate
+        entry: make helm-validate
+        types: [yaml]
+        files: ^helm/
+        language: system
+        pass_filenames: false
       - id: golangci-lint
         name: golangci-lint
         entry: golangci-lint run --timeout=10m
