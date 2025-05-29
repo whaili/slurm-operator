@@ -824,7 +824,7 @@ func TestNodeSetReconciler_processCondemned(t *testing.T) {
 				t.Errorf("slurmControl.IsNodeDrain() = %v, wantDrain %v", isDrain, tt.wantDrain)
 			}
 			key := client.ObjectKeyFromObject(pod)
-			if err := r.Client.Get(tt.args.ctx, key, pod); err != nil && !apierrors.IsNotFound(err) {
+			if err := r.Get(tt.args.ctx, key, pod); err != nil && !apierrors.IsNotFound(err) {
 				t.Errorf("Client.Get() error = %v, wantDelete %v", err, tt.wantDelete)
 			}
 		})

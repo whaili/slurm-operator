@@ -44,7 +44,7 @@ func (r *NodeSetReconciler) Sync(ctx context.Context, req reconcile.Request) err
 	if err := r.Get(ctx, req.NamespacedName, nodeset); err != nil {
 		if apierrors.IsNotFound(err) {
 			logger.V(3).Info("NodeSet has been deleted.", "request", req)
-			r.expectations.DeleteExpectations(logger, req.NamespacedName.String())
+			r.expectations.DeleteExpectations(logger, req.String())
 			return nil
 		}
 		return err

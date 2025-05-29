@@ -165,11 +165,11 @@ func newRevision(nodeset *slinkyv1alpha1.NodeSet, revision int64, collisionCount
 	if err != nil {
 		return nil, err
 	}
-	if cr.ObjectMeta.Annotations == nil {
-		cr.ObjectMeta.Annotations = make(map[string]string)
+	if cr.Annotations == nil {
+		cr.Annotations = make(map[string]string)
 	}
 	for key, value := range nodeset.Annotations {
-		cr.ObjectMeta.Annotations[key] = value
+		cr.Annotations[key] = value
 	}
 	return cr, nil
 }
