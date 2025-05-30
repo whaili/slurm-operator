@@ -6,10 +6,12 @@ toolchain go1.24.3
 
 require (
 	github.com/SlinkyProject/slurm-client v0.3.0-20250606103204-4a082b2b4f83.0.20250714121909-625cf8376f81
+	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/go-cmp v0.7.0
 	github.com/onsi/ginkgo/v2 v2.23.4
 	github.com/onsi/gomega v1.37.0
 	github.com/puttsk/hostlist v0.1.0
+	golang.org/x/crypto v0.39.0
 	golang.org/x/text v0.26.0
 	k8s.io/api v0.33.2
 	k8s.io/apimachinery v0.33.2

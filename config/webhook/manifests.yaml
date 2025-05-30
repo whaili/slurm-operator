@@ -10,9 +10,9 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-slinky-slurm-net-v1alpha1-cluster
+      path: /mutate-slinky-slurm-net-v1alpha1-accounting
   failurePolicy: Fail
-  name: mcluster.kb.io
+  name: maccounting.kb.io
   rules:
   - apiGroups:
     - slinky.slurm.net
@@ -22,7 +22,47 @@ webhooks:
     - CREATE
     - UPDATE
     resources:
-    - clusters
+    - accountings
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-slinky-slurm-net-v1alpha1-controller
+  failurePolicy: Fail
+  name: mcontroller.kb.io
+  rules:
+  - apiGroups:
+    - slinky.slurm.net
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - controllers
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-slinky-slurm-net-v1alpha1-loginset
+  failurePolicy: Fail
+  name: mloginset.kb.io
+  rules:
+  - apiGroups:
+    - slinky.slurm.net
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - loginsets
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -44,6 +84,26 @@ webhooks:
     resources:
     - nodesets
   sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-slinky-slurm-net-v1alpha1-restapi
+  failurePolicy: Fail
+  name: mrestapi.kb.io
+  rules:
+  - apiGroups:
+    - slinky.slurm.net
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - restapis
+  sideEffects: None
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
@@ -56,9 +116,9 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-slinky-slurm-net-v1alpha1-cluster
+      path: /validate-slinky-slurm-net-v1alpha1-accounting
   failurePolicy: Fail
-  name: vcluster.kb.io
+  name: vaccounting.kb.io
   rules:
   - apiGroups:
     - slinky.slurm.net
@@ -68,7 +128,47 @@ webhooks:
     - CREATE
     - UPDATE
     resources:
-    - clusters
+    - accountings
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-slinky-slurm-net-v1alpha1-controller
+  failurePolicy: Fail
+  name: vcontroller.kb.io
+  rules:
+  - apiGroups:
+    - slinky.slurm.net
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - controllers
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-slinky-slurm-net-v1alpha1-loginset
+  failurePolicy: Fail
+  name: vloginset.kb.io
+  rules:
+  - apiGroups:
+    - slinky.slurm.net
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - loginsets
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -89,4 +189,24 @@ webhooks:
     - UPDATE
     resources:
     - nodesets
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-slinky-slurm-net-v1alpha1-restapi
+  failurePolicy: Fail
+  name: vrestapi.kb.io
+  rules:
+  - apiGroups:
+    - slinky.slurm.net
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - restapis
   sideEffects: None

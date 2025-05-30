@@ -1,0 +1,139 @@
+{{- /*
+SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+{{- if and (index .Values "slurm-exporter" "enabled") (index .Values "slurm-exporter" "exporter" "enabled") }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "slurm.token.name" . }}
+  namespace: {{ include "slurm.namespace" . }}
+  labels:
+    {{- include "slurm.labels" . | nindent 4 }}
+spec:
+  ttlSecondsAfterFinished: 60
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: token-create
+      labels:
+        {{- include "slurm.labels" . | nindent 8 }}
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ include "slurm.token.name" . }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with .Values.imagePullSecrets */}}
+      initContainers:
+        - name: init
+          image: {{ include "format-image" .Values.authcred.image }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          {{- with .Values.authcred.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}{{- /* with .Values.authcred.resources */}}
+          env:
+            - name: SLURM_USER
+              value: slurm
+          command:
+            - tini
+            - -g
+            - --
+            - bash
+            - -c
+            - |
+              {{- range .Files.Lines "scripts/init.sh" }}
+              {{ . }}
+              {{- end }}{{- /* range .Files.Lines "scripts/init.sh" */}}
+          volumeMounts:
+            - name: slurm-config
+              mountPath: /mnt/slurm
+            - name: etc-slurm
+              mountPath: /mnt/etc/slurm
+        - name: sackd
+          image: {{ include "format-image" .Values.authcred.image }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          {{- with .Values.authcred.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}{{- /* with .Values.authcred.resources */}}
+          restartPolicy: Always
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 401
+            runAsGroup: 401
+          args:
+            - --conf-server
+            - {{ printf "%s:%s" (include "slurm.controller.service" .) (include "slurm.controller.port" .) }}
+          volumeMounts:
+            - name: etc-slurm
+              mountPath: /etc/slurm
+            - name: run
+              mountPath: /run
+            - name: authsocket
+              mountPath: /run/slurm
+      containers:
+        - name: token-create
+          image: {{ include "format-image" .Values.authcred.image }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          {{- with .Values.authcred.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}{{- /* with .Values.authcred.resources */}}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 401
+            runAsGroup: 401
+          env:
+            - name: SLURM_USER
+              value: exporter
+            - name: JWT_SECRET
+              value: {{ include "slurm.jwtSecret" . }}
+            - name: TOKEN_SECRET
+              value: {{ index .Values "slurm-exporter" "exporter" "secretName" }}
+          command:
+            - tini
+            - -g
+            - --
+            - bash
+            - -c
+            - |
+              {{- range .Files.Lines "scripts/init-token-secret.sh" }}
+              {{ . }}
+              {{- end }}{{- /* .Files.Lines "scripts/init-token-secret.sh" */}}
+          volumeMounts:
+            - name: etc-slurm
+              mountPath: /etc/slurm
+            - name: run
+              mountPath: /run
+            - name: authsocket
+              mountPath: /run/slurm
+      {{- with .Values.controller.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with .Values.controller.nodeSelector */}}
+      {{- with .Values.controller.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with .Values.controller.affinity */}}
+      {{- with .Values.controller.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with .Values.controller.tolerations */}}
+      volumes:
+        - name: etc-slurm
+          emptyDir:
+            medium: Memory
+        - name: run
+          emptyDir: {}
+        - name: slurm-config
+          projected:
+            defaultMode: 0600
+            sources:
+              - secret:
+                  name: {{ include "slurm.authSecret" . }}
+        - name: authsocket
+          emptyDir: {}
+{{- end }}{{- /* if and slurm-exporter.enabled slurm-exporter.exporter.enabled */}}

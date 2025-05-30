@@ -55,35 +55,37 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{/*
-Common imagePullPolicy
+Format image reference from image object.
 */}}
-{{- define "slurm.imagePullPolicy" -}}
-{{ .Values.imagePullPolicy | default "IfNotPresent" }}
+{{- define "format-image" -}}
+{{- $repository := required "image repository is required" .repository -}}
+{{- $tag := required "image tag is required" .tag -}}
+{{- printf "%s:%s" $repository $tag | quote -}}
 {{- end }}
 
 {{/*
-Common imagePullSecrets
+Converts a list to a key value CSV.
+Ref: https://github.com/helm/helm/issues/9379
 */}}
-{{- define "slurm.imagePullSecrets" -}}
-{{- with .Values.imagePullSecrets -}}
-imagePullSecrets:
-  {{- . | toYaml | nindent 2 }}
-{{- end }}
-{{- end }}
+{{- define "_toList" -}}
+{{- $items := list -}}
+{{- range $key, $val := . -}}
+  {{- if $val -}}
+    {{- $items = append $items (printf "%s=%s" $key (join "," $val)) -}}
+  {{- end -}}
+{{- end -}}
+{{- join ";" $items -}}
+{{- end -}}
 
 {{/*
-Determine slurm image repository
+Converts a map into []string.
+Handles `map[string]string` and `map[string][]string` cases.
+Ref: https://github.com/helm/helm/issues/9379
 */}}
-{{- define "slurm.image.repository" -}}
-{{- print "ghcr.io/slinkyproject" -}}
-{{- end }}
-
-{{/*
-Define image tag
-*/}}
-{{- define "slurm.image.tag" -}}
-{{- printf "%s-ubuntu24.04" .Chart.AppVersion -}}
-{{- end }}
+{{- define "toList" -}}
+{{- $items := include "_toList" . | default list | splitList ";" -}}
+{{- toYaml $items -}}
+{{- end -}}
 
 {{/*
 Parse resources object and convert units.
@@ -103,16 +105,4 @@ Ref: https://github.com/helm/helm/issues/11376#issuecomment-1256831105
   {{- end -}}
 {{- end -}}
 {{- mulf (float64 $value) $unit -}}
-{{- end -}}
-
-{{/*
-Expand a map in a uniform method.
-Handles map[string]string and map[string][]string
-*/}}
-{{- define "expand-map" -}}
-{{- range $key, $val := . -}}
-  {{- if $val -}}
-    {{- printf "%s=%s\n" $key ($val | join ",") -}}
-  {{- end -}}
-{{- end -}}
 {{- end -}}

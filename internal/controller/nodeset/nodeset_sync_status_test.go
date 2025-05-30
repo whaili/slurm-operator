@@ -12,8 +12,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/kubernetes/pkg/controller/history"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -30,8 +28,11 @@ import (
 )
 
 func TestNodeSetReconciler_syncStatus(t *testing.T) {
-	utilruntime.Must(slinkyv1alpha1.AddToScheme(scheme.Scheme))
-	const clusterName = "slurm"
+	controller := &slinkyv1alpha1.Controller{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "slurm",
+		},
+	}
 	const hash = "12345"
 	type fields struct {
 		Client        client.Client
@@ -55,10 +56,10 @@ func TestNodeSetReconciler_syncStatus(t *testing.T) {
 	}
 	tests := []testCaseFields{
 		func() testCaseFields {
-			nodeset := newNodeSet("foo", clusterName, 2)
+			nodeset := newNodeSet("foo", controller.Name, 2)
 			pods := make([]*corev1.Pod, 0)
 			for i := range 2 {
-				pod := nodesetutils.NewNodeSetPod(nodeset, i, hash)
+				pod := nodesetutils.NewNodeSetPod(nodeset, controller, i, hash)
 				pod = makePodHealthy(pod)
 				pods = append(pods, pod)
 			}
@@ -84,7 +85,7 @@ func TestNodeSetReconciler_syncStatus(t *testing.T) {
 				}(pods),
 			}
 			sc := newFakeClientList(slurminterceptor.Funcs{}, slurmNodeList)
-			slurmClusters := newSlurmClusters(clusterName, sc)
+			slurmClusters := newSlurmClusters(controller.Name, sc)
 
 			return testCaseFields{
 				name: "Healthy, up-to-date",
@@ -105,10 +106,10 @@ func TestNodeSetReconciler_syncStatus(t *testing.T) {
 			}
 		}(),
 		func() testCaseFields {
-			nodeset := newNodeSet("foo", clusterName, 2)
+			nodeset := newNodeSet("foo", controller.Name, 2)
 			pods := make([]*corev1.Pod, 0)
 			for i := range 2 {
-				pod := nodesetutils.NewNodeSetPod(nodeset, i, hash)
+				pod := nodesetutils.NewNodeSetPod(nodeset, controller, i, hash)
 				pod = makePodCreated(pod)
 				pods = append(pods, pod)
 			}
@@ -134,7 +135,7 @@ func TestNodeSetReconciler_syncStatus(t *testing.T) {
 				}(pods),
 			}
 			sc := newFakeClientList(slurminterceptor.Funcs{}, slurmNodeList)
-			slurmClusters := newSlurmClusters(clusterName, sc)
+			slurmClusters := newSlurmClusters(controller.Name, sc)
 
 			return testCaseFields{
 				name: "Created, need update",
@@ -166,8 +167,11 @@ func TestNodeSetReconciler_syncStatus(t *testing.T) {
 }
 
 func TestNodeSetReconciler_syncSlurmStatus(t *testing.T) {
-	utilruntime.Must(slinkyv1alpha1.AddToScheme(scheme.Scheme))
-	const clusterName = "slurm"
+	controller := &slinkyv1alpha1.Controller{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "slurm",
+		},
+	}
 	type fields struct {
 		Client        client.Client
 		SlurmClusters *resources.Clusters
@@ -185,10 +189,10 @@ func TestNodeSetReconciler_syncSlurmStatus(t *testing.T) {
 	}
 	tests := []testCaseFields{
 		func() testCaseFields {
-			nodeset := newNodeSet("foo", clusterName, 2)
+			nodeset := newNodeSet("foo", controller.Name, 2)
 			pods := make([]*corev1.Pod, 0)
 			for i := range 2 {
-				pod := nodesetutils.NewNodeSetPod(nodeset, i, "")
+				pod := nodesetutils.NewNodeSetPod(nodeset, controller, i, "")
 				pod = makePodHealthy(pod)
 				pods = append(pods, pod)
 			}
@@ -207,7 +211,7 @@ func TestNodeSetReconciler_syncSlurmStatus(t *testing.T) {
 				}(pods),
 			}
 			sc := newFakeClientList(slurminterceptor.Funcs{}, slurmNodeList)
-			slurmClusters := newSlurmClusters(clusterName, sc)
+			slurmClusters := newSlurmClusters(controller.Name, sc)
 
 			return testCaseFields{
 				name: "Healthy pods",
@@ -235,8 +239,11 @@ func TestNodeSetReconciler_syncSlurmStatus(t *testing.T) {
 }
 
 func TestNodeSetReconciler_syncNodeSetStatus(t *testing.T) {
-	utilruntime.Must(slinkyv1alpha1.AddToScheme(scheme.Scheme))
-	const clusterName = "slurm"
+	controller := &slinkyv1alpha1.Controller{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "slurm",
+		},
+	}
 	const hash = "12345"
 	type fields struct {
 		Client        client.Client
@@ -260,10 +267,10 @@ func TestNodeSetReconciler_syncNodeSetStatus(t *testing.T) {
 	}
 	tests := []testCaseFields{
 		func() testCaseFields {
-			nodeset := newNodeSet("foo", clusterName, 2)
+			nodeset := newNodeSet("foo", controller.Name, 2)
 			pods := make([]*corev1.Pod, 0)
 			for i := range 2 {
-				pod := nodesetutils.NewNodeSetPod(nodeset, i, hash)
+				pod := nodesetutils.NewNodeSetPod(nodeset, controller, i, hash)
 				pod = makePodHealthy(pod)
 				pods = append(pods, pod)
 			}
@@ -289,7 +296,7 @@ func TestNodeSetReconciler_syncNodeSetStatus(t *testing.T) {
 				}(pods),
 			}
 			sc := newFakeClientList(slurminterceptor.Funcs{}, slurmNodeList)
-			slurmClusters := newSlurmClusters(clusterName, sc)
+			slurmClusters := newSlurmClusters(controller.Name, sc)
 
 			return testCaseFields{
 				name: "Healthy, up-to-date",
@@ -314,16 +321,16 @@ func TestNodeSetReconciler_syncNodeSetStatus(t *testing.T) {
 					SlurmIdle:         2,
 					NodeSetHash:       "12345",
 					CollisionCount:    ptr.To[int32](0),
-					Selector:          "foo=bar",
+					Selector:          "app.kubernetes.io/instance=foo,app.kubernetes.io/name=slurmd",
 				},
 				wantErr: false,
 			}
 		}(),
 		func() testCaseFields {
-			nodeset := newNodeSet("foo", clusterName, 2)
+			nodeset := newNodeSet("foo", controller.Name, 2)
 			pods := make([]*corev1.Pod, 0)
 			for i := range 2 {
-				pod := nodesetutils.NewNodeSetPod(nodeset, i, hash)
+				pod := nodesetutils.NewNodeSetPod(nodeset, controller, i, hash)
 				pod = makePodCreated(pod)
 				pods = append(pods, pod)
 			}
@@ -349,7 +356,7 @@ func TestNodeSetReconciler_syncNodeSetStatus(t *testing.T) {
 				}(pods),
 			}
 			sc := newFakeClientList(slurminterceptor.Funcs{}, slurmNodeList)
-			slurmClusters := newSlurmClusters(clusterName, sc)
+			slurmClusters := newSlurmClusters(controller.Name, sc)
 
 			return testCaseFields{
 				name: "Created, need update",
@@ -371,7 +378,7 @@ func TestNodeSetReconciler_syncNodeSetStatus(t *testing.T) {
 					UnavailableReplicas: 2,
 					NodeSetHash:         "12345",
 					CollisionCount:      ptr.To[int32](0),
-					Selector:            "foo=bar",
+					Selector:            "app.kubernetes.io/instance=foo,app.kubernetes.io/name=slurmd",
 				},
 				wantErr: false,
 			}
@@ -395,7 +402,11 @@ func TestNodeSetReconciler_syncNodeSetStatus(t *testing.T) {
 }
 
 func TestNodeSetReconciler_calculateReplicaStatus(t *testing.T) {
-	const clusterName = "slurm"
+	controller := &slinkyv1alpha1.Controller{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "slurm",
+		},
+	}
 	const hash = "12345"
 	type args struct {
 		nodeset         *slinkyv1alpha1.NodeSet
@@ -416,10 +427,10 @@ func TestNodeSetReconciler_calculateReplicaStatus(t *testing.T) {
 		{
 			name: "Healthy, up-to-date",
 			args: func() args {
-				nodeset := newNodeSet("foo", clusterName, 2)
+				nodeset := newNodeSet("foo", controller.Name, 2)
 				pods := make([]*corev1.Pod, 0)
 				for i := range 2 {
-					pod := nodesetutils.NewNodeSetPod(nodeset, i, hash)
+					pod := nodesetutils.NewNodeSetPod(nodeset, controller, i, hash)
 					pod = makePodHealthy(pod)
 					pods = append(pods, pod)
 				}
@@ -448,10 +459,10 @@ func TestNodeSetReconciler_calculateReplicaStatus(t *testing.T) {
 		{
 			name: "Created, need update",
 			args: func() args {
-				nodeset := newNodeSet("foo", clusterName, 2)
+				nodeset := newNodeSet("foo", controller.Name, 2)
 				pods := make([]*corev1.Pod, 0)
 				for i := range 2 {
-					pod := nodesetutils.NewNodeSetPod(nodeset, i, hash)
+					pod := nodesetutils.NewNodeSetPod(nodeset, controller, i, hash)
 					pod = makePodCreated(pod)
 					pods = append(pods, pod)
 				}
@@ -488,9 +499,12 @@ func TestNodeSetReconciler_calculateReplicaStatus(t *testing.T) {
 }
 
 func TestNodeSetReconciler_updateNodeSetStatus(t *testing.T) {
-	utilruntime.Must(slinkyv1alpha1.AddToScheme(scheme.Scheme))
-	const clusterName = "slurm"
-	nodeset := newNodeSet("foo", clusterName, 2)
+	controller := &slinkyv1alpha1.Controller{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "slurm",
+		},
+	}
+	nodeset := newNodeSet("foo", controller.Name, 2)
 	type fields struct {
 		Client client.Client
 	}
@@ -509,7 +523,6 @@ func TestNodeSetReconciler_updateNodeSetStatus(t *testing.T) {
 			name: "Success",
 			fields: fields{
 				Client: fake.NewClientBuilder().
-					WithScheme(scheme.Scheme).
 					WithRuntimeObjects(nodeset).
 					WithStatusSubresource(nodeset).
 					Build(),
@@ -537,7 +550,6 @@ func TestNodeSetReconciler_updateNodeSetStatus(t *testing.T) {
 			name: "Error",
 			fields: fields{
 				Client: fake.NewClientBuilder().
-					WithScheme(scheme.Scheme).
 					WithRuntimeObjects(nodeset).
 					WithStatusSubresource(nodeset).
 					WithInterceptorFuncs(interceptor.Funcs{

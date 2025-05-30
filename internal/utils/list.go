@@ -23,3 +23,16 @@ func DereferenceList[T any](items []*T) []T {
 	}
 	return list
 }
+
+// MergeList concatenates all lists.
+func MergeList[T any](items ...[]T) []T {
+	cnt := 0
+	for _, item := range items {
+		cnt += len(item)
+	}
+	list := make([]T, 0, cnt)
+	for _, item := range items {
+		list = append(list, item...)
+	}
+	return list
+}

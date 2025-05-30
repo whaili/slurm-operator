@@ -6,22 +6,37 @@ package utils
 
 import (
 	"fmt"
+	"maps"
 	"regexp"
 	"strconv"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/kubernetes/pkg/controller"
+	k8scontroller "k8s.io/kubernetes/pkg/controller"
 	daemonutil "k8s.io/kubernetes/pkg/controller/daemon/util"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
+	"github.com/SlinkyProject/slurm-operator/internal/builder"
+	"github.com/SlinkyProject/slurm-operator/internal/builder/labels"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/historycontrol"
 )
 
+// refResolver := refresolver.New(b.client)
+// controller, err := refResolver.GetController(context.TODO(), nodeset.Spec.ControllerRef)
+// if err != nil {
+// 	return corev1.PodTemplateSpec{}, err
+// }
+
 // NewNodeSetPod returns a new Pod conforming to the nodeset's Spec with an identity generated from ordinal.
-func NewNodeSetPod(nodeset *slinkyv1alpha1.NodeSet, ordinal int, revisionHash string) *corev1.Pod {
+func NewNodeSetPod(
+	nodeset *slinkyv1alpha1.NodeSet,
+	controller *slinkyv1alpha1.Controller,
+	ordinal int,
+	revisionHash string,
+) *corev1.Pod {
 	controllerRef := metav1.NewControllerRef(nodeset, slinkyv1alpha1.NodeSetGVK)
-	pod, _ := controller.GetPodFromTemplate(&nodeset.Spec.Template, nodeset, controllerRef)
+	podTemplate := builder.New(nil).BuildComputePodTemplate(nodeset, controller)
+	pod, _ := k8scontroller.GetPodFromTemplate(&podTemplate, nodeset, controllerRef)
 	pod.Name = GetPodName(nodeset, ordinal)
 	initIdentity(nodeset, pod)
 	UpdateStorage(nodeset, pod)
@@ -48,7 +63,6 @@ func initIdentity(nodeset *slinkyv1alpha1.NodeSet, pod *corev1.Pod) {
 	} else {
 		pod.Spec.Hostname = pod.Name
 	}
-	pod.Spec.Subdomain = nodeset.Spec.ServiceName
 }
 
 // UpdateIdentity updates pod's name, hostname, and subdomain, and StatefulSetPodNameLabel to conform to nodeset's name
@@ -182,17 +196,16 @@ func IsStorageMatch(nodeset *slinkyv1alpha1.NodeSet, pod *corev1.Pod) bool {
 func GetPersistentVolumeClaims(nodeset *slinkyv1alpha1.NodeSet, pod *corev1.Pod) map[string]corev1.PersistentVolumeClaim {
 	ordinal := GetOrdinal(pod)
 	templates := nodeset.Spec.VolumeClaimTemplates
+	selectorLabels := labels.NewBuilder().WithComputeSelectorLabels(nodeset).Build()
 	claims := make(map[string]corev1.PersistentVolumeClaim, len(templates))
 	for i := range templates {
 		claim := templates[i].DeepCopy()
 		claim.Name = GetPersistentVolumeClaimName(nodeset, claim, ordinal)
 		claim.Namespace = nodeset.Namespace
 		if claim.Labels != nil {
-			for key, value := range nodeset.Spec.Selector.MatchLabels {
-				claim.Labels[key] = value
-			}
+			maps.Copy(claim.Labels, selectorLabels)
 		} else {
-			claim.Labels = nodeset.Spec.Selector.MatchLabels
+			claim.Labels = selectorLabels
 		}
 		claims[templates[i].Name] = *claim
 	}

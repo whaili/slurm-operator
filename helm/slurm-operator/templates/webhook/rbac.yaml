@@ -24,8 +24,11 @@ rules:
 - apiGroups:
   - {{ include "slurm-operator.apiGroup" . }}
   resources:
-  - clusters
+  - accountings
+  - controllers
+  - loginsets
   - nodesets
+  - restapis
   verbs:
   - create
   - delete

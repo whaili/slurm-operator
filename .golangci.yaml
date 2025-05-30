@@ -27,6 +27,12 @@ linters:
       - third_party$
       - builtin$
       - examples$
+  settings:
+    gosec:
+      severity: low
+      confidence: low
+      excludes:
+        - G115
 formatters:
   exclusions:
     generated: lax

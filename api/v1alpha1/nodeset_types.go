@@ -26,9 +26,9 @@ type NodeSetSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// clusterName is the name of the Slurm cluster to which this NodeSet
-	// belongs to. This will be matched with the name in Cluster CRD.
-	ClusterName string `json:"clusterName"`
+	// controllerRef is a reference to the Controller CR to which this has membership.
+	// +required
+	ControllerRef ObjectReference `json:"controllerRef"`
 
 	// replicas is the desired number of replicas of the given Template.
 	// These are replicas in the sense that they are instantiations of the
@@ -37,26 +37,15 @@ type NodeSetSpec struct {
 	// +optional
 	Replicas *int32 `json:"replicas,omitempty"`
 
-	// selector is a label query over pods that should match the replica count.
-	// It must match the pod template's labels.
-	// If empty, defaulted to labels on Pod Template.
-	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
-	Selector *metav1.LabelSelector `json:"selector"`
-
-	// serviceName is the name of the service that governs this NodeSet.
-	// This service must exist before the NodeSet, and is responsible for the
-	// network identity of the NodeSet. Pods get DNS/hostnames that follow the
-	// pattern: pod-specific-string.serviceName.default.svc.cluster.local
-	// where "pod-specific-string" is managed by the NodeSet controller.
-	ServiceName string `json:"serviceName"`
-
-	// template is the object that describes the pod that will be created.
-	// The NodeSet will create exactly one copy of this pod on every node
-	// that matches the template's node selector (or on every node if no node
-	// selector is specified).
-	// The only allowed template.spec.restartPolicy value is "Always".
+	// Template is the object that describes the pod that will be created if
+	// insufficient replicas are detected.
 	// More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller#pod-template
-	Template corev1.PodTemplateSpec `json:"template"`
+	// +optional
+	Template NodeSetPodTemplate `json:"template,omitempty"`
+
+	// Partition defines the Slurm partition configuration for this NodeSet.
+	// +optional
+	Partition NodeSetPartition `json:"partition,omitzero"`
 
 	// volumeClaimTemplates is a list of claims that pods are allowed to reference.
 	// The NodeSet controller is responsible for mapping network identities to
@@ -93,6 +82,35 @@ type NodeSetSpec struct {
 	// Defaults to 0 (pod will be considered available as soon as it is ready).
 	// +optional
 	MinReadySeconds int32 `json:"minReadySeconds,omitempty"`
+}
+
+type NodeSetPodTemplate struct {
+	PodTemplate `json:",inline"`
+
+	// The initconf sidecar configuration.
+	// +optional
+	InitConf SideCar `json:"initconf,omitzero"`
+
+	// The logfile sidecar configuration.
+	// +optional
+	LogFile SideCar `json:"logfile,omitzero"`
+
+	// ExtraConf is added to the slurmd args as `--conf <extraConf>`.
+	// Ref: https://slurm.schedmd.com/slurmd.html#OPT_conf-%3Cnode-parameters%3E
+	// +optional
+	ExtraConf string `json:"extraConf,omitzero"`
+}
+
+// NodeSetPartition defines the Slurm partition configuration for the NodeSet.
+type NodeSetPartition struct {
+	// Enabled will create a partition for this NodeSet.
+	// +default:=true
+	Enabled bool `json:"enabled"`
+
+	// Config is added to the NodeSet's partition line.
+	// Ref: https://slurm.schedmd.com/slurmd.html#OPT_conf-%3Cnode-parameters%3E
+	// +optional
+	Config string `json:"config,omitzero"`
 }
 
 // NodeSetUpdateStrategy indicates the strategy that the NodeSet
@@ -252,8 +270,8 @@ type NodeSetStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-//+kubebuilder:resource:shortName=nodesets;nss
-//+kubebuilder:subresource:scale:specpath=".spec.replicas",statuspath=".status.currentNumberScheduled",selectorpath=".status.selector"
+//+kubebuilder:resource:shortName=nodesets;nss;slurmd
+//+kubebuilder:subresource:scale:specpath=".spec.replicas",statuspath=".status.replicas",selectorpath=".status.selector"
 //+kubebuilder:printcolumn:name="REPLICAS",type="integer",JSONPath=".status.replicas",priority=0,description="The current number of pods."
 //+kubebuilder:printcolumn:name="UPDATED",type="integer",JSONPath=".status.updatedReplicas",priority=0,description="The number of pods updated."
 //+kubebuilder:printcolumn:name="READY",type="integer",JSONPath=".status.readyReplicas",priority=0,description="The number of pods ready."

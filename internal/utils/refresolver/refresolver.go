@@ -1,0 +1,126 @@
+// SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
+// SPDX-License-Identifier: Apache-2.0
+
+package refresolver
+
+import (
+	"context"
+	"fmt"
+
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
+	"github.com/SlinkyProject/slurm-operator/internal/utils"
+)
+
+type RefResolver struct {
+	client client.Client
+}
+
+func New(c client.Client) *RefResolver {
+	return &RefResolver{
+		client: c,
+	}
+}
+
+func (r *RefResolver) GetController(ctx context.Context, ref slinkyv1alpha1.ObjectReference) (*slinkyv1alpha1.Controller, error) {
+	obj := &slinkyv1alpha1.Controller{}
+	key := ref.NamespacedName()
+	if err := r.client.Get(ctx, key, obj); err != nil {
+		return nil, err
+	}
+	return obj, nil
+}
+
+func (r *RefResolver) GetAccounting(ctx context.Context, ref slinkyv1alpha1.ObjectReference) (*slinkyv1alpha1.Accounting, error) {
+	obj := &slinkyv1alpha1.Accounting{}
+	key := ref.NamespacedName()
+	if err := r.client.Get(ctx, key, obj); err != nil {
+		return nil, err
+	}
+	return obj, nil
+}
+
+func (r *RefResolver) GetNodeSetsForController(ctx context.Context, controller *slinkyv1alpha1.Controller) (*slinkyv1alpha1.NodeSetList, error) {
+	list := &slinkyv1alpha1.NodeSetList{}
+	if err := r.client.List(ctx, list); err != nil {
+		return nil, err
+	}
+
+	out := &slinkyv1alpha1.NodeSetList{}
+	for _, item := range list.Items {
+		if item.Spec.ControllerRef.IsMatch(utils.NamespacedName(controller)) {
+			out.Items = append(out.Items, item)
+		}
+	}
+
+	return out, nil
+}
+
+func (r *RefResolver) GetLoginSetsForController(ctx context.Context, controller *slinkyv1alpha1.Controller) (*slinkyv1alpha1.LoginSetList, error) {
+	list := &slinkyv1alpha1.LoginSetList{}
+	if err := r.client.List(ctx, list); err != nil {
+		return nil, err
+	}
+
+	out := &slinkyv1alpha1.LoginSetList{}
+	for _, item := range list.Items {
+		if item.Spec.ControllerRef.IsMatch(utils.NamespacedName(controller)) {
+			out.Items = append(out.Items, item)
+		}
+	}
+
+	return out, nil
+}
+
+func (r *RefResolver) GetRestapisForController(ctx context.Context, controller *slinkyv1alpha1.Controller) (*slinkyv1alpha1.RestApiList, error) {
+	list := &slinkyv1alpha1.RestApiList{}
+	if err := r.client.List(ctx, list); err != nil {
+		return nil, err
+	}
+
+	out := &slinkyv1alpha1.RestApiList{}
+	for _, item := range list.Items {
+		if item.Spec.ControllerRef.IsMatch(utils.NamespacedName(controller)) {
+			out.Items = append(out.Items, item)
+		}
+	}
+
+	return out, nil
+}
+
+func (r *RefResolver) GetControllersForAccounting(ctx context.Context, accounting *slinkyv1alpha1.Accounting) (*slinkyv1alpha1.ControllerList, error) {
+	list := &slinkyv1alpha1.ControllerList{}
+	if err := r.client.List(ctx, list); err != nil {
+		return nil, err
+	}
+
+	out := &slinkyv1alpha1.ControllerList{}
+	for _, item := range list.Items {
+		if item.Spec.AccountingRef.IsMatch(utils.NamespacedName(accounting)) {
+			out.Items = append(out.Items, item)
+		}
+	}
+
+	return out, nil
+}
+
+func (r *RefResolver) GetSecretKeyRef(ctx context.Context, selector *slinkyv1alpha1.SecretKeySelector, namespace string) ([]byte, error) {
+	secret := &corev1.Secret{}
+	key := types.NamespacedName{
+		Name:      selector.Name,
+		Namespace: namespace,
+	}
+	if err := r.client.Get(ctx, key, secret); err != nil {
+		return nil, err
+	}
+
+	data, ok := secret.Data[selector.Key]
+	if !ok {
+		return nil, fmt.Errorf("secret key '%s' not found", selector.Key)
+	}
+
+	return data, nil
+}

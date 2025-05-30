@@ -1,0 +1,110 @@
+{{- /*
+SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+{{- range $key, $nodeset := $.Values.nodesets -}}
+{{- if $nodeset.enabled }}
+{{- $name := printf "%s-%s" (include "slurm.compute.name" $) $key }}
+{{- $sidecarRepository := $.Values.authcred.image.repository }}
+{{- $sidecarTag := $.Values.authcred.image.tag }}
+{{- $sidecarImagePullPolicy := $nodeset.imagePullPolicy | default $.Values.imagePullPolicy }}
+{{- $sidecarResources := $.Values.authcred.resources }}
+{{- with $nodeset.authcred -}}
+  {{- with .image -}}
+    {{- $sidecarRepository = .repository | default $sidecarRepository -}}
+    {{- $sidecarTag = .tag | default $sidecarTag -}}
+  {{- end -}}
+  {{- $sidecarImagePullPolicy = .imagePullPolicy | default $sidecarImagePullPolicy -}}
+  {{- $sidecarResources = .resources | default $sidecarResources -}}
+{{- end -}}
+{{- $sidecarImageRef := printf "%s:%s" $sidecarRepository $sidecarTag }}
+---
+apiVersion: slinky.slurm.net/v1alpha1
+kind: NodeSet
+metadata:
+  name: {{ $name }}
+  namespace: {{ include "slurm.namespace" $ }}
+  labels:
+    nodeset.slinky.slurm.net/name: {{ $name }}
+    {{- include "slurm.labels" $ | nindent 4 }}
+spec:
+  controllerRef:
+    name: {{ include "slurm.fullname" $ }}
+    namespace: {{ include "slurm.namespace" $ }}
+  {{- with $nodeset.partition }}
+  partition:
+    enabled: {{ $nodeset.enabled | default false }}
+    {{- if (include "slurm.compute.PartitionConfig" $nodeset.partition) }}
+    config: {{ include "slurm.compute.PartitionConfig" $nodeset.partition | quote }}
+    {{- end }}{{- /* if (include "slurm.compute.PartitionConfig" $nodeset.partition) */}}
+  {{- end }}{{- /* with $nodeset.partition */}}
+  replicas: {{ $nodeset.replicas }}
+  template:
+    metadata:
+      labels:
+        nodeset.slinky.slurm.net/name: {{ $name }}
+        {{- include "slurm.labels" $ | nindent 8 }}
+    {{- with $.Values.imagePullSecrets }}
+    imagePullSecrets:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}{{- /* with $.Values.imagePullSecrets */}}
+    {{- if (include "slurm.compute.extraConf" $nodeset) }}
+    extraConf: {{ include "slurm.compute.extraConf" $nodeset | quote }}
+    {{- end }}{{- /* if (include "slurm.compute.extraConf" $nodeset) */}}
+    hostname: "{{ $key }}-"
+    container:
+      image: {{ include "format-image" $nodeset.image }}
+      imagePullPolicy: {{ $.Values.imagePullPolicy }}
+      {{- if $nodeset.useResourceLimits }}
+      env:
+        - name: POD_CPUS
+          value: {{ include "slurm.compute.podCpus" $nodeset | toString | quote }}
+        - name: POD_MEMORY
+          value: {{ include "slurm.compute.podMemory" $nodeset | toString | quote }}
+      {{- end }}{{- /* if $nodeset.useResourceLimits */}}
+      {{- with $nodeset.args }}
+      args:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with $nodeset.args */}}
+      {{- with $nodeset.resources }}
+      resources:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with $nodeset.resources */}}
+      {{- with $nodeset.volumeMounts }}
+      volumeMounts:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with $nodeset.volumeMounts */}}
+    initconf:
+      image: {{ $sidecarImageRef }}
+      imagePullPolicy: {{ $sidecarImagePullPolicy }}
+      resources:
+        {{- toYaml $sidecarResources | nindent 8 }}
+    logfile:
+      image: {{ $sidecarImageRef }}
+      imagePullPolicy: {{ $sidecarImagePullPolicy }}
+      resources:
+        {{- toYaml $sidecarResources | nindent 8 }}
+    {{- with $nodeset.nodeSelector }}
+    nodeSelector:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}{{- /* with $nodeset.nodeSelector */}}
+    {{- with $nodeset.affinity }}
+    affinity:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}{{- /* with $nodeset.affinity */}}
+    {{- with $nodeset.tolerations }}
+    tolerations:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}{{- /* with $nodeset.tolerations */}}
+    priorityClassName: {{ $.Values.priorityClassName }}
+    {{- with $nodeset.volumes }}
+    volumes:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}{{- /* with $nodeset.volumes */}}
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 100%
+{{- end }}{{- /* $nodeset.enabled */}}
+{{- end }}{{- /* range $nodeset := $.Values.nodesets */}}

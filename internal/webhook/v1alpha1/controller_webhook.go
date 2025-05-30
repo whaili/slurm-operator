@@ -1,0 +1,156 @@
+// SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
+// SPDX-License-Identifier: Apache-2.0
+
+package v1alpha1
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"regexp"
+	"slices"
+
+	apiequality "k8s.io/apimachinery/pkg/api/equality"
+	"k8s.io/apimachinery/pkg/runtime"
+	utilerrors "k8s.io/apimachinery/pkg/util/errors"
+	"k8s.io/klog/v2"
+	ctrl "sigs.k8s.io/controller-runtime"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
+
+	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
+)
+
+// TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
+
+type ControllerWebhook struct{}
+
+// log is for logging in this package.
+var controllerlog = logf.Log.WithName("controller-resource")
+
+func (r *ControllerWebhook) SetupWebhookWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewWebhookManagedBy(mgr).
+		For(&slinkyv1alpha1.Controller{}).
+		WithDefaulter(r).
+		WithValidator(r).
+		Complete()
+}
+
+// +kubebuilder:webhook:path=/mutate-slinky-slurm-net-v1alpha1-controller,mutating=true,failurePolicy=fail,sideEffects=None,groups=slinky.slurm.net,resources=controllers,verbs=create;update,versions=v1alpha1,name=mcontroller.kb.io,admissionReviewVersions=v1
+
+var _ webhook.CustomDefaulter = &ControllerWebhook{}
+
+// Default implements webhook.Defaulter so a webhook will be registered for the type
+func (r *ControllerWebhook) Default(ctx context.Context, obj runtime.Object) error {
+	controller := obj.(*slinkyv1alpha1.Controller)
+	controllerlog.Info("default", "controller", klog.KObj(controller))
+	return nil
+}
+
+// TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
+// +kubebuilder:webhook:path=/validate-slinky-slurm-net-v1alpha1-controller,mutating=false,failurePolicy=fail,sideEffects=None,groups=slinky.slurm.net,resources=controllers,verbs=create;update,versions=v1alpha1,name=vcontroller.kb.io,admissionReviewVersions=v1
+
+var _ webhook.CustomValidator = &ControllerWebhook{}
+
+const validTableNameRegex = `[0-9a-zA-Z$_]+`
+const warnTableNameRegex = `[A-Z]+`
+
+// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
+func (r *ControllerWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
+	controller := obj.(*slinkyv1alpha1.Controller)
+	controllerlog.Info("validate create", "controller", klog.KObj(controller))
+
+	warns, errs := validateController(controller)
+
+	// https://slurm.schedmd.com/slurm.conf.html#OPT_ClusterName
+	controllerName := controller.ClusterName()
+	if len(controllerName) > 40 {
+		errs = append(errs, fmt.Errorf("ClusterName exceeds 40 characters (%d): %s",
+			len(controllerName), controllerName))
+	}
+	validTableName := regexp.MustCompile(validTableNameRegex)
+	if !validTableName.MatchString(controllerName) {
+		errs = append(errs, fmt.Errorf("ClusterName must match regex `%s`: %s",
+			validTableNameRegex, controllerName))
+	}
+	warnTableName := regexp.MustCompile(warnTableNameRegex)
+	if warnTableName.MatchString(controllerName) {
+		warns = append(warns, fmt.Sprintf("ClusterName contains capital letters: %s",
+			controllerName))
+	}
+
+	return warns, utilerrors.NewAggregate(errs)
+}
+
+// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
+func (r *ControllerWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) (admission.Warnings, error) {
+	newController := newObj.(*slinkyv1alpha1.Controller)
+	oldController := oldObj.(*slinkyv1alpha1.Controller)
+	controllerlog.Info("validate update", "newController", klog.KObj(newController))
+
+	warns, errs := validateController(newController)
+
+	if newController.ClusterName() != oldController.ClusterName() {
+		errs = append(errs, errors.New("cannot change ClusterName after deployment"))
+	}
+	if !apiequality.Semantic.DeepEqual(newController.Spec.SlurmKeyRef.LocalObjectReference, oldController.Spec.SlurmKeyRef.LocalObjectReference) {
+		errs = append(errs, errors.New("cannot change SlurmKeyRef after deployment"))
+	}
+	if !apiequality.Semantic.DeepEqual(newController.Spec.JwtHs256KeyRef.LocalObjectReference, oldController.Spec.JwtHs256KeyRef.LocalObjectReference) {
+		errs = append(errs, errors.New("cannot change JwtHs256KeyRef after deployment"))
+	}
+
+	// We use volumeClaimTemplates to handle the controller savestate PVC.
+	// StatefulSet does not allow update of that field.
+	if newController.Spec.Persistence.Enabled != oldController.Spec.Persistence.Enabled {
+		errs = append(errs, errors.New("cannot change persistence.enabled after deployment"))
+	}
+
+	return warns, utilerrors.NewAggregate(errs)
+}
+
+// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
+func (r *ControllerWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
+	controller := obj.(*slinkyv1alpha1.Controller)
+	controllerlog.Info("validate delete", "controller", klog.KObj(controller))
+
+	return nil, nil
+}
+
+func validateController(obj *slinkyv1alpha1.Controller) (admission.Warnings, []error) {
+	var warns admission.Warnings
+	var errs []error
+
+	// Ref: https://slurm.schedmd.com/man_index.html#configuration_files
+	configFiles := obj.Spec.ConfigFiles
+	denyConfigFiles := []string{
+		"slurm.conf",
+		"slurmdbd.conf",
+	}
+	knownConfigFiles := []string{
+		"acct_gather.conf",
+		"burst_buffer.conf",
+		"cgroup.conf",
+		"cli_filter.lua",
+		"gres.conf",
+		"helpers.conf",
+		"job_container.conf",
+		"job_submit.lua",
+		"knl.conf", // deprecated
+		"mpi.conf",
+		"oci.conf",
+		"plugstack.conf",
+		"topology.conf",
+		"topology.yaml",
+	}
+	for _, file := range configFiles {
+		if slices.Contains(denyConfigFiles, file) {
+			errs = append(errs, fmt.Errorf("the configFile is reserved for slurm-operator use: %s", file))
+		} else if slices.Contains(knownConfigFiles, file) {
+			warns = append(warns, fmt.Sprintf("the configFile is unknown to Slurm, make sure to include it in another config file otherwise it is ignored: %s", file))
+		}
+	}
+
+	return warns, errs
+}

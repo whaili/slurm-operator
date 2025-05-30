@@ -16,16 +16,19 @@ Helm Chart for Slurm HPC Workload Manager Operator
 | imagePullSecrets | list | `[]` | Sets the image pull secrets. Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
 | nameOverride | string | `""` | Overrides the name of the release. |
 | namespaceOverride | string | `""` | Overrides the namespace of the release. |
+| operator.accountingWorkers | int | `4` | Set the max concurrent workers for the Accounting controller. |
 | operator.affinity | object | `{}` | Affinity for pod assignment. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity |
-| operator.clusterWorkers | int | `1` | Set the max concurrent workers for the Cluster controller. |
+| operator.controllerWorkers | int | `4` | Set the max concurrent workers for the Controller controller. |
 | operator.enabled | bool | `true` | Enables the operator. |
 | operator.image.repository | string | `"ghcr.io/slinkyproject/slurm-operator"` |  |
 | operator.image.tag | string | `""` |  |
 | operator.imagePullPolicy | string | `"IfNotPresent"` | Set the image pull policy. |
 | operator.logLevel | string | `"info"` | Set the log level by string (e.g. error, info, debug) or number (e.g. 1..5). |
-| operator.nodesetWorkers | int | `1` | Set the max concurrent workers for the NodeSet controller. |
+| operator.loginsetWorkers | int | `4` | Set the max concurrent workers for the LoginSet controller. |
+| operator.nodesetWorkers | int | `4` | Set the max concurrent workers for the NodeSet controller. |
 | operator.replicas | int | `1` | Set the number of replicas to deploy. |
 | operator.resources | object | `{}` | The container resource limits and requests. Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container |
+| operator.restapiWorkers | int | `4` | Set the max concurrent workers for the Restapi controller. |
 | operator.serviceAccount.create | bool | `true` | Allows chart to create the service account. |
 | operator.serviceAccount.name | string | `""` | Set the service account to use (and create). |
 | operator.tolerations | list | `[]` | Tolerations for pod assignment. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |

@@ -5,9 +5,7 @@ package slurmcontrol
 
 import (
 	"context"
-	"fmt"
 	"path/filepath"
-	"runtime"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -21,6 +19,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/testutils"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -49,8 +48,7 @@ var _ = BeforeSuite(func() {
 			filepath.Join("..", "..", "..", "..", "config", "crd", "bases"),
 		},
 		ErrorIfCRDPathMissing: true,
-		BinaryAssetsDirectory: filepath.Join("..", "..", "..", "..", "bin", "k8s",
-			fmt.Sprintf("1.32.0-%s-%s", runtime.GOOS, runtime.GOARCH)),
+		BinaryAssetsDirectory: testutils.GetEnvTestBinary(filepath.Join("..", "..", "..", "..")),
 	}
 
 	var err error

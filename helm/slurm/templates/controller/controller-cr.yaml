@@ -1,0 +1,112 @@
+{{- /*
+SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+apiVersion: slinky.slurm.net/v1alpha1
+kind: Controller
+metadata:
+  name: {{include "slurm.fullname" . }}
+  namespace: {{ include "slurm.namespace" . }}
+  labels:
+    {{- include "slurm.labels" . | nindent 4 }}
+spec:
+  {{- if .Values.accounting.enabled }}
+  accountingRef:
+    name: {{include "slurm.fullname" . }}
+    namespace: {{ include "slurm.namespace" . }}
+  {{- end }}{{- /* if .Values.accounting.enabled */}}
+  slurmKeyRef:
+    {{- if .Values.slurmKeyRef }}
+    {{- toYaml .Values.slurmKeyRef | nindent 4 }}
+    {{- else }}
+    name: {{ include "slurm.authSlurmRef.name" . }}
+    key: {{ include "slurm.authSlurmRef.key" . }}
+    {{- end }}{{- /* if .Values.slurmKeyRef */}}
+  jwtHs256KeyRef:
+    {{- if .Values.jwtHs256KeyRef }}
+    {{- toYaml .Values.jwtHs256KeyRef | nindent 4 }}
+    {{- else }}
+    name: {{ include "slurm.authJwtHs256Ref.name" . }}
+    key: {{ include "slurm.authJwtHs256Ref.key" . }}
+    {{- end }}{{- /* if .Values.jwtHs256KeyRef */}}
+  {{- with .Values.clusterName }}
+  clusterName: {{ . }}
+  {{- end }}{{- /* with .Values.clusterName */}}
+  {{- if (include "slurm.controller.extraConf" .) }}
+  extraConf: |
+    {{- include "slurm.controller.extraConf" . | nindent 4 }}
+  {{- end }}{{- /* if (include "slurm.controller.extraConf" .) */}}
+  {{- with .Values.configFiles }}
+  configFiles:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}{{- /* with .Values.configFiles */}}
+  {{- with .Values.prologScripts }}
+  prologScripts:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}{{- /* with .Values.prologScripts */}}
+  {{- with .Values.epilogScripts }}
+  epilogScripts:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}{{- /* with .Values.epilogScripts */}}
+  template:
+    metadata:
+      labels:
+        {{- include "slurm.labels" . | nindent 8 }}
+    {{- with .Values.imagePullSecrets }}
+    imagePullSecrets:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}{{- /* with .Values.imagePullSecrets */}}
+    container:
+      image: {{ include "format-image" .Values.controller.image }}
+      imagePullPolicy: {{ .Values.imagePullPolicy }}
+      {{- with .Values.controller.args }}
+      args:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with .Values.controller.args */}}
+      {{- with .Values.controller.resources }}
+      resources:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with .Values.controller.resources */}}
+    initconf:
+      image: {{ include "format-image" .Values.authcred.image }}
+      imagePullPolicy: {{ .Values.imagePullPolicy }}
+      {{- with .Values.authcred.resources }}
+      resources:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with .Values.authcred.resources */}}
+    reconfigure:
+      image: {{ include "format-image" .Values.authcred.image }}
+      imagePullPolicy: {{ .Values.imagePullPolicy }}
+      {{- with .Values.authcred.resources }}
+      resources:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with .Values.authcred.resources */}}
+    logfile:
+      image: {{ include "format-image" .Values.authcred.image }}
+      imagePullPolicy: {{ .Values.imagePullPolicy }}
+      {{- with .Values.authcred.resources }}
+      resources:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with .Values.authcred.resources */}}
+    {{- with .Values.controller.nodeSelector }}
+    nodeSelector:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}{{- /* with .Values.controller.nodeSelector */}}
+    {{- with .Values.controller.affinity }}
+    affinity:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}{{- /* with .Values.controller.affinity */}}
+    {{- with .Values.controller.tolerations }}
+    tolerations:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}{{- /* with .Values.controller.tolerations */}}
+    priorityClassName: {{ .Values.priorityClassName }}
+  {{- with .Values.controller.persistence }}
+  persistence:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}{{- /* with .Values.controller.persistence */}}
+  {{- with .Values.controller.service }}
+  service:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}{{- /* with .Values.controller.service */}}

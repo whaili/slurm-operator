@@ -5,14 +5,13 @@ package nodeset
 
 import (
 	"context"
-	"fmt"
 	"path/filepath"
-	"runtime"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -25,6 +24,7 @@ import (
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/resources"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/testutils"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -44,9 +44,14 @@ var cancel context.CancelFunc
 // a functioning slurm control plane and rest api.
 var slurmClusters *resources.Clusters
 
+func init() {
+	utilruntime.Must(scheme.AddToScheme(scheme.Scheme))
+	utilruntime.Must(slinkyv1alpha1.AddToScheme(scheme.Scheme))
+}
+
 func TestHandlers(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Slinky Controller Suite")
+	RunSpecs(t, "NodeSet Controller Suite")
 }
 
 var _ = BeforeSuite(func() {
@@ -60,8 +65,7 @@ var _ = BeforeSuite(func() {
 			filepath.Join("..", "..", "..", "config", "crd", "bases"),
 		},
 		ErrorIfCRDPathMissing: true,
-		BinaryAssetsDirectory: filepath.Join("..", "..", "..", "bin", "k8s",
-			fmt.Sprintf("1.32.0-%s-%s", runtime.GOOS, runtime.GOARCH)),
+		BinaryAssetsDirectory: testutils.GetEnvTestBinary(filepath.Join("..", "..", "..")),
 	}
 
 	var err error

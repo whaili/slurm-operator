@@ -24,14 +24,18 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
+	"github.com/SlinkyProject/slurm-operator/internal/builder"
 	"github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/podcontrol"
 	"github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/slurmcontrol"
 	"github.com/SlinkyProject/slurm-operator/internal/resources"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/durationstore"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/historycontrol"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/refresolver"
 )
 
 const (
+	NodeSetControllerName = "nodeset-controller"
+
 	// BackoffGCInterval is the time that has to pass before next iteration of backoff GC is run
 	BackoffGCInterval = 1 * time.Minute
 )
@@ -68,6 +72,8 @@ type NodeSetReconciler struct {
 	SlurmClusters *resources.Clusters
 	EventCh       chan event.GenericEvent
 
+	builder        *builder.Builder
+	refResolver    *refresolver.RefResolver
 	podControl     podcontrol.PodControlInterface
 	slurmControl   slurmcontrol.SlurmControlInterface
 	historyControl historycontrol.HistoryControlInterface
@@ -78,6 +84,7 @@ type NodeSetReconciler struct {
 //+kubebuilder:rbac:groups=slinky.slurm.net,resources=nodesets,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=slinky.slurm.net,resources=nodesets/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=slinky.slurm.net,resources=nodesets/finalizers,verbs=update
+//+kubebuilder:rbac:groups=slinky.slurm.net,resources=controllers,verbs=get;list;watch
 //+kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=persistentvolumeclaims,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=pods,verbs=get;list;watch;create;update;patch;delete
@@ -123,7 +130,9 @@ func (r *NodeSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (re
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *NodeSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	r.eventRecorder = record.NewBroadcaster().NewRecorder(r.Scheme, corev1.EventSource{Component: "nodeset-controller"})
+	r.eventRecorder = record.NewBroadcaster().NewRecorder(r.Scheme, corev1.EventSource{Component: NodeSetControllerName})
+	r.builder = builder.New(r.Client)
+	r.refResolver = refresolver.New(r.Client)
 	r.historyControl = historycontrol.NewHistoryControl(r.Client)
 	r.podControl = podcontrol.NewPodControl(r.Client, r.eventRecorder)
 	r.slurmControl = slurmcontrol.NewSlurmControl(r.SlurmClusters)
@@ -133,11 +142,19 @@ func (r *NodeSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		expectations: r.expectations,
 	}
 	return ctrl.NewControllerManagedBy(mgr).
-		Named("nodeset-controller").
+		Named(NodeSetControllerName).
 		For(&slinkyv1alpha1.NodeSet{}).
 		Owns(&corev1.Pod{}).
 		Watches(&corev1.Pod{}, podEventHandler).
 		WatchesRawSource(source.Channel(r.EventCh, podEventHandler)).
+		Watches(&slinkyv1alpha1.Controller{}, &controllerEventHandler{
+			Reader:      r.Client,
+			refResolver: r.refResolver,
+		}).
+		Watches(&corev1.Secret{}, &secretEventHandler{
+			Reader:      r.Client,
+			refResolver: r.refResolver,
+		}).
 		WithOptions(controller.Options{
 			MaxConcurrentReconciles: maxConcurrentReconciles,
 		}).

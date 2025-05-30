@@ -7,7 +7,8 @@ package v1alpha1
 const (
 	SlinkyPrefix = "slinky.slurm.net/"
 
-	NodeSetPrefix = "nodeset." + SlinkyPrefix
+	NodeSetPrefix  = "nodeset." + SlinkyPrefix
+	LoginSetPrefix = "loginset." + SlinkyPrefix
 )
 
 // Well Known Annotations

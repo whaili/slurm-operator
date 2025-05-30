@@ -5,9 +5,40 @@ package utils
 
 import (
 	"fmt"
+	"maps"
 	"strconv"
 	"time"
 )
+
+// Get keys from map
+func Keys[K comparable, V any](items map[K]V) []K {
+	keys := make([]K, len(items))
+	i := 0
+	for k := range items {
+		keys[i] = k
+		i++
+	}
+	return keys
+}
+
+// Get values from map
+func Values[K comparable, V any](items map[K]V) []V {
+	vals := make([]V, len(items))
+	i := 0
+	for _, v := range items {
+		vals[i] = v
+		i++
+	}
+	return vals
+}
+
+func MergeMaps(mapList ...map[string]string) map[string]string {
+	out := make(map[string]string, 0)
+	for _, m := range mapList {
+		maps.Copy(out, m)
+	}
+	return out
+}
 
 func validFirstDigit(str string) bool {
 	if len(str) == 0 {

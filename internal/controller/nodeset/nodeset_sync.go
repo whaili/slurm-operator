@@ -10,10 +10,9 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
+	k8slabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
 	podutil "k8s.io/kubernetes/pkg/api/v1/pod"
@@ -26,6 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
+	"github.com/SlinkyProject/slurm-operator/internal/builder/labels"
 	nodesetutils "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/historycontrol"
@@ -53,13 +53,6 @@ func (r *NodeSetReconciler) Sync(ctx context.Context, req reconcile.Request) err
 	// Make a copy now to avoid client cache mutation.
 	nodeset = nodeset.DeepCopy()
 	key := utils.KeyFunc(nodeset)
-
-	everything := metav1.LabelSelector{}
-	if apiequality.Semantic.DeepEqual(nodeset.Spec.Selector, &everything) {
-		r.eventRecorder.Eventf(nodeset, corev1.EventTypeWarning, SelectingAllReason,
-			"This NodeSet is selecting all pods. A non-empty selector is required.")
-		return nil
-	}
 
 	if err := r.adoptOrphanRevisions(ctx, nodeset); err != nil {
 		return err
@@ -152,10 +145,8 @@ func (r *NodeSetReconciler) doAdoptOrphanRevisions(
 // listRevisions returns a array of the ControllerRevisions that represent the revisions of nodeset. If the returned
 // error is nil, the returns slice of ControllerRevisions is valid.
 func (r *NodeSetReconciler) listRevisions(nodeset *slinkyv1alpha1.NodeSet) ([]*appsv1.ControllerRevision, error) {
-	selector, err := metav1.LabelSelectorAsSelector(nodeset.Spec.Selector)
-	if err != nil {
-		return nil, err
-	}
+	selectorLabels := labels.NewBuilder().WithComputeSelectorLabels(nodeset).Build()
+	selector := k8slabels.SelectorFromSet(k8slabels.Set(selectorLabels))
 	return r.historyControl.ListControllerRevisions(nodeset, selector)
 }
 
@@ -167,16 +158,14 @@ func (r *NodeSetReconciler) getNodeSetPods(
 	ctx context.Context,
 	nodeset *slinkyv1alpha1.NodeSet,
 ) ([]*corev1.Pod, error) {
-	selector, err := metav1.LabelSelectorAsSelector(nodeset.Spec.Selector)
-	if err != nil {
-		return nil, err
-	}
+	selectorLabels := labels.NewBuilder().WithComputeSelectorLabels(nodeset).Build()
+	selector := k8slabels.SelectorFromSet(k8slabels.Set(selectorLabels))
 
 	// List all pods to include those that do not match the selector anymore but
 	// have a ControllerRef pointing to this controller.
 	opts := &client.ListOptions{
 		Namespace:     nodeset.GetNamespace(),
-		LabelSelector: labels.Everything(),
+		LabelSelector: k8slabels.Everything(),
 	}
 	podList := &corev1.PodList{}
 	if err := r.List(ctx, podList, opts); err != nil {
@@ -346,7 +335,10 @@ func (r *NodeSetReconciler) doPodScaleOut(
 		for usedOrdinals.Has(ordinal) {
 			ordinal++
 		}
-		pod := nodesetutils.NewNodeSetPod(nodeset, ordinal, hash)
+		pod, err := r.newNodeSetPod(ctx, nodeset, ordinal, hash)
+		if err != nil {
+			return err
+		}
 		usedOrdinals.Insert(ordinal)
 		podsToCreate[i] = pod
 	}
@@ -394,6 +386,23 @@ func (r *NodeSetReconciler) doPodScaleOut(
 	}
 
 	return err
+}
+
+func (r *NodeSetReconciler) newNodeSetPod(
+	ctx context.Context,
+	nodeset *slinkyv1alpha1.NodeSet,
+	ordinal int,
+	revisionHash string,
+) (*corev1.Pod, error) {
+	controller := &slinkyv1alpha1.Controller{}
+	key := nodeset.Spec.ControllerRef.NamespacedName()
+	if err := r.Get(ctx, key, controller); err != nil {
+		return nil, err
+	}
+
+	pod := nodesetutils.NewNodeSetPod(nodeset, controller, ordinal, revisionHash)
+
+	return pod, nil
 }
 
 // doPodScaleIn handles scaling-in NodeSet pods.
@@ -702,7 +711,7 @@ func (r *NodeSetReconciler) syncRollingUpdate(
 	podsToDelete, _ := r.splitUpdatePods(ctx, nodeset, healthyPods, hash)
 	if len(podsToDelete) > 0 {
 		logger.Info("Scale-in pods for Rolling Update",
-			"nodeset", klog.KObj(nodeset), "delete", len(podsToDelete))
+			"delete", len(podsToDelete))
 		if err := r.doPodScaleIn(ctx, nodeset, podsToDelete, nil); err != nil {
 			return err
 		}

@@ -31,14 +31,26 @@ spec:
           image: {{ include "slurm-operator.operator.imageRef" . }}
           imagePullPolicy: {{ include "slurm-operator.imagePullPolicy" . }}
           args:
-            {{- with .Values.operator.clusterWorkers }}
-            - --cluster-workers
+            {{- with .Values.operator.accountingWorkers }}
+            - --accounting-workers
             - {{ . | quote }}
             {{- end }}{{- /* with .Values.operator.clusterWorkers */}}
+            {{- with .Values.operator.accountingWorkers }}
+            - --controller-workers
+            - {{ . | quote }}
+            {{- end }}{{- /* with .Values.operator.clusterWorkers */}}
+            {{- with .Values.operator.loginsetWorkers }}
+            - --loginset-workers
+            - {{ . | quote }}
+            {{- end }}{{- /* with .Values.operator.loginsetWorkers */}}
             {{- with .Values.operator.nodesetWorkers }}
             - --nodeset-workers
             - {{ . | quote }}
             {{- end }}{{- /* with .Values.operator.nodesetWorkers */}}
+            {{- with .Values.operator.restapiWorkers }}
+            - --restapi-workers
+            - {{ . | quote }}
+            {{- end }}{{- /* with .Values.operator.restapiWorkers */}}
             {{- with .Values.operator.logLevel }}
             - --zap-log-level
             - {{ . | quote }}

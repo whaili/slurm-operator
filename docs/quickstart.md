@@ -107,7 +107,7 @@ SSH through the login service:
 
 ```sh
 SLURM_LOGIN_IP="$(kubectl get services -n slurm -l app.kubernetes.io/instance=slurm,app.kubernetes.io/name=login -o jsonpath="{.items[0].status.loadBalancer.ingress[0].ip}")"
-## Assuming your public SSH key was configured in `login.rootSshAuthorizedKeys[]`.
+## Assuming your public SSH key was configured in `login.rootSshAuthorizedKeys`.
 ssh -p 2222 root@${SLURM_LOGIN_IP}
 ## Assuming SSSD is configured.
 ssh -p 2222 ${USER}@${SLURM_LOGIN_IP}

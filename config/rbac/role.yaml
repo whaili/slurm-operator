@@ -7,9 +7,12 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - configmaps
   - events
   - persistentvolumeclaims
   - pods
+  - secrets
+  - services
   verbs:
   - create
   - delete
@@ -22,7 +25,6 @@ rules:
   - ""
   resources:
   - nodes
-  - secrets
   verbs:
   - get
   - list
@@ -39,6 +41,8 @@ rules:
   - apps
   resources:
   - controllerrevisions
+  - deployments
+  - statefulsets
   verbs:
   - create
   - delete
@@ -50,8 +54,11 @@ rules:
 - apiGroups:
   - slinky.slurm.net
   resources:
-  - clusters
+  - accountings
+  - controllers
+  - loginsets
   - nodesets
+  - restapis
   verbs:
   - create
   - delete
@@ -63,15 +70,21 @@ rules:
 - apiGroups:
   - slinky.slurm.net
   resources:
-  - clusters/finalizers
+  - accountings/finalizers
+  - controllers/finalizers
+  - loginsets/finalizers
   - nodesets/finalizers
+  - restapis/finalizers
   verbs:
   - update
 - apiGroups:
   - slinky.slurm.net
   resources:
-  - clusters/status
+  - accountings/status
+  - controllers/status
+  - loginsets/status
   - nodesets/status
+  - restapis/status
   verbs:
   - get
   - patch

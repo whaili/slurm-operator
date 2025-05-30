@@ -1,0 +1,151 @@
+// SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
+// SPDX-License-Identifier: Apache-2.0
+
+package v1alpha1
+
+import (
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
+// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+
+const (
+	ControllerKind = "Controller"
+)
+
+var (
+	ControllerGVK        = GroupVersion.WithKind(ControllerKind)
+	ControllerAPIVersion = GroupVersion.String()
+)
+
+// ControllerSpec defines the desired state of Controller
+type ControllerSpec struct {
+	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+	// Important: Run "make" to regenerate code after modifying this file
+
+	// The Slurm ClusterName, which uniquely identifies the Slurm Cluster to
+	// itself and accounting.
+	// Ref: https://slurm.schedmd.com/slurm.conf.html#OPT_ClusterName
+	// +optional
+	ClusterName string `json:"clusterName,omitzero"`
+
+	// Slurm `auth/slurm` key authentication.
+	// +required
+	SlurmKeyRef SecretKeySelector `json:"slurmKeyRef,omitzero"`
+
+	// Slurm `auth/jwt` JWT HS256 key authentication.
+	// +required
+	JwtHs256KeyRef SecretKeySelector `json:"jwtHs256KeyRef,omitzero"`
+
+	// accountingRef is a reference to the Accounting CR to which this has membership.
+	// +optional
+	AccountingRef ObjectReference `json:"accountingRef"`
+
+	// Template is the object that describes the pod that will be created if
+	// insufficient replicas are detected.
+	// More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller#pod-template
+	// +optional
+	Template ControllerPodTemplate `json:"template"`
+
+	// ExtraConf is appended onto the end of the `slurm.conf` file.
+	// Ref: https://slurm.schedmd.com/slurm.conf.html
+	// +optional
+	ExtraConf string `json:"extraConf,omitempty"`
+
+	// ConfigFiles is a map of configuration files to be mounted.
+	// Ref: https://slurm.schedmd.com/slurm.conf.html
+	// +optional
+	ConfigFiles map[string]string `json:"configFiles,omitempty"`
+
+	// PrologScripts is a map of prolog scripts to be mounted.
+	// Ref: https://slurm.schedmd.com/prolog_epilog.html
+	// +optional
+	PrologScripts map[string]string `json:"prologScripts,omitempty"`
+
+	// EpilogScripts is a map of epilog scripts to be mounted.
+	// Ref: https://slurm.schedmd.com/prolog_epilog.html
+	// +optional
+	EpilogScripts map[string]string `json:"epilogScripts,omitempty"`
+
+	// Persistence defines a persistent volume for the slurm controller to store its save-state.
+	// Used to recover from system failures or from pod upgrades.
+	// +optional
+	Persistence ControllerPersistence `json:"persistence,omitzero"`
+
+	// Service defines a template for a Kubernetes Service object.
+	// +optional
+	Service ServiceSpec `json:"service,omitzero"`
+}
+
+type ControllerPodTemplate struct {
+	PodTemplate `json:",inline"`
+
+	// The initconf sidecar configuration.
+	// +optional
+	InitConf SideCar `json:"initconf,omitzero"`
+
+	// The reconfigure sidecar configuration.
+	// +optional
+	Reconfigure SideCar `json:"reconfigure,omitzero"`
+
+	// The logfile sidecar configuration.
+	// +optional
+	LogFile SideCar `json:"logfile,omitzero"`
+}
+
+type ControllerPersistence struct {
+	// Enabled controls if the optional accounting subsystem is enabled.
+	// +default:=true
+	Enabled bool `json:"enabled"`
+
+	// ExistingClaim is the name of an existing `PersistentVolumeClaim` to use instead.
+	// If this is not empty, then certain other fields will be ignored.
+	// +optional
+	ExistingClaim string `json:"existingClaim,omitempty"`
+
+	// +optional
+	corev1.PersistentVolumeClaimSpec `json:",inline"`
+}
+
+// ControllerStatus defines the observed state of Controller
+type ControllerStatus struct {
+	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+	// Important: Run "make" to regenerate code after modifying this file
+
+	// Represents the latest available observations of a Controller's current state.
+	// +optional
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=type
+	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+}
+
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:shortName=slurmctld
+// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+
+// Controller is the Schema for the controllers API
+type Controller struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   ControllerSpec   `json:"spec,omitempty"`
+	Status ControllerStatus `json:"status,omitempty"`
+}
+
+//+kubebuilder:object:root=true
+
+// ControllerList contains a list of Controller
+type ControllerList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Controller `json:"items"`
+}
+
+func init() {
+	SchemeBuilder.Register(&Controller{}, &ControllerList{})
+}

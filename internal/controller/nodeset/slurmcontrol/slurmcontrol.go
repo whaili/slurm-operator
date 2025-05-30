@@ -12,7 +12,6 @@ import (
 
 	"github.com/puttsk/hostlist"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
 	"k8s.io/utils/ptr"
 	"k8s.io/utils/set"
@@ -92,7 +91,7 @@ func (r *realSlurmControl) UpdateNodeWithPodInfo(ctx context.Context, nodeset *s
 	slurmClient := r.lookupClient(nodeset)
 	if slurmClient == nil {
 		logger.V(2).Info("no client for nodeset, cannot do UpdateNodeWithPodInfo()",
-			"nodeset", klog.KObj(nodeset), "pod", klog.KObj(pod))
+			"pod", klog.KObj(pod))
 		return nil
 	}
 
@@ -142,7 +141,7 @@ func (r *realSlurmControl) MakeNodeDrain(ctx context.Context, nodeset *slinkyv1a
 	slurmClient := r.lookupClient(nodeset)
 	if slurmClient == nil {
 		logger.V(2).Info("no client for nodeset, cannot do MakeNodeDrain()",
-			"nodeset", klog.KObj(nodeset), "pod", klog.KObj(pod))
+			"pod", klog.KObj(pod))
 		return nil
 	}
 
@@ -156,7 +155,7 @@ func (r *realSlurmControl) MakeNodeDrain(ctx context.Context, nodeset *slinkyv1a
 	}
 
 	logger.V(1).Info("make slurm node drain",
-		"nodeset", klog.KObj(nodeset), "pod", klog.KObj(pod))
+		"pod", klog.KObj(pod))
 	req := api.V0043UpdateNodeMsg{
 		State:  ptr.To([]api.V0043UpdateNodeMsgState{api.V0043UpdateNodeMsgStateDRAIN}),
 		Reason: ptr.To(nodeReasonPrefix + " " + reason),
@@ -178,7 +177,7 @@ func (r *realSlurmControl) MakeNodeUndrain(ctx context.Context, nodeset *slinkyv
 	slurmClient := r.lookupClient(nodeset)
 	if slurmClient == nil {
 		logger.V(2).Info("no client for nodeset, cannot do MakeNodeUndrain()",
-			"nodeset", klog.KObj(nodeset), "pod", klog.KObj(pod))
+			"pod", klog.KObj(pod))
 		return nil
 	}
 
@@ -204,7 +203,7 @@ func (r *realSlurmControl) MakeNodeUndrain(ctx context.Context, nodeset *slinkyv
 	}
 
 	logger.V(1).Info("make slurm node undrain",
-		"nodeset", klog.KObj(nodeset), "pod", klog.KObj(pod))
+		"pod", klog.KObj(pod))
 	req := api.V0043UpdateNodeMsg{
 		State:  ptr.To([]api.V0043UpdateNodeMsgState{api.V0043UpdateNodeMsgStateUNDRAIN}),
 		Reason: ptr.To(nodeReasonPrefix + " " + reason),
@@ -226,7 +225,7 @@ func (r *realSlurmControl) IsNodeDrain(ctx context.Context, nodeset *slinkyv1alp
 	slurmClient := r.lookupClient(nodeset)
 	if slurmClient == nil {
 		logger.V(2).Info("no client for nodeset, cannot do IsNodeDrain()",
-			"nodeset", klog.KObj(nodeset), "pod", klog.KObj(pod))
+			"pod", klog.KObj(pod))
 		return true, nil
 	}
 
@@ -250,7 +249,7 @@ func (r *realSlurmControl) IsNodeDrained(ctx context.Context, nodeset *slinkyv1a
 	slurmClient := r.lookupClient(nodeset)
 	if slurmClient == nil {
 		logger.V(2).Info("no client for nodeset, cannot do IsNodeDrained()",
-			"nodeset", klog.KObj(nodeset), "pod", klog.KObj(pod))
+			"pod", klog.KObj(pod))
 		return true, nil
 	}
 
@@ -431,11 +430,7 @@ func (r *realSlurmControl) GetNodeDeadlines(ctx context.Context, nodeset *slinky
 }
 
 func (r *realSlurmControl) lookupClient(nodeset *slinkyv1alpha1.NodeSet) slurmclient.Client {
-	clusterName := types.NamespacedName{
-		Namespace: nodeset.GetNamespace(),
-		Name:      nodeset.Spec.ClusterName,
-	}
-	return r.slurmClusters.Get(clusterName)
+	return r.slurmClusters.Get(nodeset.Spec.ControllerRef.NamespacedName())
 }
 
 var _ SlurmControlInterface = &realSlurmControl{}

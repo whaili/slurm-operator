@@ -7,21 +7,7 @@ set -euo pipefail
 # Assume env contains:
 # SLURM_USER - username or UID
 
-function init::common() {
-	local dir
-
-	dir=/var/spool/slurmd
-	mkdir -p "$dir"
-	chown -v "${SLURM_USER}:${SLURM_USER}" "$dir"
-	chmod -v 700 "$dir"
-
-	dir=/var/spool/slurmctld
-	mkdir -p "$dir"
-	chown -v "${SLURM_USER}:${SLURM_USER}" "$dir"
-	chmod -v 700 "$dir"
-}
-
-function init::slurm() {
+function main() {
 	SLURM_MOUNT=/mnt/slurm
 	SLURM_DIR=/mnt/etc/slurm
 
@@ -54,10 +40,5 @@ function init::slurm() {
 
 	# Display Slurm directory files
 	ls -lAF "${SLURM_DIR}"
-}
-
-function main() {
-	init::common
-	init::slurm
 }
 main

@@ -5,7 +5,6 @@ package nodeset
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -13,6 +12,7 @@ import (
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8slabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/util/retry"
@@ -21,6 +21,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
+	"github.com/SlinkyProject/slurm-operator/internal/builder/labels"
 	"github.com/SlinkyProject/slurm-operator/internal/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/historycontrol"
 )
@@ -77,10 +78,8 @@ func (r *NodeSetReconciler) syncNodeSetStatus(
 ) error {
 	logger := log.FromContext(ctx)
 
-	selector, err := metav1.LabelSelectorAsSelector(nodeset.Spec.Selector)
-	if err != nil {
-		return fmt.Errorf("could not get label selector for NodeSet(%s): %w", klog.KObj(nodeset), err)
-	}
+	selectorLabels := labels.NewBuilder().WithComputeSelectorLabels(nodeset).Build()
+	selector := k8slabels.SelectorFromSet(k8slabels.Set(selectorLabels))
 
 	replicaStatus := r.calculateReplicaStatus(nodeset, pods, currentRevision, updateRevision)
 	slurmNodeStatus, err := r.slurmControl.CalculateNodeStatus(ctx, nodeset, pods)
@@ -107,7 +106,7 @@ func (r *NodeSetReconciler) syncNodeSetStatus(
 	newStatus.Conditions = append(newStatus.Conditions, nodeset.Status.Conditions...)
 
 	if apiequality.Semantic.DeepEqual(nodeset.Status, newStatus) {
-		logger.V(2).Info("NodeSet Status has not changed, skipping status update", "nodeset", klog.KObj(nodeset), "status", nodeset.Status)
+		logger.V(2).Info("NodeSet Status has not changed, skipping status update", "status", nodeset.Status)
 		return nil
 	}
 
@@ -191,7 +190,7 @@ func (r *NodeSetReconciler) updateNodeSetStatus(
 	}
 
 	logger.V(1).Info("Pending NodeSet Status update",
-		"nodeset", klog.KObj(nodeset), "newStatus", newStatus)
+		"newStatus", newStatus)
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		toUpdate := &slinkyv1alpha1.NodeSet{}
 		if err := r.Get(ctx, namespacedName, toUpdate); err != nil {

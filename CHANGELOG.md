@@ -8,6 +8,9 @@ All notable changes to this project will be documented in this file.
 
 - Added NodeSet level authcred configuration.
 - Added topology.yaml to config files
+- Added Accounting, Controller, Restapi, and LoginSet CRDs.
+- Added Slurm ClusterName override, otherwise derived from Controller CR
+  metadata.
 
 ### Fixed
 
@@ -23,5 +26,8 @@ All notable changes to this project will be documented in this file.
 
 - Changed default storageClassName to empty.
 - Changed to Slurm v43 API.
+- Changed how a Slurm clusters are expressed via CRDs.
 
 ### Removed
+
+- Removed the Cluster CRD.

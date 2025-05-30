@@ -56,10 +56,16 @@ operator:
     # limits:
     #   cpu: 2
     #   memory: 4Gi
-  # -- Set the max concurrent workers for the Cluster controller.
-  clusterWorkers: 1
+  # -- Set the max concurrent workers for the Accounting controller.
+  accountingWorkers: 4
+  # -- Set the max concurrent workers for the Controller controller.
+  controllerWorkers: 4
+  # -- Set the max concurrent workers for the LoginSet controller.
+  loginsetWorkers: 4
   # -- Set the max concurrent workers for the NodeSet controller.
-  nodesetWorkers: 1
+  nodesetWorkers: 4
+  # -- Set the max concurrent workers for the Restapi controller.
+  restapiWorkers: 4
   # -- Set the log level by string (e.g. error, info, debug) or number (e.g. 1..5).
   logLevel: info
 

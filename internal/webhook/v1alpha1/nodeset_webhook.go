@@ -6,8 +6,6 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
-	"sort"
-	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
@@ -73,29 +71,10 @@ func (r *NodeSetWebhook) ValidateCreate(ctx context.Context, obj runtime.Object)
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
 func (r *NodeSetWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) (admission.Warnings, error) {
 	newNodeSet := newObj.(*slinkyv1alpha1.NodeSet)
-	oldNodeSet := oldObj.(*slinkyv1alpha1.NodeSet)
-	nodesetlog.Info("validate update", "newNodeSet", klog.KObj(newNodeSet), "oldNodeSet", klog.KObj(oldNodeSet))
+	_ = oldObj.(*slinkyv1alpha1.NodeSet)
+	nodesetlog.Info("validate update", "newNodeSet", klog.KObj(newNodeSet))
 
 	warns, errs := validateNodeSet(newNodeSet)
-
-	updateFields := []string{
-		"MinReadySeconds",
-		"PersistentVolumeClaimRetentionPolicy",
-		"Replicas",
-		"RevisionHistoryLimit",
-		"Selector",
-		"UpdateStrategy",
-		"VolumeClaimTemplates",
-		"Volumes",
-	}
-	sort.Strings(updateFields)
-	errMsgStub := fmt.Sprintf("Mutatable fields include: %s", strings.Join(updateFields, ", "))
-	if newNodeSet.Spec.ClusterName != oldNodeSet.Spec.ClusterName {
-		errs = append(errs, fmt.Errorf("updates to `NodeSet.Spec.ClusterName` is forbidden. %v", errMsgStub))
-	}
-	if newNodeSet.Spec.ServiceName != oldNodeSet.Spec.ServiceName {
-		errs = append(errs, fmt.Errorf("updates to `NodeSet.Spec.ServiceName` is forbidden. %v", errMsgStub))
-	}
 
 	return warns, utilerrors.NewAggregate(errs)
 }
@@ -111,10 +90,6 @@ func (r *NodeSetWebhook) ValidateDelete(ctx context.Context, obj runtime.Object)
 func validateNodeSet(obj *slinkyv1alpha1.NodeSet) (admission.Warnings, []error) {
 	var warns admission.Warnings
 	var errs []error
-
-	if obj.Spec.ServiceName == "" {
-		errs = append(errs, fmt.Errorf("`NodeSet.Spec.ServiceName` cannot be empty"))
-	}
 
 	switch obj.Spec.UpdateStrategy.Type {
 	case slinkyv1alpha1.RollingUpdateNodeSetStrategyType:

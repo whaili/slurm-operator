@@ -1,0 +1,279 @@
+// SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
+// SPDX-License-Identifier: Apache-2.0
+
+package builder
+
+import (
+	_ "embed"
+	"fmt"
+
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/ptr"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+
+	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
+	"github.com/SlinkyProject/slurm-operator/internal/builder/labels"
+	"github.com/SlinkyProject/slurm-operator/internal/builder/metadata"
+	"github.com/SlinkyProject/slurm-operator/internal/utils"
+)
+
+const (
+	SlurmctldPort = 6817
+
+	slurmctldLogFile     = "slurmctld.log"
+	slurmctldLogFilePath = slurmLogFileDir + "/" + slurmctldLogFile
+
+	slurmAuthSocketVolume  = "slurm-authsocket"
+	slurmctldAuthSocketDir = "/run/slurmctld"
+
+	slurmctldStateSaveVolume = "statesave"
+
+	slurmctldSpoolDir = "/var/spool/slurmctld"
+)
+
+func (b *Builder) BuildController(controller *slinkyv1alpha1.Controller) (*appsv1.StatefulSet, error) {
+	key := controller.Key()
+	serviceKey := controller.ServiceKey()
+	selectorLabels := labels.NewBuilder().
+		WithControllerSelectorLabels(controller).
+		Build()
+	objectMeta := metadata.NewBuilder(key).
+		WithMetadata(controller.Spec.Template.PodMetadata).
+		WithLabels(labels.NewBuilder().WithControllerLabels(controller).Build()).
+		Build()
+
+	persistence := controller.Spec.Persistence
+
+	podTemplate, err := b.controllerPodTemplate(controller)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build pod template: %w", err)
+	}
+
+	o := &appsv1.StatefulSet{
+		ObjectMeta: objectMeta,
+		Spec: appsv1.StatefulSetSpec{
+			PodManagementPolicy:  appsv1.ParallelPodManagement,
+			Replicas:             ptr.To[int32](1),
+			RevisionHistoryLimit: ptr.To[int32](0),
+			Selector: &metav1.LabelSelector{
+				MatchLabels: selectorLabels,
+			},
+			ServiceName: serviceKey.Name,
+			Template:    podTemplate,
+		},
+	}
+
+	switch {
+	case persistence.Enabled && persistence.ExistingClaim != "":
+		volume := corev1.Volume{
+			Name: slurmctldStateSaveVolume,
+			VolumeSource: corev1.VolumeSource{
+				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+					ClaimName: persistence.ExistingClaim,
+				},
+			},
+		}
+		o.Spec.Template.Spec.Volumes = append(o.Spec.Template.Spec.Volumes, volume)
+	case persistence.Enabled:
+		volumeClaimTemplate := corev1.PersistentVolumeClaim{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      slurmctldStateSaveVolume,
+				Namespace: key.Namespace,
+			},
+			Spec: persistence.PersistentVolumeClaimSpec,
+		}
+		o.Spec.VolumeClaimTemplates = append(o.Spec.VolumeClaimTemplates, volumeClaimTemplate)
+	default:
+		volume := corev1.Volume{
+			Name: slurmctldStateSaveVolume,
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		}
+		o.Spec.Template.Spec.Volumes = append(o.Spec.Template.Spec.Volumes, volume)
+	}
+
+	if err := controllerutil.SetControllerReference(controller, o, b.client.Scheme()); err != nil {
+		return nil, fmt.Errorf("failed to set owner controller: %w", err)
+	}
+
+	return o, nil
+}
+
+func (b *Builder) controllerPodTemplate(controller *slinkyv1alpha1.Controller) (corev1.PodTemplateSpec, error) {
+	key := controller.Key()
+
+	objectMeta := metadata.NewBuilder(key).
+		WithMetadata(controller.Spec.Template.PodMetadata).
+		WithLabels(labels.NewBuilder().WithControllerLabels(controller).Build()).
+		WithAnnotations(map[string]string{
+			annotationDefaultContainer: labels.ControllerApp,
+		}).
+		Build()
+
+	template := controller.Spec.Template
+
+	o := corev1.PodTemplateSpec{
+		ObjectMeta: objectMeta,
+		Spec: corev1.PodSpec{
+			AutomountServiceAccountToken: ptr.To(false),
+			Affinity:                     template.Affinity,
+			Containers: []corev1.Container{
+				slurmctldContainer(template.Container),
+				reconfigureContainer(template.Reconfigure),
+			},
+			Hostname: template.Hostname,
+			InitContainers: []corev1.Container{
+				initconfContainer(template.InitConf),
+				logfileContainer(template.LogFile, slurmctldLogFilePath),
+			},
+			ImagePullSecrets:  template.ImagePullSecrets,
+			NodeSelector:      template.NodeSelector,
+			PriorityClassName: template.PriorityClassName,
+			Tolerations:       template.Tolerations,
+			Volumes:           utils.MergeList(controllerVolumes(controller), template.Volumes),
+		},
+	}
+
+	return o, nil
+}
+
+func controllerVolumes(controller *slinkyv1alpha1.Controller) []corev1.Volume {
+	out := []corev1.Volume{
+		etcSlurmVolume(),
+		{
+			Name: slurmConfigVolume,
+			VolumeSource: corev1.VolumeSource{
+				Projected: &corev1.ProjectedVolumeSource{
+					DefaultMode: ptr.To[int32](0o600),
+					Sources: []corev1.VolumeProjection{
+						{
+							ConfigMap: &corev1.ConfigMapProjection{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: controller.ConfigKey().Name,
+								},
+							},
+						},
+						{
+							ConfigMap: &corev1.ConfigMapProjection{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: controller.ScriptsKey().Name,
+								},
+								Optional: ptr.To(true),
+							},
+						},
+						{
+							Secret: &corev1.SecretProjection{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: controller.AuthSlurmRef().Name,
+								},
+								Items: []corev1.KeyToPath{
+									{Key: controller.AuthSlurmRef().Key, Path: slurmKeyFile},
+								},
+							},
+						},
+						{
+							Secret: &corev1.SecretProjection{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: controller.AuthJwtHs256Ref().Name,
+								},
+								Items: []corev1.KeyToPath{
+									{Key: controller.AuthJwtHs256Ref().Key, Path: JwtHs256KeyFile},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		logFileVolume(),
+		pidfileVolume(),
+		{
+			Name: slurmAuthSocketVolume,
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		},
+	}
+	return out
+}
+
+func slurmctldContainer(container slinkyv1alpha1.Container) corev1.Container {
+	out := corev1.Container{
+		Name:            labels.ControllerApp,
+		Args:            container.Args,
+		Image:           container.Image,
+		ImagePullPolicy: container.ImagePullPolicy,
+		Ports: []corev1.ContainerPort{
+			{
+				Name:          labels.ControllerApp,
+				ContainerPort: SlurmctldPort,
+				Protocol:      corev1.ProtocolTCP,
+			},
+		},
+		Resources: container.Resources,
+		StartupProbe: &corev1.Probe{
+			ProbeHandler: corev1.ProbeHandler{
+				TCPSocket: &corev1.TCPSocketAction{
+					Port: intstr.FromInt(SlurmctldPort),
+				},
+			},
+			FailureThreshold: 6,
+			PeriodSeconds:    10,
+		},
+		ReadinessProbe: &corev1.Probe{
+			ProbeHandler: corev1.ProbeHandler{
+				TCPSocket: &corev1.TCPSocketAction{
+					Port: intstr.FromInt(SlurmctldPort),
+				},
+			},
+		},
+		SecurityContext: &corev1.SecurityContext{
+			RunAsNonRoot: ptr.To(true),
+			RunAsUser:    ptr.To(slurmUserUid),
+			RunAsGroup:   ptr.To(slurmUserGid),
+		},
+		VolumeDevices: container.VolumeDevices,
+		VolumeMounts: []corev1.VolumeMount{
+			{Name: slurmEtcVolume, MountPath: slurmEtcDir, ReadOnly: true},
+			{Name: slurmPidFileVolume, MountPath: slurmPidFileDir},
+			{Name: slurmctldStateSaveVolume, MountPath: slurmctldSpoolDir},
+			{Name: slurmAuthSocketVolume, MountPath: slurmctldAuthSocketDir},
+			{Name: slurmLogFileVolume, MountPath: slurmLogFileDir},
+		},
+	}
+	out.VolumeMounts = append(out.VolumeMounts, container.VolumeMounts...)
+	return out
+}
+
+//go:embed scripts/reconfigure.sh
+var reconfigureScript string
+
+func reconfigureContainer(sidecar slinkyv1alpha1.SideCar) corev1.Container {
+	out := corev1.Container{
+		Name:            "reconfigure",
+		Image:           sidecar.Image,
+		ImagePullPolicy: sidecar.ImagePullPolicy,
+		Env: []corev1.EnvVar{
+			{Name: "SLURM_USER", Value: slurmUser},
+		},
+		Command: []string{
+			"tini",
+			"-g",
+			"--",
+			"bash",
+			"-c",
+			reconfigureScript,
+		},
+		Resources: sidecar.Resources,
+		VolumeMounts: []corev1.VolumeMount{
+			{Name: slurmEtcVolume, MountPath: slurmEtcMountDir},
+			{Name: slurmConfigVolume, MountPath: slurmConfigDir, ReadOnly: true},
+			{Name: slurmAuthSocketVolume, MountPath: slurmctldAuthSocketDir, ReadOnly: true},
+		},
+	}
+	return out
+}

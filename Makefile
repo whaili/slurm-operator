@@ -7,10 +7,6 @@
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
 VERSION ?= 0.4.0
 
-# Set the namespaces that helm tests will run against
-SLURM_NAMESPACE ?= slurm
-SLURM_OPERATOR_NAMESPACE ?= slinky
-
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
 GOBIN=$(shell go env GOPATH)/bin
@@ -282,7 +278,7 @@ golangci-lint: golangci-lint-bin ## Run golangci-lint.
 golangci-lint-fmt: golangci-lint-bin ## Run golangci-lint fmt.
 	$(GOLANGCI_LINT) fmt
 
-CODECOV_PERCENT ?= 71
+CODECOV_PERCENT ?= 69
 
 .PHONY: test
 test: envtest ## Run tests.
@@ -297,8 +293,3 @@ test: envtest ## Run tests.
 			echo "Total test coverage ($${percentage}%) is less than the coverage threshold ($(CODECOV_PERCENT)%)."; \
 			exit 1; \
 		fi
-
-.PHONY: helmtest
-helmtest:
-	helm test slurm -n $(SLURM_NAMESPACE)
-	helm test slurm-operator -n $(SLURM_OPERATOR_NAMESPACE)

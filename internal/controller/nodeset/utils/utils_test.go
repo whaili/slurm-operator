@@ -15,6 +15,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
+	"github.com/SlinkyProject/slurm-operator/internal/builder/labels"
 )
 
 func newNodeSet(name string) *slinkyv1alpha1.NodeSet {
@@ -47,20 +48,18 @@ func newNodeSetWithVolumes(name string, petMounts []corev1.VolumeMount, podMount
 		})
 	}
 
-	template := corev1.PodTemplateSpec{
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:         "nginx",
-					Image:        "nginx",
-					VolumeMounts: mounts,
-				},
+	template := slinkyv1alpha1.NodeSetPodTemplate{
+		PodTemplate: slinkyv1alpha1.PodTemplate{
+			PodMetadata: slinkyv1alpha1.Metadata{
+				Labels: map[string]string{"foo": "bar"},
+			},
+			Container: slinkyv1alpha1.Container{
+				Image:        "nginx",
+				VolumeMounts: mounts,
 			},
 			Volumes: vols,
 		},
 	}
-
-	template.Labels = map[string]string{"foo": "bar"}
 
 	return &slinkyv1alpha1.NodeSet{
 		TypeMeta: metav1.TypeMeta{
@@ -73,15 +72,9 @@ func newNodeSetWithVolumes(name string, petMounts []corev1.VolumeMount, podMount
 			UID:       types.UID("test"),
 		},
 		Spec: slinkyv1alpha1.NodeSetSpec{
-			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"foo": "bar",
-				},
-			},
 			Replicas:             ptr.To[int32](1),
 			Template:             template,
 			VolumeClaimTemplates: claims,
-			ServiceName:          "governingsvc",
 			UpdateStrategy: slinkyv1alpha1.NodeSetUpdateStrategy{
 				Type: slinkyv1alpha1.RollingUpdateNodeSetStrategyType,
 			},
@@ -111,6 +104,11 @@ func newPVC(name string) corev1.PersistentVolumeClaim {
 }
 
 func TestIsPodFromNodeSet(t *testing.T) {
+	controller := &slinkyv1alpha1.Controller{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "foo",
+		},
+	}
 	type args struct {
 		nodeset *slinkyv1alpha1.NodeSet
 		pod     *corev1.Pod
@@ -124,7 +122,7 @@ func TestIsPodFromNodeSet(t *testing.T) {
 			name: "From NodeSet",
 			args: args{
 				nodeset: newNodeSet("foo"),
-				pod:     NewNodeSetPod(newNodeSet("foo"), 0, ""),
+				pod:     NewNodeSetPod(newNodeSet("foo"), controller, 0, ""),
 			},
 			want: true,
 		},
@@ -132,7 +130,7 @@ func TestIsPodFromNodeSet(t *testing.T) {
 			name: "Not From NodeSet",
 			args: args{
 				nodeset: newNodeSet("foo"),
-				pod:     NewNodeSetPod(newNodeSet("bar"), 1, ""),
+				pod:     NewNodeSetPod(newNodeSet("bar"), controller, 1, ""),
 			},
 			want: false,
 		},
@@ -147,6 +145,11 @@ func TestIsPodFromNodeSet(t *testing.T) {
 }
 
 func TestGetParentName(t *testing.T) {
+	controller := &slinkyv1alpha1.Controller{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "foo",
+		},
+	}
 	type args struct {
 		pod *corev1.Pod
 	}
@@ -158,14 +161,14 @@ func TestGetParentName(t *testing.T) {
 		{
 			name: "foo-0",
 			args: args{
-				pod: NewNodeSetPod(newNodeSet("foo"), 0, ""),
+				pod: NewNodeSetPod(newNodeSet("foo"), controller, 0, ""),
 			},
 			want: "foo",
 		},
 		{
 			name: "bar-1",
 			args: args{
-				pod: NewNodeSetPod(newNodeSet("bar"), 1, ""),
+				pod: NewNodeSetPod(newNodeSet("bar"), controller, 1, ""),
 			},
 			want: "bar",
 		},
@@ -180,6 +183,11 @@ func TestGetParentName(t *testing.T) {
 }
 
 func TestGetOrdinal(t *testing.T) {
+	controller := &slinkyv1alpha1.Controller{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "foo",
+		},
+	}
 	type args struct {
 		pod *corev1.Pod
 	}
@@ -191,14 +199,14 @@ func TestGetOrdinal(t *testing.T) {
 		{
 			name: "foo-0",
 			args: args{
-				pod: NewNodeSetPod(newNodeSet("foo"), 0, ""),
+				pod: NewNodeSetPod(newNodeSet("foo"), controller, 0, ""),
 			},
 			want: 0,
 		},
 		{
 			name: "bar-1",
 			args: args{
-				pod: NewNodeSetPod(newNodeSet("bar"), 1, ""),
+				pod: NewNodeSetPod(newNodeSet("bar"), controller, 1, ""),
 			},
 			want: 1,
 		},
@@ -213,6 +221,11 @@ func TestGetOrdinal(t *testing.T) {
 }
 
 func TestGetParentNameAndOrdinal(t *testing.T) {
+	controller := &slinkyv1alpha1.Controller{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "foo",
+		},
+	}
 	type args struct {
 		pod *corev1.Pod
 	}
@@ -225,7 +238,7 @@ func TestGetParentNameAndOrdinal(t *testing.T) {
 		{
 			name: "foo-0",
 			args: args{
-				pod: NewNodeSetPod(newNodeSet("foo"), 0, ""),
+				pod: NewNodeSetPod(newNodeSet("foo"), controller, 0, ""),
 			},
 			want:  "foo",
 			want1: 0,
@@ -233,7 +246,7 @@ func TestGetParentNameAndOrdinal(t *testing.T) {
 		{
 			name: "bar-1",
 			args: args{
-				pod: NewNodeSetPod(newNodeSet("bar"), 1, ""),
+				pod: NewNodeSetPod(newNodeSet("bar"), controller, 1, ""),
 			},
 			want:  "bar",
 			want1: 1,
@@ -289,6 +302,11 @@ func TestGetPodName(t *testing.T) {
 }
 
 func TestGetNodeName(t *testing.T) {
+	controller := &slinkyv1alpha1.Controller{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "foo",
+		},
+	}
 	type args struct {
 		pod *corev1.Pod
 	}
@@ -300,14 +318,14 @@ func TestGetNodeName(t *testing.T) {
 		{
 			name: "foo-0",
 			args: args{
-				pod: NewNodeSetPod(newNodeSet("foo"), 0, ""),
+				pod: NewNodeSetPod(newNodeSet("foo"), controller, 0, ""),
 			},
 			want: "foo-0",
 		},
 		{
 			name: "bar-1",
 			args: args{
-				pod: NewNodeSetPod(newNodeSet("bar"), 1, ""),
+				pod: NewNodeSetPod(newNodeSet("bar"), controller, 1, ""),
 			},
 			want: "bar-1",
 		},
@@ -322,6 +340,11 @@ func TestGetNodeName(t *testing.T) {
 }
 
 func TestIsIdentityMatch(t *testing.T) {
+	controller := &slinkyv1alpha1.Controller{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "foo",
+		},
+	}
 	type args struct {
 		nodeset *slinkyv1alpha1.NodeSet
 		pod     *corev1.Pod
@@ -335,7 +358,7 @@ func TestIsIdentityMatch(t *testing.T) {
 			name: "Match",
 			args: args{
 				nodeset: newNodeSet("foo"),
-				pod:     NewNodeSetPod(newNodeSet("foo"), 0, ""),
+				pod:     NewNodeSetPod(newNodeSet("foo"), controller, 0, ""),
 			},
 			want: true,
 		},
@@ -343,7 +366,7 @@ func TestIsIdentityMatch(t *testing.T) {
 			name: "Not Match",
 			args: args{
 				nodeset: newNodeSet("foo"),
-				pod:     NewNodeSetPod(newNodeSet("bar"), 1, ""),
+				pod:     NewNodeSetPod(newNodeSet("bar"), controller, 1, ""),
 			},
 			want: false,
 		},
@@ -358,6 +381,11 @@ func TestIsIdentityMatch(t *testing.T) {
 }
 
 func TestIsStorageMatch(t *testing.T) {
+	controller := &slinkyv1alpha1.Controller{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "foo",
+		},
+	}
 	type args struct {
 		nodeset *slinkyv1alpha1.NodeSet
 		pod     *corev1.Pod
@@ -371,7 +399,7 @@ func TestIsStorageMatch(t *testing.T) {
 			name: "Match",
 			args: args{
 				nodeset: newNodeSet("foo"),
-				pod:     NewNodeSetPod(newNodeSet("foo"), 0, ""),
+				pod:     NewNodeSetPod(newNodeSet("foo"), controller, 0, ""),
 			},
 			want: true,
 		},
@@ -379,7 +407,7 @@ func TestIsStorageMatch(t *testing.T) {
 			name: "Not Match",
 			args: args{
 				nodeset: newNodeSet("foo"),
-				pod:     NewNodeSetPod(newNodeSet("bar"), 1, ""),
+				pod:     NewNodeSetPod(newNodeSet("bar"), controller, 1, ""),
 			},
 			want: false,
 		},
@@ -394,6 +422,11 @@ func TestIsStorageMatch(t *testing.T) {
 }
 
 func TestGetPersistentVolumeClaims(t *testing.T) {
+	controller := &slinkyv1alpha1.Controller{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "foo",
+		},
+	}
 	type args struct {
 		nodeset *slinkyv1alpha1.NodeSet
 		pod     *corev1.Pod
@@ -417,7 +450,7 @@ func TestGetPersistentVolumeClaims(t *testing.T) {
 				}
 				return args{
 					nodeset: nodeset,
-					pod:     NewNodeSetPod(nodeset, 0, ""),
+					pod:     NewNodeSetPod(nodeset, controller, 0, ""),
 				}
 			}(),
 			want: map[string]corev1.PersistentVolumeClaim{},
@@ -426,16 +459,14 @@ func TestGetPersistentVolumeClaims(t *testing.T) {
 			name: "With Claims",
 			args: args{
 				nodeset: newNodeSet("foo"),
-				pod:     NewNodeSetPod(newNodeSet("foo"), 0, ""),
+				pod:     NewNodeSetPod(newNodeSet("foo"), controller, 0, ""),
 			},
 			want: map[string]corev1.PersistentVolumeClaim{
 				"datadir": {
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: corev1.NamespaceDefault,
 						Name:      "datadir-foo-0",
-						Labels: map[string]string{
-							"foo": "bar",
-						},
+						Labels:    labels.NewBuilder().WithComputeSelectorLabels(newNodeSet("foo")).Build(),
 					},
 					Spec: corev1.PersistentVolumeClaimSpec{
 						Resources: corev1.VolumeResourceRequirements{

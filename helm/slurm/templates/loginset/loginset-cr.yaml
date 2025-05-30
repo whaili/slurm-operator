@@ -1,0 +1,102 @@
+{{- /*
+SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+{{- range $key, $loginset := $.Values.loginsets -}}
+{{- if $loginset.enabled }}
+{{- $name := printf "%s-%s" (include "slurm.login.name" $) $key }}
+{{- $sidecarRepository := $.Values.authcred.image.repository }}
+{{- $sidecarTag := $.Values.authcred.image.tag }}
+{{- $sidecarImagePullPolicy := $loginset.imagePullPolicy | default $.Values.imagePullPolicy }}
+{{- $sidecarResources := $.Values.authcred.resources }}
+{{- with $loginset.authcred -}}
+  {{- with .image -}}
+    {{- $sidecarRepository = .repository | default $sidecarRepository -}}
+    {{- $sidecarTag = .tag | default $sidecarTag -}}
+  {{- end -}}
+  {{- $sidecarImagePullPolicy = .imagePullPolicy | default $sidecarImagePullPolicy -}}
+  {{- $sidecarResources = .resources | default $sidecarResources -}}
+{{- end -}}
+{{- $sidecarImageRef := printf "%s:%s" $sidecarRepository $sidecarTag }}
+---
+apiVersion: slinky.slurm.net/v1alpha1
+kind: LoginSet
+metadata:
+  name: {{ $name }}
+  namespace: {{ include "slurm.namespace" $ }}
+  labels:
+    loginset.slinky.slurm.net/name: {{ $name }}
+    {{- include "slurm.labels" $ | nindent 4 }}
+spec:
+  controllerRef:
+    name: {{ include "slurm.fullname" $ }}
+    namespace: {{ include "slurm.namespace" $ }}
+  {{- with $loginset.extraSshdConfig }}
+  extraSshdConfig:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}{{- /* with $loginset.extraSshdConfig */}}
+  sssdConfRef:
+    name: {{ $name }}-sssd-conf
+    key: sssd.conf
+  {{- with $loginset.rootSshAuthorizedKeys }}
+  rootSshAuthorizedKeys: |
+    {{- . | nindent 4 }}
+  {{- end }}{{- /* with $loginset.rootSshAuthorizedKeys */}}
+  replicas: {{ $loginset.replicas }}
+  template:
+    metadata:
+      labels:
+        loginset.slinky.slurm.net/name: {{ $name }}
+        {{- include "slurm.labels" $ | nindent 8 }}
+    {{- with $.Values.imagePullSecrets }}
+    imagePullSecrets:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}{{- /* with $.Values.imagePullSecrets */}}
+    container:
+      image: {{ include "format-image" $loginset.image }}
+      imagePullPolicy: {{ $.Values.imagePullPolicy }}
+      {{- with $loginset.env }}
+      env:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with $loginset.env */}}
+      {{- with $loginset.resources }}
+      resources:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with $loginset.resources */}}
+      {{- with $loginset.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with $loginset.securityContext */}}
+      {{- with $loginset.volumeMounts }}
+      volumeMounts:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with $loginset.volumeMounts */}}
+    initconf:
+      image: {{ $sidecarImageRef }}
+      imagePullPolicy: {{ $sidecarImagePullPolicy }}
+      resources:
+        {{- toYaml $sidecarResources | nindent 10 }}
+    {{- with $loginset.nodeSelector }}
+    nodeSelector:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}{{- /* with $loginset.nodeSelector */}}
+    {{- with $loginset.affinity }}
+    affinity:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}{{- /* with $loginset.affinity */}}
+    {{- with $loginset.tolerations }}
+    tolerations:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}{{- /* with $loginset.tolerations */}}
+    priorityClassName: {{ $.Values.priorityClassName }}
+    {{- with $loginset.volumes }}
+    volumes:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}{{- /* with $loginset.volumes */}}
+  {{- with $loginset.service }}
+  service:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}{{- /* with $loginset.service */}}
+{{- end }}{{- /* $loginset.enabled */}}
+{{- end }}{{- /* range $loginset := $.Values.loginsets */}}

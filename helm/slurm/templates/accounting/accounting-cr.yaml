@@ -1,0 +1,78 @@
+{{- /*
+SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+{{- if .Values.accounting.enabled }}
+apiVersion: slinky.slurm.net/v1alpha1
+kind: Accounting
+metadata:
+  name: {{ include "slurm.fullname" . }}
+  namespace: {{ include "slurm.namespace" . }}
+  labels:
+    {{- include "slurm.labels" . | nindent 4 }}
+spec:
+  slurmKeyRef:
+    {{- if .Values.slurmKeyRef }}
+    {{- toYaml .Values.slurmKeyRef | nindent 4 }}
+    {{- else }}
+    name: {{ include "slurm.authSlurmRef.name" . }}
+    key: {{ include "slurm.authSlurmRef.key" . }}
+    {{- end }}{{- /* if .Values.slurmKeyRef */}}
+  jwtHs256KeyRef:
+    {{- if .Values.jwtHs256KeyRef }}
+    {{- toYaml .Values.jwtHs256KeyRef | nindent 4 }}
+    {{- else }}
+    name: {{ include "slurm.authJwtHs256Ref.name" . }}
+    key: {{ include "slurm.authJwtHs256Ref.key" . }}
+    {{- end }}{{- /* if .Values.jwtHs256KeyRef */}}
+  {{- if (include "slurm.accounting.extraConf" .) }}
+  extraConf: |
+    {{- include "slurm.accounting.extraConf" . | nindent 4 }}
+  {{- end }}{{- /* if (include "slurm.accounting.extraConf" .) */}}
+  template:
+    metadata:
+      labels:
+        {{- include "slurm.labels" . | nindent 8 }}
+    {{- with .Values.imagePullSecrets }}
+    imagePullSecrets:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}{{- /* with .Values.imagePullSecrets */}}
+    container:
+      image: {{ include "format-image" .Values.accounting.image }}
+      imagePullPolicy: {{ .Values.imagePullPolicy }}
+      {{- with .Values.accounting.args }}
+      args:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with .Values.accounting.args */}}
+      {{- with .Values.accounting.resources }}
+      resources:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with .Values.accounting.resources */}}
+    initconf:
+      image: {{ include "format-image" .Values.authcred.image }}
+      imagePullPolicy: {{ .Values.imagePullPolicy }}
+      {{- with .Values.authcred.resources }}
+      resources:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with .Values.authcred.resources */}}
+    {{- with .Values.accounting.nodeSelector }}
+    nodeSelector:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}{{- /* with .Values.accounting.nodeSelector */}}
+    {{- with .Values.accounting.affinity }}
+    affinity:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}{{- /* with .Values.accounting.affinity */}}
+    {{- with .Values.accounting.tolerations }}
+    tolerations:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}{{- /* with .Values.accounting.tolerations */}}
+    priorityClassName: {{ .Values.priorityClassName }}
+  storageConfig:
+    {{- include "slurm.accounting.storageConfig" . | nindent 4 }}
+{{- else }}{{- /* if .Values.accounting.enabled */}}
+  {{- if .Values.mariadb.enabled }}
+    {{- fail "bad configuration: `accounting.enabled=false` and `mariadb.enabled=true`" -}}
+  {{- end }}{{- /* if .Values.mariadb.enabled */}}
+{{- end }}{{- /* if .Values.accounting.enabled */}}

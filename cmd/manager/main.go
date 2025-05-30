@@ -23,8 +23,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
-	"github.com/SlinkyProject/slurm-operator/internal/controller/cluster"
+	"github.com/SlinkyProject/slurm-operator/internal/controller/accounting"
+	"github.com/SlinkyProject/slurm-operator/internal/controller/controller"
+	"github.com/SlinkyProject/slurm-operator/internal/controller/loginset"
 	"github.com/SlinkyProject/slurm-operator/internal/controller/nodeset"
+	"github.com/SlinkyProject/slurm-operator/internal/controller/restapi"
 	"github.com/SlinkyProject/slurm-operator/internal/resources"
 	//+kubebuilder:scaffold:imports
 )
@@ -110,13 +113,27 @@ func main() {
 
 	slurmClusters := resources.NewClusters()
 	eventCh := make(chan event.GenericEvent, 100)
-	if err = (&cluster.ClusterReconciler{
+	if err = (&controller.ControllerReconciler{
 		Client:        mgr.GetClient(),
 		Scheme:        mgr.GetScheme(),
 		SlurmClusters: slurmClusters,
 		EventCh:       eventCh,
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Cluster")
+		setupLog.Error(err, "unable to create controller", "controller", "Controller")
+		os.Exit(1)
+	}
+	if err = (&restapi.RestapiReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Restapi")
+		os.Exit(1)
+	}
+	if err = (&accounting.AccountingReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Accounting")
 		os.Exit(1)
 	}
 	if err = (&nodeset.NodeSetReconciler{
@@ -126,6 +143,13 @@ func main() {
 		EventCh:       eventCh,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NodeSet")
+		os.Exit(1)
+	}
+	if err = (&loginset.LoginSetReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "LoginSet")
 		os.Exit(1)
 	}
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {

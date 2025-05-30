@@ -38,14 +38,14 @@ metadata:
   labels:
     {{- include "slurm-operator.webhook.labels" . | nindent 4 }}
 webhooks:
-  - name: clusters.{{- include "slurm-operator.apiGroup" . }}
+  - name: accountings.{{- include "slurm-operator.apiGroup" . }}
     rules:
       - apiGroups:
           - {{ include "slurm-operator.apiGroup" . }}
         apiVersions:
           - "*"
         resources:
-          - clusters
+          - accountings
         operations:
           - CREATE
           - UPDATE
@@ -57,7 +57,63 @@ webhooks:
       service:
         namespace: {{ include "slurm-operator.namespace" . }}
         name: {{ include "slurm-operator.webhook.name" . }}
-        path: /validate-slinky-slurm-net-v1alpha1-cluster
+        path: /validate-slinky-slurm-net-v1alpha1-accounting
+    {{- with .Values.webhook.timeoutSeconds }}
+    timeoutSeconds: {{ . }}
+    {{- end }}{{- /* with .Values.webhook.timeoutSeconds */}}
+    admissionReviewVersions:
+      - v1
+      - v1beta1
+      - v1alpha1
+    sideEffects: None
+  - name: controllers.{{- include "slurm-operator.apiGroup" . }}
+    rules:
+      - apiGroups:
+          - {{ include "slurm-operator.apiGroup" . }}
+        apiVersions:
+          - "*"
+        resources:
+          - controllers
+        operations:
+          - CREATE
+          - UPDATE
+        scope: Namespaced
+    clientConfig:
+      {{- if not .Values.certManager.enabled }}
+      caBundle: {{ $ca.Cert | b64enc | quote }}
+      {{- end }}{{- /* if not .Values.certManager.enabled */}}
+      service:
+        namespace: {{ include "slurm-operator.namespace" . }}
+        name: {{ include "slurm-operator.webhook.name" . }}
+        path: /validate-slinky-slurm-net-v1alpha1-controller
+    {{- with .Values.webhook.timeoutSeconds }}
+    timeoutSeconds: {{ . }}
+    {{- end }}{{- /* with .Values.webhook.timeoutSeconds */}}
+    admissionReviewVersions:
+      - v1
+      - v1beta1
+      - v1alpha1
+    sideEffects: None
+  - name: loginsets.{{- include "slurm-operator.apiGroup" . }}
+    rules:
+      - apiGroups:
+          - {{ include "slurm-operator.apiGroup" . }}
+        apiVersions:
+          - "*"
+        resources:
+          - loginsets
+        operations:
+          - CREATE
+          - UPDATE
+        scope: Namespaced
+    clientConfig:
+      {{- if not .Values.certManager.enabled }}
+      caBundle: {{ $ca.Cert | b64enc | quote }}
+      {{- end }}{{- /* if not .Values.certManager.enabled */}}
+      service:
+        namespace: {{ include "slurm-operator.namespace" . }}
+        name: {{ include "slurm-operator.webhook.name" . }}
+        path: /validate-slinky-slurm-net-v1alpha1-loginset
     {{- with .Values.webhook.timeoutSeconds }}
     timeoutSeconds: {{ . }}
     {{- end }}{{- /* with .Values.webhook.timeoutSeconds */}}
@@ -94,6 +150,32 @@ webhooks:
       - v1beta1
       - v1alpha1
     sideEffects: None
+  - name: restapis.{{- include "slurm-operator.apiGroup" . }}
+    rules:
+      - apiGroups:
+          - {{ include "slurm-operator.apiGroup" . }}
+        apiVersions:
+          - "*"
+        resources:
+          - restapis
+        operations:
+          - CREATE
+          - UPDATE
+        scope: Namespaced
+    clientConfig:
+      {{- if not .Values.certManager.enabled }}
+      caBundle: {{ $ca.Cert | b64enc | quote }}
+      {{- end }}{{- /* if not .Values.certManager.enabled */}}
+      service:
+        namespace: {{ include "slurm-operator.namespace" . }}
+        name: {{ include "slurm-operator.webhook.name" . }}
+        path: /validate-slinky-slurm-net-v1alpha1-restapi
+    timeoutSeconds: {{ .Values.webhook.timeoutSeconds | default 10 }}
+    admissionReviewVersions:
+      - v1
+      - v1beta1
+      - v1alpha1
+    sideEffects: None
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
@@ -107,14 +189,14 @@ metadata:
   labels:
     {{- include "slurm-operator.webhook.labels" . | nindent 4 }}
 webhooks:
-  - name: clusters.{{- include "slurm-operator.apiGroup" . }}
+  - name: accountings.{{- include "slurm-operator.apiGroup" . }}
     rules:
       - apiGroups:
           - {{ include "slurm-operator.apiGroup" . }}
         apiVersions:
           - "*"
         resources:
-          - clusters
+          - accountings
         operations:
           - CREATE
           - UPDATE
@@ -126,7 +208,63 @@ webhooks:
       service:
         namespace: {{ include "slurm-operator.namespace" . }}
         name: {{ include "slurm-operator.webhook.name" . }}
-        path: /mutate-slinky-slurm-net-v1alpha1-cluster
+        path: /mutate-slinky-slurm-net-v1alpha1-accounting
+    {{- with .Values.webhook.timeoutSeconds }}
+    timeoutSeconds: {{ . }}
+    {{- end }}{{- /* with .Values.webhook.timeoutSeconds */}}
+    admissionReviewVersions:
+      - v1
+      - v1beta1
+      - v1alpha1
+    sideEffects: None
+  - name: controllers.{{- include "slurm-operator.apiGroup" . }}
+    rules:
+      - apiGroups:
+          - {{ include "slurm-operator.apiGroup" . }}
+        apiVersions:
+          - "*"
+        resources:
+          - controllers
+        operations:
+          - CREATE
+          - UPDATE
+        scope: Namespaced
+    clientConfig:
+      {{- if not .Values.certManager.enabled }}
+      caBundle: {{ $ca.Cert | b64enc | quote }}
+      {{- end }}{{- /* if not .Values.certManager.enabled */}}
+      service:
+        namespace: {{ include "slurm-operator.namespace" . }}
+        name: {{ include "slurm-operator.webhook.name" . }}
+        path: /mutate-slinky-slurm-net-v1alpha1-controller
+    {{- with .Values.webhook.timeoutSeconds }}
+    timeoutSeconds: {{ . }}
+    {{- end }}{{- /* with .Values.webhook.timeoutSeconds */}}
+    admissionReviewVersions:
+      - v1
+      - v1beta1
+      - v1alpha1
+    sideEffects: None
+  - name: loginsets.{{- include "slurm-operator.apiGroup" . }}
+    rules:
+      - apiGroups:
+          - {{ include "slurm-operator.apiGroup" . }}
+        apiVersions:
+          - "*"
+        resources:
+          - loginsets
+        operations:
+          - CREATE
+          - UPDATE
+        scope: Namespaced
+    clientConfig:
+      {{- if not .Values.certManager.enabled }}
+      caBundle: {{ $ca.Cert | b64enc | quote }}
+      {{- end }}{{- /* if not .Values.certManager.enabled */}}
+      service:
+        namespace: {{ include "slurm-operator.namespace" . }}
+        name: {{ include "slurm-operator.webhook.name" . }}
+        path: /mutate-slinky-slurm-net-v1alpha1-loginset
     {{- with .Values.webhook.timeoutSeconds }}
     timeoutSeconds: {{ . }}
     {{- end }}{{- /* with .Values.webhook.timeoutSeconds */}}
@@ -155,6 +293,34 @@ webhooks:
         namespace: {{ include "slurm-operator.namespace" . }}
         name: {{ include "slurm-operator.webhook.name" . }}
         path: /mutate-slinky-slurm-net-v1alpha1-nodeset
+    {{- with .Values.webhook.timeoutSeconds }}
+    timeoutSeconds: {{ . }}
+    {{- end }}{{- /* with .Values.webhook.timeoutSeconds */}}
+    admissionReviewVersions:
+      - v1
+      - v1beta1
+      - v1alpha1
+    sideEffects: None
+  - name: restapis.{{- include "slurm-operator.apiGroup" . }}
+    rules:
+      - apiGroups:
+          - {{ include "slurm-operator.apiGroup" . }}
+        apiVersions:
+          - "*"
+        resources:
+          - restapis
+        operations:
+          - CREATE
+          - UPDATE
+        scope: Namespaced
+    clientConfig:
+      {{- if not .Values.certManager.enabled }}
+      caBundle: {{ $ca.Cert | b64enc | quote }}
+      {{- end }}{{- /* if not .Values.certManager.enabled */}}
+      service:
+        namespace: {{ include "slurm-operator.namespace" . }}
+        name: {{ include "slurm-operator.webhook.name" . }}
+        path: /mutate-slinky-slurm-net-v1alpha1-restapi
     {{- with .Values.webhook.timeoutSeconds }}
     timeoutSeconds: {{ . }}
     {{- end }}{{- /* with .Values.webhook.timeoutSeconds */}}

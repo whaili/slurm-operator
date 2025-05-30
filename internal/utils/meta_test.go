@@ -6,18 +6,16 @@ package utils
 import (
 	"testing"
 
+	appsv1 "k8s.io/api/apps/v1"
+	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 func TestKeyFunc(t *testing.T) {
 	type args struct {
 		obj metav1.Object
 	}
-	ns := &slinkyv1alpha1.NodeSet{}
-	ns.SetName("nodeSetTest")
-	ns.SetNamespace("slurm")
 	tests := []struct {
 		name string
 		args args
@@ -26,22 +24,68 @@ func TestKeyFunc(t *testing.T) {
 		{
 			name: "No namespace",
 			args: args{
-				obj: &slinkyv1alpha1.NodeSet{},
+				obj: &appsv1.Deployment{},
 			},
 			want: "/",
 		},
 		{
 			name: "Slurm namespace",
 			args: args{
-				obj: ns,
+				obj: &appsv1.Deployment{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "foo",
+						Namespace: "bar",
+					},
+				},
 			},
-			want: "slurm/nodeSetTest",
+			want: "bar/foo",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := KeyFunc(tt.args.obj); got != tt.want {
 				t.Errorf("KeyFunc() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNamespacedName(t *testing.T) {
+	type args struct {
+		obj metav1.Object
+	}
+	tests := []struct {
+		name string
+		args args
+		want types.NamespacedName
+	}{
+		{
+			name: "No namespace",
+			args: args{
+				obj: &appsv1.Deployment{},
+			},
+			want: types.NamespacedName{},
+		},
+		{
+			name: "Slurm namespace",
+			args: args{
+				obj: &appsv1.Deployment{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "foo",
+						Namespace: "bar",
+					},
+				},
+			},
+			want: types.NamespacedName{
+				Name:      "foo",
+				Namespace: "bar",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := NamespacedName(tt.args.obj); !apiequality.Semantic.DeepEqual(got, tt.want) {
+				t.Errorf("NamespacedName() = %v, want %v", got, tt.want)
 			}
 		})
 	}

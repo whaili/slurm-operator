@@ -158,7 +158,7 @@ func newRevision(nodeset *slinkyv1alpha1.NodeSet, revision int64, collisionCount
 	cr, err := history.NewControllerRevision(
 		nodeset,
 		slinkyv1alpha1.NodeSetGVK,
-		nodeset.Spec.Template.Labels,
+		nodeset.Spec.Template.PodMetadata.Labels,
 		runtime.RawExtension{Raw: patch},
 		revision,
 		collisionCount)

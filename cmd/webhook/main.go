@@ -118,12 +118,24 @@ func main() {
 		setupLog.Error(err, "unable to set up ready check")
 		os.Exit(1)
 	}
-	if err := (&webhookv1alpha1.ClusterWebhook{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "Cluster")
+	if err := (&webhookv1alpha1.ControllerWebhook{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "Controller")
+		os.Exit(1)
+	}
+	if err := (&webhookv1alpha1.RestapiWebhook{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "Restapi")
+		os.Exit(1)
+	}
+	if err := (&webhookv1alpha1.AccountingSetWebhook{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "Accounting")
 		os.Exit(1)
 	}
 	if err := (&webhookv1alpha1.NodeSetWebhook{}).SetupWebhookWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create webhook", "webhook", "NodeSet")
+		os.Exit(1)
+	}
+	if err = (&webhookv1alpha1.LoginSetWebhook{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "LoginSet")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder
