@@ -7,10 +7,6 @@
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
 VERSION ?= 0.4.0
 
-# Set the Operator SDK version to use. By default, what is installed on the system is used.
-# This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
-OPERATOR_SDK_VERSION ?= v1.36.1
-
 # Set the namespaces that helm tests will run against
 SLURM_NAMESPACE ?= slurm
 SLURM_OPERATOR_NAMESPACE ?= slinky
@@ -152,6 +148,7 @@ endef
 KUBECTL ?= kubectl
 KUSTOMIZE ?= $(LOCALBIN)/kustomize-$(KUSTOMIZE_VERSION)
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen-$(CONTROLLER_TOOLS_VERSION)
+OPERATOR_SDK ?= $(LOCALBIN)/operator-sdk-$(OPERATOR_SDK_VERSION)
 ENVTEST ?= $(LOCALBIN)/setup-envtest-$(ENVTEST_VERSION)
 GOVULNCHECK ?= $(LOCALBIN)/govulncheck-$(GOVULNCHECK_VERSION)
 GOLANGCI_LINT ?= $(LOCALBIN)/golangci-lint-$(GOLANGCI_LINT_VERSION)
@@ -160,6 +157,7 @@ HELM_DOCS ?= $(LOCALBIN)/helm-docs-$(HELM_DOCS_VERSION)
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.6.0
 CONTROLLER_TOOLS_VERSION ?= v0.18.0
+OPERATOR_SDK_VERSION ?= v1.39.2
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION ?= $(shell go list -m -f "{{ .Version }}" k8s.io/api | awk -F'[v.]' '{printf "1.%d", $$3}')
 ENVTEST_VERSION ?= $(shell go list -m -f "{{ .Version }}" sigs.k8s.io/controller-runtime | awk -F'[v.]' '{printf "release-%d.%d", $$2, $$3}')
@@ -199,7 +197,6 @@ $(HELM_DOCS): $(LOCALBIN)
 	$(call go-install-tool,$(HELM_DOCS),github.com/norwoodj/helm-docs/cmd/helm-docs,$(HELM_DOCS_VERSION))
 
 .PHONY: operator-sdk
-OPERATOR_SDK ?= $(LOCALBIN)/operator-sdk
 operator-sdk: ## Download operator-sdk locally if necessary.
 ifeq (,$(wildcard $(OPERATOR_SDK)))
 ifeq (, $(shell which operator-sdk 2>/dev/null))
