@@ -60,6 +60,7 @@ All notable changes to this project will be documented in this file.
 - Changed `compute.nodesets[].resources` to allow empty resources.
 - Changed how `compute.nodeset[]` expresses gres, weight, and features.
 - Changed default `login.securityContext`, omit SYS_CHROOT.
+- Changed Slurm version to 25.05
 
 ### Removed
 

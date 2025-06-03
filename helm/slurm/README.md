@@ -1,6 +1,6 @@
 # slurm
 
-![Version: 0.3.0](https://img.shields.io/badge/Version-0.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 24.11](https://img.shields.io/badge/AppVersion-24.11-informational?style=flat-square)
+![Version: 0.3.0](https://img.shields.io/badge/Version-0.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 25.05](https://img.shields.io/badge/AppVersion-25.05-informational?style=flat-square)
 
 Helm Chart for Slurm HPC Workload Manager
 
@@ -25,17 +25,17 @@ Helm Chart for Slurm HPC Workload Manager
 | accounting.external.secretName | string | `""` |  The existing secret containing the user password to the database. |
 | accounting.external.user | string | `"slurm"` |  The database user to use. |
 | accounting.image.repository | string | `"ghcr.io/slinkyproject/slurmdbd"` |  Set the image repository to use. |
-| accounting.image.tag | string | `"24.11-ubuntu24.04"` |  Set the image tag to use. |
+| accounting.image.tag | string | `"25.05-ubuntu24.04"` |  Set the image tag to use. |
 | accounting.imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |
 | accounting.nodeSelector | map | `{"kubernetes.io/os":"linux"}` |  Selector which must match a node's labels for the pod to be scheduled on that node. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector |
 | accounting.resources | object | `{}` |  Set container resource requests and limits for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container |
 | accounting.tolerations | list | `[]` |  Configure pod tolerations. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
 | authcred.image.repository | string | `"ghcr.io/slinkyproject/sackd"` |  Set the image repository to use. |
-| authcred.image.tag | string | `"24.11-ubuntu24.04"` |  Set the image tag to use. |
+| authcred.image.tag | string | `"25.05-ubuntu24.04"` |  Set the image tag to use. |
 | authcred.imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |
 | authcred.resources | object | `{}` |  Set container resource requests and limits for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container |
 | compute.image.repository | string | `"ghcr.io/slinkyproject/slurmd"` |  Set the image repository to use. |
-| compute.image.tag | string | `"24.11-ubuntu24.04"` |  Set the image tag to use. |
+| compute.image.tag | string | `"25.05-ubuntu24.04"` |  Set the image tag to use. |
 | compute.imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |
 | compute.nodesets | list | `[{"affinity":{},"enabled":true,"extraVolumeMounts":[],"extraVolumes":[],"image":{"repository":"","tag":""},"imagePullPolicy":"IfNotPresent","name":"debug","nodeConfig":{},"nodeSelector":{"kubernetes.io/os":"linux"},"partition":{"config":{"MaxTime":"UNLIMITED","State":"UP"},"enabled":true},"persistentVolumeClaimRetentionPolicy":{"whenDeleted":"Retain","whenScaled":"Retain"},"priorityClassName":"","replicas":1,"resources":{},"tolerations":[],"updateStrategy":{"rollingUpdate":{"maxUnavailable":"20%"},"type":"RollingUpdate"},"useResourceLimits":true,"volumeClaimTemplates":[]}]` |  Slurm NodeSets by object list. |
 | compute.nodesets[0] | string | `{"affinity":{},"enabled":true,"extraVolumeMounts":[],"extraVolumes":[],"image":{"repository":"","tag":""},"imagePullPolicy":"IfNotPresent","name":"debug","nodeConfig":{},"nodeSelector":{"kubernetes.io/os":"linux"},"partition":{"config":{"MaxTime":"UNLIMITED","State":"UP"},"enabled":true},"persistentVolumeClaimRetentionPolicy":{"whenDeleted":"Retain","whenScaled":"Retain"},"priorityClassName":"","replicas":1,"resources":{},"tolerations":[],"updateStrategy":{"rollingUpdate":{"maxUnavailable":"20%"},"type":"RollingUpdate"},"useResourceLimits":true,"volumeClaimTemplates":[]}` |  Name of NodeSet. Must be unique. |
@@ -71,7 +71,7 @@ Helm Chart for Slurm HPC Workload Manager
 | compute.partitions[0].nodesets | list | `["ALL"]` |  NodeSets to put into this Partition by name/key. NOTE: 'ALL' is a Slurm meta value to mean all nodes in the system. |
 | controller.affinity | object | `{}` |  Set affinity for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity |
 | controller.image.repository | string | `"ghcr.io/slinkyproject/slurmctld"` |  Set the image repository to use. |
-| controller.image.tag | string | `"24.11-ubuntu24.04"` |  Set the image tag to use. |
+| controller.image.tag | string | `"25.05-ubuntu24.04"` |  Set the image tag to use. |
 | controller.imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |
 | controller.nodeSelector | map | `{"kubernetes.io/os":"linux"}` |  Selector which must match a node's labels for the pod to be scheduled on that node. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector |
 | controller.persistence.accessModes | list | `["ReadWriteOnce"]` |  Create a `PersistentVolumeClaim` with these access modes. |
@@ -97,7 +97,7 @@ Helm Chart for Slurm HPC Workload Manager
 | login.extraVolumeMounts | list | `[]` |  List of volume mounts. Ref: https://kubernetes.io/docs/concepts/storage/volumes/ |
 | login.extraVolumes | list | `[]` |  Define list of pod volumes. Ref: https://kubernetes.io/docs/concepts/storage/volumes/ |
 | login.image.repository | string | `"ghcr.io/slinkyproject/login"` |  Set the image repository to use. |
-| login.image.tag | string | `"24.11-ubuntu24.04"` |  Set the image tag to use. |
+| login.image.tag | string | `"25.05-ubuntu24.04"` |  Set the image tag to use. |
 | login.imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |
 | login.nodeSelector | map | `{"kubernetes.io/os":"linux"}` |  Selector which must match a node's labels for the pod to be scheduled on that node. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector |
 | login.priorityClassName | string | `""` |  Set the priority class to use. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass |
@@ -141,7 +141,7 @@ Helm Chart for Slurm HPC Workload Manager
 | restapi.affinity | object | `{}` |  Set affinity for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity |
 | restapi.enabled | bool | `true` |  Enables restapi services. |
 | restapi.image.repository | string | `"ghcr.io/slinkyproject/slurmrestd"` |  Set the image repository to use. |
-| restapi.image.tag | string | `"24.11-ubuntu24.04"` |  Set the image tag to use. |
+| restapi.image.tag | string | `"25.05-ubuntu24.04"` |  Set the image tag to use. |
 | restapi.imagePullPolicy | string | `"IfNotPresent"` |  Set the image pull policy. |
 | restapi.nodeSelector | map | `{"kubernetes.io/os":"linux"}` |  Selector which must match a node's labels for the pod to be scheduled on that node. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector |
 | restapi.priorityClassName | string | `""` |  Set the priority class to use. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass |
