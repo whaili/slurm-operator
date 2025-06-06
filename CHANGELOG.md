@@ -6,6 +6,16 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+### Fixed
+
+### Changed
+
+### Removed
+
+## v0.3.0
+
+### Added
+
 - Added `NodeSets[].Volumes` to mount additional volumes.
 - Added `Tolerations[]` to components.
 - Added `controller.persistence.enabled` option.
