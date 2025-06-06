@@ -61,6 +61,7 @@ All notable changes to this project will be documented in this file.
 - Changed how `compute.nodeset[]` expresses gres, weight, and features.
 - Changed default `login.securityContext`, omit SYS_CHROOT.
 - Changed Slurm version to 25.05
+- Changed slurm-client to 0.3.0
 
 ### Removed
 
