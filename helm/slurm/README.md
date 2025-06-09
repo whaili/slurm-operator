@@ -81,7 +81,7 @@ Helm Chart for Slurm HPC Workload Manager
 | controller.persistence.labels | object | `{}` |  Create a `PersistentVolumeClaim` with these labels. |
 | controller.persistence.selector | object | `{}` |  Selector to match an existing `PersistentVolume`. |
 | controller.persistence.size | string | `"4Gi"` |  Create a `PersistentVolumeClaim` with this storage size. |
-| controller.persistence.storageClass | string | `"standard"` |  Create a `PersistentVolumeClaim` with this storage class. |
+| controller.persistence.storageClass | string | `nil` |  Create a `PersistentVolumeClaim` with this storage class. |
 | controller.priorityClassName | string | `""` |  Set the priority class to use. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass |
 | controller.resources | object | `{}` |  Set container resource requests and limits for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container |
 | controller.service | object | `{}` |  The controller service configuration. Ref: https://kubernetes.io/docs/concepts/services-networking/service/ |
@@ -129,7 +129,7 @@ Helm Chart for Slurm HPC Workload Manager
 | mariadb.primary.persistence.labels | object | `{}` |  |
 | mariadb.primary.persistence.selector | object | `{}` |  |
 | mariadb.primary.persistence.size | string | `"8Gi"` |  |
-| mariadb.primary.persistence.storageClass | string | `"standard"` |  |
+| mariadb.primary.persistence.storageClass | string | `nil` |  |
 | mariadb.primary.priorityClassName | string | `""` |  |
 | mariadb.primary.tolerations | list | `[]` |  |
 | mariadb.resources | object | `{}` |  |
