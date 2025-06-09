@@ -8,6 +8,9 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- Fixed token job `ttlSecondsAfterFinished` being too low for helm
+  `--wait-for-jobs`.
+
 ### Changed
 
 ### Removed
