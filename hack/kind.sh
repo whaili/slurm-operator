@@ -121,6 +121,7 @@ function slurm::prerequisites() {
 	helm repo add bitnami https://charts.bitnami.com/bitnami
 	if $FLAG_EXTRAS; then
 		helm repo add nfs-server-provisioner https://kubernetes-sigs.github.io/nfs-ganesha-server-and-external-provisioner/
+		helm repo add helm-openldap https://jp-gouin.github.io/helm-openldap/
 		helm repo add kedacore https://kedacore.github.io/charts
 	fi
 	helm repo update
