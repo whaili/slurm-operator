@@ -62,14 +62,6 @@ function sys::check() {
 			echo "  $ echo 'fs.inotify.max_user_watches=1048576' | sudo tee --append /etc/sysctl.d/fs"
 		fi
 	fi
-	if $FLAG_EXTRAS; then
-		if ! systemctl is-active --quiet nfs-kernel-server.service; then
-			echo "Recommended to install, start, and enable 'nfs-kernel-server.service':"
-			echo "  $ sudo apt install -qq -y nfs-kernel-server"
-			echo "  $ sudo systemctl start nfs-kernel-server.service"
-			echo "  $ sudo systemctl enable nfs-kernel-server.service"
-		fi
-	fi
 
 	if $fail; then
 		exit 1
