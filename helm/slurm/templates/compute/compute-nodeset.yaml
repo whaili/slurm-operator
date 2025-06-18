@@ -9,6 +9,19 @@ SPDX-License-Identifier: Apache-2.0
 {{- $tag := $nodeset.image.tag | default (include "slurm.compute.image.tag" $) }}
 {{- $imageRef := printf "%s:%s" $repository $tag }}
 {{- $name := printf "%s-%s" (include "slurm.compute.name" $) $nodeset.name }}
+{{- $authcredRepository := include "slurm.authcred.image.repository" $ }}
+{{- $authcredTag := include "slurm.authcred.image.repository" $ }}
+{{- $authcredImagePullPolicy := $nodeset.imagePullPolicy | default (include "slurm.imagePullPolicy" $) }}
+{{- $authcredResources := $.Values.authcred.resources }}
+{{- with $nodeset.authcred -}}
+  {{- with .image -}}
+    {{- $authcredRepository = .repository | default $authcredRepository -}}
+    {{- $authcredTag = .tag | default $authcredTag -}}
+  {{- end -}}
+  {{- $authcredImagePullPolicy = .imagePullPolicy | default $authcredImagePullPolicy -}}
+  {{- $authcredResources = .resources | default $authcredResources -}}
+{{- end -}}
+{{- $authcredImageRef := printf "%s:%s" $authcredRepository $authcredTag }}
 ---
 apiVersion: slinky.slurm.net/v1alpha1
 kind: NodeSet
@@ -50,12 +63,12 @@ spec:
       {{- include "slurm.imagePullSecrets" $ | nindent 6 }}
       initContainers:
         - name: init
-          image: {{ include "slurm.authcred.imageRef" $ }}
-          imagePullPolicy: {{ $.Values.authcred.imagePullPolicy | default (include "slurm.imagePullPolicy" $) }}
-          {{- with $.Values.authcred.resources }}
+          image: {{ $authcredImageRef }}
+          imagePullPolicy: {{ $authcredImagePullPolicy }}
+          {{- with $authcredResources }}
           resources:
             {{- toYaml . | nindent 12 }}
-          {{- end }}{{- /* with .Values.authcred.resources */}}
+          {{- end }}{{- /* with $authcredResources */}}
           env:
             - name: SLURM_USER
               value: {{ include "slurm.user" $ }}
@@ -72,8 +85,8 @@ spec:
           volumeMounts:
             {{- include "slurm.init.volumeMounts" $ | nindent 12 }}
         - name: logfile
-          image: {{ include "slurm.authcred.imageRef" $ }}
-          imagePullPolicy: {{ $.Values.authcred.imagePullPolicy | default (include "slurm.imagePullPolicy" $) }}
+          image: {{ $authcredImageRef }}
+          imagePullPolicy: {{ $authcredImagePullPolicy }}
           restartPolicy: Always
           env:
             - name: SOCKET
@@ -88,10 +101,10 @@ spec:
               {{- range $.Files.Lines "scripts/socket-logger.sh" }}
               {{ . }}
               {{- end }}{{- /* range $.Files.Lines "scripts/socket-logger.sh" */}}
-          {{- with $.Values.authcred.resources }}
+          {{- with $authcredResources }}
           resources:
             {{- toYaml . | nindent 12 }}
-          {{- end }}{{- /* with $.Values.authcred.resources */}}
+          {{- end }}{{- /* with $authcredResources */}}
           volumeMounts:
             - name: slurm-log
               mountPath: /var/log/slurm

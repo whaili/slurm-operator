@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Added NodeSet level authcred configuration.
+
 ### Fixed
 
 - Fixed token job `ttlSecondsAfterFinished` being too low for helm
