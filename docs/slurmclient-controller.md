@@ -26,39 +26,37 @@ sequenceDiagram
 
     actor User as User
     participant KAPI as Kubernetes API
-    participant CC as Cluster Controller
+    participant SCC as SlurmClient Controller
     box Operator Internals
         participant SCM as Slurm Client Map
         participant SEC as Slurm Event Channel
     end %% Operator Internals
 
     note over KAPI: Handle CR Creation
-    User->>KAPI: Create Cluster CR
-    KAPI-->>CC: Watch Cluster CRD
-    CC->>+KAPI: Get referenced secret
-    KAPI-->>-CC: Return secret
+    User->>KAPI: Create Controller CR
+    KAPI-->>SCC: Watch Controller CRD
     create participant SC as Slurm Client
-    CC->>+SC: Create Slurm Client for Cluster
-    SC-->>-CC: Return Slurm Client Status
+    SCC->>+SC: Create Slurm Client
+    SC-->>-SCC: Return Slurm Client Status
     loop Watch Slurm Nodes
         SC->>+SAPI: Get Slurm Nodes
         SAPI-->>-SC: Return Slurm Nodes
         SC->>SEC: Add Event for Cache Delta
     end %% loop Watch Slurm Nodes
-    CC->>SCM: Add Slurm Client to Map
-    CC->>+SC: Ping Slurm Control Plane
+    SCC->>SCM: Add Slurm Client to Map
+    SCC->>+SC: Ping Slurm Control Plane
     SC->>+SAPI: Ping Slurm Control Plane
     SAPI-->>-SC: Return Ping
-    SC-->>-CC: Return Ping
-    CC->>KAPI: Update Cluster CR Status
+    SC-->>-SCC: Return Ping
+    SCC->>KAPI: Update Controller CR Status
 
     note over KAPI: Handle CR Deletion
-    User->>KAPI: Delete Cluster CR
-    KAPI-->>CC: Watch Cluster CRD
-    SCM-->>CC: Lookup Slurm Client
+    User->>KAPI: Delete Controller CR
+    KAPI-->>SCC: Watch Controller CRD
+    SCM-->>SCC: Lookup Slurm Client
+    SCC->>SCM: Remove Slurm Client from Map
     destroy SC
-    CC-)SC: Shutdown Slurm Client
-    CC->>SCM: Remove Slurm Client from Map
+    SCC-)SC: GC Slurm Client
 
     participant SAPI as Slurm REST API
 ```

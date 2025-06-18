@@ -20,6 +20,7 @@
     - [`helm/`](#helm)
     - [`internal/`](#internal)
     - [`internal/controller/`](#internalcontroller)
+    - [`internal/webhook/`](#internalwebhook)
 
 <!-- mdformat-toc end -->
 
@@ -127,7 +128,12 @@ Contains code that is used internally. This code is not externally importable.
 Contains the controllers.
 
 Each controller is named after the Custom Resource Definition (CRD) it manages.
-Currently, this consists of the nodeset and the cluster CRDs.
+
+### `internal/webhook/`
+
+Contains the webhooks.
+
+Each webhook is named after the Custom Resource Definition (CRD) it manages.
 
 <!-- Links -->
 

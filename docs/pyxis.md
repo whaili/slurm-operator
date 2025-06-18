@@ -29,37 +29,38 @@ Configure `plugstack.conf` to include the pyxis configuration.
 > should actually have the pyxis libraries installed.
 
 ```yaml
-slurm:
-  configFiles:
-    plugstack.conf: |
-      include /usr/share/pyxis/*
+configFiles:
+  plugstack.conf: |
+    include /usr/share/pyxis/*
   ...
 ```
 
 Configure one or more NodeSets and the login pods to use a pyxis OCI image.
 
 ```yaml
-login:
-  image:
-    repository: ghcr.io/slinkyproject/login-pyxis
-  ...
-compute:
-  nodesets:
-    - name: debug
-      image:
-        repository: ghcr.io/slinkyproject/slurmd-pyxis
-      ...
+loginsets:
+  - name: pyxis
+    image:
+      repository: ghcr.io/slinkyproject/login-pyxis
+    ...
+nodesets:
+  - name: pyxis
+    image:
+      repository: ghcr.io/slinkyproject/slurmd-pyxis
+    ...
 ```
 
 To make enroot activity in the login container permissible, it requires
 `securityContext.privileged=true`.
 
 ```yaml
-login:
-  image:
-    repository: ghcr.io/slinkyproject/login-pyxis
-  securityContext:
-    privileged: true
+loginsets:
+  - name: pyxis
+    image:
+      repository: ghcr.io/slinkyproject/login-pyxis
+    securityContext:
+      privileged: true
+    ...
 ```
 
 ## Test
@@ -67,7 +68,7 @@ login:
 Submit a job to a Slurm node.
 
 ```bash
-$ srun --partition=debug grep PRETTY /etc/os-release
+$ srun --partition=pyxis grep PRETTY /etc/os-release
 PRETTY_NAME="Ubuntu 24.04.2 LTS"
 ```
 
@@ -75,7 +76,7 @@ Submit a job to a Slurm node with pyxis and it will launch in its requested
 container.
 
 ```bash
-$ srun --partition=debug --container-image=alpine:latest grep PRETTY /etc/os-release
+$ srun --partition=pyxis --container-image=alpine:latest grep PRETTY /etc/os-release
 pyxis: importing docker image: alpine:latest
 pyxis: imported docker image: alpine:latest
 PRETTY_NAME="Alpine Linux v3.21"

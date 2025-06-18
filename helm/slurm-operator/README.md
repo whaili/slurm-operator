@@ -20,8 +20,7 @@ Helm Chart for Slurm HPC Workload Manager Operator
 | operator.affinity | object | `{}` | Affinity for pod assignment. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity |
 | operator.controllerWorkers | int | `4` | Set the max concurrent workers for the Controller controller. |
 | operator.enabled | bool | `true` | Enables the operator. |
-| operator.image.repository | string | `"ghcr.io/slinkyproject/slurm-operator"` |  |
-| operator.image.tag | string | `""` |  |
+| operator.image | object | `{"repository":"ghcr.io/slinkyproject/slurm-operator","tag":""}` | The image to use, `${repository}:${tag}`. Ref: https://kubernetes.io/docs/concepts/containers/images/#image-names |
 | operator.imagePullPolicy | string | `"IfNotPresent"` | Set the image pull policy. |
 | operator.logLevel | string | `"info"` | Set the log level by string (e.g. error, info, debug) or number (e.g. 1..5). |
 | operator.loginsetWorkers | int | `4` | Set the max concurrent workers for the LoginSet controller. |
@@ -36,8 +35,7 @@ Helm Chart for Slurm HPC Workload Manager Operator
 | priorityClassName | string | `""` | Set the priority class to use. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass |
 | webhook.affinity | object | `{}` | Affinity for pod assignment. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity |
 | webhook.enabled | bool | `true` | Enable the webhook. |
-| webhook.image.repository | string | `"ghcr.io/slinkyproject/slurm-operator-webhook"` |  |
-| webhook.image.tag | string | `""` |  |
+| webhook.image | object | `{"repository":"ghcr.io/slinkyproject/slurm-operator-webhook","tag":""}` | The image to use, `${repository}:${tag}`. Ref: https://kubernetes.io/docs/concepts/containers/images/#image-names |
 | webhook.imagePullPolicy | string | `"IfNotPresent"` | Set the image pull policy. |
 | webhook.logLevel | string | `"info"` | Set the log level by string (e.g. error, info, debug) or number (e.g. 1..5). |
 | webhook.replicas | int | `1` | Set the number of replicas to deploy. |

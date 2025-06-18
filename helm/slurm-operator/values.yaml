@@ -27,7 +27,7 @@ operator:
   replicas: 1
   # -- Set the image pull policy.
   imagePullPolicy: IfNotPresent
-  # The image to use, `${repository}:${tag}`.
+  # -- The image to use, `${repository}:${tag}`.
   # Ref: https://kubernetes.io/docs/concepts/containers/images/#image-names
   image:
     repository: ghcr.io/slinkyproject/slurm-operator
@@ -79,7 +79,7 @@ webhook:
   replicas: 1
   # -- Set the image pull policy.
   imagePullPolicy: IfNotPresent
-  # The image to use, `${repository}:${tag}`.
+  # -- The image to use, `${repository}:${tag}`.
   # Ref: https://kubernetes.io/docs/concepts/containers/images/#image-names
   image:
     repository: ghcr.io/slinkyproject/slurm-operator-webhook

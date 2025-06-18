@@ -21,6 +21,8 @@ Run [Slurm] on [Kubernetes], by [SchedMD]. A [Slinky] project.
     - [Slurm Cluster](#slurm-cluster)
   - [Features](#features)
     - [NodeSets](#nodesets)
+    - [LoginSets](#loginsets)
+    - [Hybrid Support](#hybrid-support)
     - [Slurm](#slurm)
   - [Limitations](#limitations)
   - [Installation](#installation)
@@ -77,6 +79,20 @@ scale-in or upgrade.
 The operator supports NodeSet scale to zero, scaling the resource down to zero
 replicas. Hence, any Horizontal Pod Autoscaler (HPA) that also support scale to
 zero can be best paired with NodeSets.
+
+### LoginSets
+
+A set of homogeneous login nodes (submit node, jump host) for Slurm, which
+manage user identity via LDAP.
+
+The operator supports LoginSet scale to zero, scaling the resource down to zero
+replicas. Hence, any Horizontal Pod Autoscaler (HPA) that also support scale to
+zero can be best paired with LoginSets.
+
+### Hybrid Support
+
+Sometimes a Slurm cluster has some, but not all, of its components in
+Kubernetes. The operator and its CRD are designed support these use cases.
 
 ### Slurm
 

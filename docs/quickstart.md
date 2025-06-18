@@ -92,13 +92,13 @@ kubectl --namespace=slurm get pods
 Output should be similar to:
 
 ```sh
-NAME                              READY   STATUS      RESTARTS      AGE
-slurm-accounting-0                1/1     Running     0             5m00s
-slurm-compute-debug-0             1/1     Running     0             5m00s
-slurm-controller-0                2/2     Running     0             5m00s
-slurm-exporter-7b44b6d856-d86q5   1/1     Running     0             5m00s
-slurm-mariadb-0                   1/1     Running     0             5m00s
-slurm-restapi-5f75db85d9-67gpl    1/1     Running     0             5m00s
+NAME                                  READY   STATUS    RESTARTS   AGE
+slurm-accounting-0                    1/1     Running   0          2m
+slurm-compute-slinky-0                2/2     Running   0          2m
+slurm-controller-0                    3/3     Running   0          2m
+slurm-exporter-6ffb9fdbbd-547zj       1/1     Running   0          2m
+slurm-login-slinky-7ff66445b5-wdjkn   1/1     Running   0          2m
+slurm-restapi-77b9f969f7-kh4r8        1/1     Running   0          2m
 ```
 
 ### Testing
@@ -106,11 +106,12 @@ slurm-restapi-5f75db85d9-67gpl    1/1     Running     0             5m00s
 SSH through the login service:
 
 ```sh
-SLURM_LOGIN_IP="$(kubectl get services -n slurm -l app.kubernetes.io/instance=slurm,app.kubernetes.io/name=login -o jsonpath="{.items[0].status.loadBalancer.ingress[0].ip}")"
+SLURM_LOGIN_IP="$(kubectl get services -n slurm slurm-login-slinky -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
+SLURM_LOGIN_PORT="$(kubectl get services -n slurm slurm-login-slinky -o jsonpath='{.status.loadBalancer.ingress[0].ports[0].port}')"
 ## Assuming your public SSH key was configured in `login.rootSshAuthorizedKeys`.
-ssh -p 2222 root@${SLURM_LOGIN_IP}
+ssh -p ${SLURM_LOGIN_PORT:-22} root@${SLURM_LOGIN_IP}
 ## Assuming SSSD is configured.
-ssh -p 2222 ${USER}@${SLURM_LOGIN_IP}
+ssh -p ${SLURM_LOGIN_PORT:-22} ${USER}@${SLURM_LOGIN_IP}
 ```
 
 Then, from a login pod, run Slurm commands to quickly test that Slurm is
