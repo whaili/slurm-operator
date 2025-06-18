@@ -1,9 +1,6 @@
 dependencies:
-- name: mariadb
-  repository: oci://registry-1.docker.io/bitnamicharts
-  version: 20.4.3
 - name: slurm-exporter
   repository: oci://ghcr.io/slinkyproject/charts
   version: 0.3.0
-digest: sha256:0eaab5cf130c5c3ad092f2b8e7f7eabfe73c67e04f60d691a342d9257ee40b53
-generated: "2025-06-06T13:39:00.313661-05:00"
+digest: sha256:0f2b727deffe39681a7a034b7bbb8a9a3e2e0df3bd774b3c31ba1b66defac1ee
+generated: "2025-06-18T10:17:50.987852968-04:00"

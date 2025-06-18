@@ -69,10 +69,8 @@ spec:
       {{- toYaml . | nindent 6 }}
     {{- end }}{{- /* with .Values.accounting.tolerations */}}
     priorityClassName: {{ .Values.priorityClassName }}
+  {{- with .Values.accounting.storageConfig }}
   storageConfig:
-    {{- include "slurm.accounting.storageConfig" . | nindent 4 }}
-{{- else }}{{- /* if .Values.accounting.enabled */}}
-  {{- if .Values.mariadb.enabled }}
-    {{- fail "bad configuration: `accounting.enabled=false` and `mariadb.enabled=true`" -}}
-  {{- end }}{{- /* if .Values.mariadb.enabled */}}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}{{- /* with .Values.accounting.storageConfig */}}
 {{- end }}{{- /* if .Values.accounting.enabled */}}

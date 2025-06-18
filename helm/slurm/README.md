@@ -9,7 +9,6 @@ Helm Chart for Slurm HPC Workload Manager
 | Repository | Name | Version |
 |------------|------|---------|
 | oci://ghcr.io/slinkyproject/charts | slurm-exporter | ~0.3.0 |
-| oci://registry-1.docker.io/bitnamicharts | mariadb | ~20.4 |
 
 ## Values
 
@@ -41,7 +40,7 @@ Helm Chart for Slurm HPC Workload Manager
 | controller.image | object | `{"repository":"ghcr.io/slinkyproject/slurmctld","tag":"25.05-ubuntu24.04"}` | The image to use, `${repository}:${tag}`. Ref: https://kubernetes.io/docs/concepts/containers/images/#image-names |
 | controller.nodeSelector | map[string]string | `{"kubernetes.io/os":"linux"}` | Node label selector for pod assignment. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector |
 | controller.persistence.accessModes[0] | string | `"ReadWriteOnce"` |  |
-| controller.persistence.enabled | bool | `false` | Enable persistence for slurmctld, retain save-state across recreations. |
+| controller.persistence.enabled | bool | `true` | Enable persistence for slurmctld, retain save-state across recreations. |
 | controller.persistence.existingClaim | string | `nil` | Name of the existing `PersistentVolumeClaim` to use instead of creating one. If this is not empty, then certain other fields will be ignored. |
 | controller.persistence.resources | object | `{"requests":{"storage":"4Gi"}}` | The minimum resources for the `PersistentVolumeClaim` to be created with. Ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources |
 | controller.persistence.storageClassName | string | `nil` | The name of the `StorageClass` for the created `PersistentVolumeClaim`. Ref: https://kubernetes.io/docs/concepts/storage/storage-classes/ |
@@ -69,28 +68,6 @@ Helm Chart for Slurm HPC Workload Manager
 | loginsets.slinky.tolerations | list | `[]` | Tolerations for pod assignment. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
 | loginsets.slinky.volumeMounts | list | `[]` | List of volume mounts to use. Ref: https://kubernetes.io/docs/concepts/storage/volumes/ |
 | loginsets.slinky.volumes | list | `[]` | List of volumes to use. Ref: https://kubernetes.io/docs/concepts/storage/volumes/ |
-| mariadb.affinity | object | `{}` |  |
-| mariadb.auth.database | string | `"slurm_acct_db"` |  |
-| mariadb.auth.forcePassword | bool | `true` |  |
-| mariadb.auth.username | string | `"slurm"` |  |
-| mariadb.enabled | bool | `false` | Enable use of mariadb with Slurm accounting. NOTE: When enabled, `accounting.databaseConfig` will automatically set/overridden. |
-| mariadb.metrics.enabled | bool | `false` |  |
-| mariadb.metrics.serviceMonitor.enabled | bool | `false` |  |
-| mariadb.nodeSelector."kubernetes.io/os" | string | `"linux"` |  |
-| mariadb.primary.configuration | string | `"[mysqld]\nskip-name-resolve\nexplicit_defaults_for_timestamp\nbasedir=/opt/bitnami/mariadb\ndatadir=/bitnami/mariadb/data\nplugin_dir=/opt/bitnami/mariadb/plugin\nport={{ .Values.primary.containerPorts.mysql }}\nsocket=/opt/bitnami/mariadb/tmp/mysql.sock\ntmpdir=/opt/bitnami/mariadb/tmp\ninnodb_buffer_pool_size=4096M\ninnodb_lock_wait_timeout=900\ninnodb_log_file_size=1024M\nmax_allowed_packet=16M\nbind-address=*\npid-file=/opt/bitnami/mariadb/tmp/mysqld.pid\nlog-error=/opt/bitnami/mariadb/logs/mysqld.log\ncharacter-set-server=UTF8\ncollation-server=utf8_general_ci\nslow_query_log=0\nlong_query_time=10.0\nbinlog_expire_logs_seconds=2592000\n{{- if .Values.tls.enabled }}\nssl_cert=/opt/bitnami/mariadb/certs/{{ .Values.tls.certFilename }}\nssl_key=/opt/bitnami/mariadb/certs/{{ .Values.tls.certKeyFilename }}\n{{- if (include \"mariadb.tlsCACert\" .) }}\nssl_ca={{ include \"mariadb.tlsCACert\" . }}\n{{- end }}\n{{- end }}\n{{- if .Values.tde.enabled }}\nplugin_load_add=file_key_management\nfile_key_management_filename=/opt/bitnami/mariadb/tde/{{ .Values.tde.encryptedKeyFilename }}\nfile_key_management_filekey=FILE:/opt/bitnami/mariadb/tde/{{ .Values.tde.randomKeyFilename }}\nfile_key_management_encryption_algorithm={{ .Values.tde.fileKeyManagementEncryptionAlgorithm }}\ninnodb_encrypt_tables={{ .Values.tde.innodbEncryptTables }}\ninnodb_encrypt_log={{ .Values.tde.innodbEncryptLog }}\ninnodb_encrypt_temporary_tables={{ .Values.tde.innodbEncryptTemporaryTables }}\ninnodb_encryption_threads={{ .Values.tde.innodbEncryptionThreads }}\nencrypt_tmp_disk_tables={{ .Values.tde.encryptTmpDiskTables }}\nencrypt_tmp_files={{ .Values.tde.encryptTmpTiles }}\nencrypt_binlog={{ .Values.tde.encryptBINLOG }}\naria_encrypt_tables={{ .Values.tde.ariaEncryptTables }}\n{{- end }}\n\n[client]\nport=3306\nsocket=/opt/bitnami/mariadb/tmp/mysql.sock\ndefault-character-set=UTF8\nplugin_dir=/opt/bitnami/mariadb/plugin\n\n[manager]\nport=3306\nsocket=/opt/bitnami/mariadb/tmp/mysql.sock\npid-file=/opt/bitnami/mariadb/tmp/mysqld.pid"` |  |
-| mariadb.primary.persistence.accessModes[0] | string | `"ReadWriteOnce"` |  |
-| mariadb.primary.persistence.annotations | object | `{}` |  |
-| mariadb.primary.persistence.enabled | bool | `true` |  |
-| mariadb.primary.persistence.existingClaim | string | `""` |  |
-| mariadb.primary.persistence.labels | object | `{}` |  |
-| mariadb.primary.persistence.selector | object | `{}` |  |
-| mariadb.primary.persistence.size | string | `"8Gi"` |  |
-| mariadb.primary.persistence.storageClass | string | `nil` |  |
-| mariadb.primary.priorityClassName | string | `""` |  |
-| mariadb.primary.tolerations | list | `[]` |  |
-| mariadb.resources | object | `{}` |  |
-| mariadb.tde.enabled | bool | `false` |  |
-| mariadb.tls.enabled | bool | `false` |  |
 | nameOverride | string | `nil` | Overrides the name of the release. |
 | namespaceOverride | string | `nil` | Overrides the namespace of the release. |
 | nodesets.slinky.affinity | object | `{}` | Affinity for pod assignment. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity |

@@ -33,3 +33,4 @@ All notable changes to this project will be documented in this file.
 ### Removed
 
 - Removed the Cluster CRD.
+- Removed `bitnami/mariadb` dependency from Slurm helm chart.

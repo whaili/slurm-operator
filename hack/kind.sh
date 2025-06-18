@@ -118,7 +118,7 @@ function helm::uninstall() {
 function slurm::prerequisites() {
 	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 	helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
-	helm repo add bitnami https://charts.bitnami.com/bitnami
+	helm repo add mariadb-operator https://helm.mariadb.com/mariadb-operator
 	if $FLAG_EXTRAS; then
 		helm repo add nfs-server-provisioner https://kubernetes-sigs.github.io/nfs-ganesha-server-and-external-provisioner/
 		helm repo add helm-openldap https://jp-gouin.github.io/helm-openldap/
@@ -138,6 +138,14 @@ function slurm::prerequisites() {
 		helm install "$metrics" metrics-server/metrics-server \
 			--set args="{--kubelet-insecure-tls}" \
 			--namespace "$metrics" --create-namespace
+	fi
+	local mariadbOperator="mariadb-operator"
+	if [ "$(helm list --all-namespaces --short --filter="$mariadbOperator" | wc -l)" -eq 0 ]; then
+		local ns="mariadb"
+		helm install mariadb-operator-crds mariadb-operator/mariadb-operator-crds \
+			--namespace "$ns" --create-namespace
+		helm install "$mariadbOperator" mariadb-operator/mariadb-operator \
+			--namespace "$ns" --create-namespace
 	fi
 	if $FLAG_EXTRAS; then
 		local keda="keda"
