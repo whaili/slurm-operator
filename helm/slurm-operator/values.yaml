@@ -140,6 +140,10 @@ webhook:
     # Set the service account to use (and create).
     name: ""
   #
+  # -- (int)
+  # Set the timeout period for calls.
+  timeoutSeconds: 10
+  #
   # -- (object)
   # Set affinity for Kubernetes Pod scheduling.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity

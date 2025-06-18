@@ -40,5 +40,6 @@ Helm Chart for Slurm HPC Workload Manager Operator
 | webhook.resources | object | `{}` |  Set container resource requests and limits for Kubernetes Pod scheduling. Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container |
 | webhook.serviceAccount.create | bool | `true` |  Allows chart to create the service account. |
 | webhook.serviceAccount.name | string | `""` |  Set the service account to use (and create). |
+| webhook.timeoutSeconds | int | `10` |  Set the timeout period for calls. |
 | webhook.tolerations | list | `[]` |  Configure pod tolerations. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
 

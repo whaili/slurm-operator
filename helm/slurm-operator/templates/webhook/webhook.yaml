@@ -58,7 +58,9 @@ webhooks:
         namespace: {{ include "slurm-operator.namespace" . }}
         name: {{ include "slurm-operator.webhook.name" . }}
         path: /validate-slinky-slurm-net-v1alpha1-cluster
-    timeoutSeconds: {{ default 10 .Values.timeoutSeconds }}
+    {{- with .Values.webhook.timeoutSeconds }}
+    timeoutSeconds: {{ . }}
+    {{- end }}{{- /* with .Values.webhook.timeoutSeconds */}}
     admissionReviewVersions:
       - v1
       - v1beta1
@@ -84,7 +86,9 @@ webhooks:
         namespace: {{ include "slurm-operator.namespace" . }}
         name: {{ include "slurm-operator.webhook.name" . }}
         path: /validate-slinky-slurm-net-v1alpha1-nodeset
-    timeoutSeconds: {{ default 10 .Values.timeoutSeconds }}
+    {{- with .Values.webhook.timeoutSeconds }}
+    timeoutSeconds: {{ . }}
+    {{- end }}{{- /* with .Values.webhook.timeoutSeconds */}}
     admissionReviewVersions:
       - v1
       - v1beta1
@@ -123,7 +127,9 @@ webhooks:
         namespace: {{ include "slurm-operator.namespace" . }}
         name: {{ include "slurm-operator.webhook.name" . }}
         path: /mutate-slinky-slurm-net-v1alpha1-cluster
-    timeoutSeconds: {{ default 10 .Values.timeoutSeconds }}
+    {{- with .Values.webhook.timeoutSeconds }}
+    timeoutSeconds: {{ . }}
+    {{- end }}{{- /* with .Values.webhook.timeoutSeconds */}}
     admissionReviewVersions:
       - v1
       - v1beta1
@@ -149,7 +155,9 @@ webhooks:
         namespace: {{ include "slurm-operator.namespace" . }}
         name: {{ include "slurm-operator.webhook.name" . }}
         path: /mutate-slinky-slurm-net-v1alpha1-nodeset
-    timeoutSeconds: {{ default 10 .Values.timeoutSeconds }}
+    {{- with .Values.webhook.timeoutSeconds }}
+    timeoutSeconds: {{ . }}
+    {{- end }}{{- /* with .Values.webhook.timeoutSeconds */}}
     admissionReviewVersions:
       - v1
       - v1beta1
