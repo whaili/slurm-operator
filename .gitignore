@@ -134,3 +134,4 @@ Dockerfile.cross
 vendor/*
 *.tgz
 values-*.yaml
+.helm_ls_cache
