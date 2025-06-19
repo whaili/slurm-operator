@@ -51,9 +51,9 @@ ssh via the Slurm login service:
   {{- if eq (.Values.login.service.type | default "" | lower) ("LoadBalancer" | lower) }}
   $ SLURM_LOGIN_IP="$(kubectl get services -n {{ $.Release.Namespace }} -l app.kubernetes.io/instance={{ $.Release.Name }},app.kubernetes.io/name=login -o jsonpath="{.items[0].status.loadBalancer.ingress[0].ip}")"
   {{- else if eq (.Values.login.service.type | default "" | lower) ("ExternalName" | lower) }}
-  $ SLURM_LOGIN_IP="$(kubectl get services -n {{ $.Release.Namespace }} -l app.kubernetes.io/instance={{ $.Release.Name }},app.kubernetes.io/name=login -o jsonpath="{.items[0].spec.externalName})"
+  $ SLURM_LOGIN_IP="$(kubectl get services -n {{ $.Release.Namespace }} -l app.kubernetes.io/instance={{ $.Release.Name }},app.kubernetes.io/name=login -o jsonpath="{.items[0].spec.externalName}")"
   {{- else }}
-  $ SLURM_LOGIN_IP="$(kubectl get services -n {{ $.Release.Namespace }} -l app.kubernetes.io/instance={{ $.Release.Name }},app.kubernetes.io/name=login -o jsonpath="{.items[0].spec.clusterIP})"
+  $ SLURM_LOGIN_IP="$(kubectl get services -n {{ $.Release.Namespace }} -l app.kubernetes.io/instance={{ $.Release.Name }},app.kubernetes.io/name=login -o jsonpath="{.items[0].spec.clusterIP}")"
   {{- end }}{{- /* if eq (.Values.login.service.type | default "" | lower) ("LoadBalancer" | lower) */}}
   {{- if eq (.Values.login.service.type | default "" | lower) ("NodePort" | lower) }}
   $ ssh -p {{ .Values.login.serviceNodePort }} $SLURM_LOGIN_IP
@@ -68,9 +68,9 @@ The Slurm controller service:
   {{- if eq (.Values.controller.service.type | default "" | lower) ("LoadBalancer" | lower) }}
   $ SLURM_CONTROLLER_IP="$(kubectl get services -n {{ $.Release.Namespace }} -l app.kubernetes.io/instance={{ $.Release.Name }},app.kubernetes.io/name=slurmctld -o jsonpath="{.items[0].status.loadBalancer.ingress[0].ip}")"
   {{- else if eq (.Values.controller.service.type | default "" | lower) ("ExternalName" | lower) }}
-  $ SLURM_CONTROLLER_IP="$(kubectl get services -n {{ $.Release.Namespace }} -l app.kubernetes.io/instance={{ $.Release.Name }},app.kubernetes.io/name=slurmctld -o jsonpath="{.items[0].spec.externalName})"
+  $ SLURM_CONTROLLER_IP="$(kubectl get services -n {{ $.Release.Namespace }} -l app.kubernetes.io/instance={{ $.Release.Name }},app.kubernetes.io/name=slurmctld -o jsonpath="{.items[0].spec.externalName}")"
   {{- else }}
-  $ SLURM_CONTROLLER_IP="$(kubectl get services -n {{ $.Release.Namespace }} -l app.kubernetes.io/instance={{ $.Release.Name }},app.kubernetes.io/name=slurmctld -o jsonpath="{.items[0].spec.clusterIP})"
+  $ SLURM_CONTROLLER_IP="$(kubectl get services -n {{ $.Release.Namespace }} -l app.kubernetes.io/instance={{ $.Release.Name }},app.kubernetes.io/name=slurmctld -o jsonpath="{.items[0].spec.clusterIP}")"
   {{- end }}{{- /* if eq (.Values.controller.service.type | default "" | lower) ("LoadBalancer" | lower) */}}
   {{- if eq (.Values.controller.service.type | default "" | lower) ("NodePort" | lower) }}
   $ SLURM_CONF_SERVER=$SLURM_CONTROLLER_IP:{{ .Values.controller.serviceNodePort }}
@@ -89,9 +89,9 @@ curl the Slurm restapi service:
   {{- if eq (.Values.restapi.service.type | default "" | lower) ("LoadBalancer" | lower) }}
   $ SLURM_RESTAPI_IP="$(kubectl get services -n {{ $.Release.Namespace }} -l app.kubernetes.io/instance={{ $.Release.Name }},app.kubernetes.io/name=slurmrestd -o jsonpath="{.items[0].status.loadBalancer.ingress[0].ip}")"
   {{- else if eq (.Values.restapi.service.type | default "" | lower) ("ExternalName" | lower) }}
-  $ SLURM_RESTAPI_IP="$(kubectl get services -n {{ $.Release.Namespace }} -l app.kubernetes.io/instance={{ $.Release.Name }},app.kubernetes.io/name=slurmrestd -o jsonpath="{.items[0].spec.externalName})"
+  $ SLURM_RESTAPI_IP="$(kubectl get services -n {{ $.Release.Namespace }} -l app.kubernetes.io/instance={{ $.Release.Name }},app.kubernetes.io/name=slurmrestd -o jsonpath="{.items[0].spec.externalName}")"
   {{- else }}
-  $ SLURM_RESTAPI_IP="$(kubectl get services -n {{ $.Release.Namespace }} -l app.kubernetes.io/instance={{ $.Release.Name }},app.kubernetes.io/name=slurmrestd -o jsonpath="{.items[0].spec.clusterIP})"
+  $ SLURM_RESTAPI_IP="$(kubectl get services -n {{ $.Release.Namespace }} -l app.kubernetes.io/instance={{ $.Release.Name }},app.kubernetes.io/name=slurmrestd -o jsonpath="{.items[0].spec.clusterIP}")"
   {{- end }}{{- /* if eq (.Values.restapi.service.type | default "" | lower) ("LoadBalancer" | lower) */}}
   {{- if eq (.Values.restapi.service.type | default "" | lower) ("NodePort" | lower) }}
   $ curl -H "X-SLURM-USER-TOKEN: auth/none" http://${SLURM_RESTAPI_IP}:{{ .Values.restapi.serviceNodePort }}/openapi/v3
