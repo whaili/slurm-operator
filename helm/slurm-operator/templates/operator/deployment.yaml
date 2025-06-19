@@ -12,7 +12,7 @@ metadata:
   labels:
     {{- include "slurm-operator.operator.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.replicas }}
+  replicas: {{ .Values.operator.replicas }}
   revisionHistoryLimit: 0
   selector:
     matchLabels:

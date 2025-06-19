@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
   `--wait-for-jobs`.
 - Fixed nodeset pod's sackd image tag default value.
 - Fixed webhook timeout being read from unintended values path.
+- Fixed operator replicas being read form unintended values path.
 
 ### Changed
 
