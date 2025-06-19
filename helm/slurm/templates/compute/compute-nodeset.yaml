@@ -50,8 +50,8 @@ spec:
       {{- include "slurm.imagePullSecrets" $ | nindent 6 }}
       initContainers:
         - name: init
-          image: {{ $imageRef }}
-          imagePullPolicy: {{ $nodeset.imagePullPolicy | default (include "slurm.imagePullPolicy" $) }}
+          image: {{ include "slurm.authcred.imageRef" $ }}
+          imagePullPolicy: {{ $.Values.authcred.imagePullPolicy | default (include "slurm.imagePullPolicy" $) }}
           {{- with $.Values.authcred.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
