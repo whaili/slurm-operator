@@ -23,6 +23,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
+	webhookv1alpha1 "github.com/SlinkyProject/slurm-operator/internal/webhook/v1alpha1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -119,11 +120,11 @@ func main() {
 		setupLog.Error(err, "unable to set up ready check")
 		os.Exit(1)
 	}
-	if err := (&slinkyv1alpha1.Cluster{}).SetupWebhookWithManager(mgr); err != nil {
+	if err := (&webhookv1alpha1.ClusterWebhook{}).SetupWebhookWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create webhook", "webhook", "Cluster")
 		os.Exit(1)
 	}
-	if err := (&slinkyv1alpha1.NodeSet{}).SetupWebhookWithManager(mgr); err != nil {
+	if err := (&webhookv1alpha1.NodeSetWebhook{}).SetupWebhookWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create webhook", "webhook", "NodeSet")
 		os.Exit(1)
 	}

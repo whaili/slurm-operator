@@ -17,16 +17,20 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
+
+	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 )
 
 // TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
+type NodeSetWebhook struct{}
+
 // log is for logging in this package.
 var nodesetlog = logf.Log.WithName("nodeset-resource")
 
-func (r *NodeSet) SetupWebhookWithManager(mgr ctrl.Manager) error {
+func (r *NodeSetWebhook) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
-		For(r).
+		For(&slinkyv1alpha1.NodeSet{}).
 		WithDefaulter(r).
 		WithValidator(r).
 		Complete()
@@ -34,30 +38,31 @@ func (r *NodeSet) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 //+kubebuilder:webhook:path=/mutate-slinky-slurm-net-v1alpha1-nodeset,mutating=true,failurePolicy=fail,sideEffects=None,groups=slinky.slurm.net,resources=nodesets,verbs=create;update,versions=v1alpha1,name=mnodeset.kb.io,admissionReviewVersions=v1
 
-var _ webhook.CustomDefaulter = &NodeSet{}
+var _ webhook.CustomDefaulter = &NodeSetWebhook{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *NodeSet) Default(ctx context.Context, obj runtime.Object) error {
-	nodeset := obj.(*NodeSet)
+func (r *NodeSetWebhook) Default(ctx context.Context, obj runtime.Object) error {
+	nodeset := obj.(*slinkyv1alpha1.NodeSet)
 	nodesetlog.Info("default", "nodeset", klog.KObj(nodeset))
 
 	if nodeset.Spec.RevisionHistoryLimit == nil {
 		nodeset.Spec.RevisionHistoryLimit = ptr.To[int32](0)
 	}
 	if nodeset.Spec.UpdateStrategy.Type == "" {
-		nodeset.Spec.UpdateStrategy.Type = RollingUpdateNodeSetStrategyType
+		nodeset.Spec.UpdateStrategy.Type = slinkyv1alpha1.RollingUpdateNodeSetStrategyType
 	}
+
 	return nil
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 //+kubebuilder:webhook:path=/validate-slinky-slurm-net-v1alpha1-nodeset,mutating=false,failurePolicy=fail,sideEffects=None,groups=slinky.slurm.net,resources=nodesets,verbs=create;update,versions=v1alpha1,name=vnodeset.kb.io,admissionReviewVersions=v1
 
-var _ webhook.CustomValidator = &NodeSet{}
+var _ webhook.CustomValidator = &NodeSetWebhook{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *NodeSet) ValidateCreate(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	nodeset := obj.(*NodeSet)
+func (r *NodeSetWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
+	nodeset := obj.(*slinkyv1alpha1.NodeSet)
 	nodesetlog.Info("validate create", "nodeset", klog.KObj(nodeset))
 
 	warns, errs := validateNodeSet(nodeset)
@@ -66,9 +71,9 @@ func (r *NodeSet) ValidateCreate(ctx context.Context, obj runtime.Object) (admis
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *NodeSet) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) (admission.Warnings, error) {
-	newNodeSet := newObj.(*NodeSet)
-	oldNodeSet := oldObj.(*NodeSet)
+func (r *NodeSetWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) (admission.Warnings, error) {
+	newNodeSet := newObj.(*slinkyv1alpha1.NodeSet)
+	oldNodeSet := oldObj.(*slinkyv1alpha1.NodeSet)
 	nodesetlog.Info("validate update", "newNodeSet", klog.KObj(newNodeSet), "oldNodeSet", klog.KObj(oldNodeSet))
 
 	warns, errs := validateNodeSet(newNodeSet)
@@ -96,49 +101,49 @@ func (r *NodeSet) ValidateUpdate(ctx context.Context, oldObj runtime.Object, new
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *NodeSet) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	nodeset := obj.(*NodeSet)
+func (r *NodeSetWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
+	nodeset := obj.(*slinkyv1alpha1.NodeSet)
 	nodesetlog.Info("validate delete", "nodeset", klog.KObj(nodeset))
 
 	return nil, nil
 }
 
-func validateNodeSet(r *NodeSet) (admission.Warnings, []error) {
+func validateNodeSet(obj *slinkyv1alpha1.NodeSet) (admission.Warnings, []error) {
 	var warns admission.Warnings
 	var errs []error
 
-	if r.Spec.ServiceName == "" {
+	if obj.Spec.ServiceName == "" {
 		errs = append(errs, fmt.Errorf("`NodeSet.Spec.ServiceName` cannot be empty"))
 	}
 
-	switch r.Spec.UpdateStrategy.Type {
-	case RollingUpdateNodeSetStrategyType:
+	switch obj.Spec.UpdateStrategy.Type {
+	case slinkyv1alpha1.RollingUpdateNodeSetStrategyType:
 		// valid
-	case OnDeleteNodeSetStrategyType:
+	case slinkyv1alpha1.OnDeleteNodeSetStrategyType:
 		// valid
 	default:
 		errs = append(errs, fmt.Errorf("`NodeSet.Spec.UpdateStrategy.Type` is not valid. Got: %v. Expected of: %s; %s",
-			r.Spec.UpdateStrategy.Type, RollingUpdateNodeSetStrategyType, OnDeleteNodeSetStrategyType))
+			obj.Spec.UpdateStrategy.Type, slinkyv1alpha1.RollingUpdateNodeSetStrategyType, slinkyv1alpha1.OnDeleteNodeSetStrategyType))
 	}
 
-	if r.Spec.PersistentVolumeClaimRetentionPolicy != nil {
-		switch r.Spec.PersistentVolumeClaimRetentionPolicy.WhenDeleted {
-		case RetainPersistentVolumeClaimRetentionPolicyType:
+	if obj.Spec.PersistentVolumeClaimRetentionPolicy != nil {
+		switch obj.Spec.PersistentVolumeClaimRetentionPolicy.WhenDeleted {
+		case slinkyv1alpha1.RetainPersistentVolumeClaimRetentionPolicyType:
 			// valid
-		case DeletePersistentVolumeClaimRetentionPolicyType:
+		case slinkyv1alpha1.DeletePersistentVolumeClaimRetentionPolicyType:
 			// valid
 		default:
 			errs = append(errs, fmt.Errorf("`NodeSet.Spec.PersistentVolumeClaimRetentionPolicy.WhenDeleted` is not valid. Got: %v. Expected of: %s; %s",
-				r.Spec.PersistentVolumeClaimRetentionPolicy.WhenDeleted, RetainPersistentVolumeClaimRetentionPolicyType, DeletePersistentVolumeClaimRetentionPolicyType))
+				obj.Spec.PersistentVolumeClaimRetentionPolicy.WhenDeleted, slinkyv1alpha1.RetainPersistentVolumeClaimRetentionPolicyType, slinkyv1alpha1.DeletePersistentVolumeClaimRetentionPolicyType))
 		}
-		switch r.Spec.PersistentVolumeClaimRetentionPolicy.WhenScaled {
-		case RetainPersistentVolumeClaimRetentionPolicyType:
+		switch obj.Spec.PersistentVolumeClaimRetentionPolicy.WhenScaled {
+		case slinkyv1alpha1.RetainPersistentVolumeClaimRetentionPolicyType:
 			// valid
-		case DeletePersistentVolumeClaimRetentionPolicyType:
+		case slinkyv1alpha1.DeletePersistentVolumeClaimRetentionPolicyType:
 			// valid
 		default:
 			errs = append(errs, fmt.Errorf("`NodeSet.Spec.PersistentVolumeClaimRetentionPolicy.WhenScaled` is not valid. Got: %v. Expected of: %s; %s",
-				r.Spec.PersistentVolumeClaimRetentionPolicy.WhenScaled, RetainPersistentVolumeClaimRetentionPolicyType, DeletePersistentVolumeClaimRetentionPolicyType))
+				obj.Spec.PersistentVolumeClaimRetentionPolicy.WhenScaled, slinkyv1alpha1.RetainPersistentVolumeClaimRetentionPolicyType, slinkyv1alpha1.DeletePersistentVolumeClaimRetentionPolicyType))
 		}
 	}
 
