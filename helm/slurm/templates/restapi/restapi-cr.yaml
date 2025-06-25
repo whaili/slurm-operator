@@ -44,13 +44,6 @@ spec:
       resources:
         {{- toYaml . | nindent 8 }}
       {{- end }}{{- /* with .Values.restapi.resources */}}
-    initconf:
-      image: {{ include "format-image" .Values.authcred.image }}
-      imagePullPolicy: {{ .Values.imagePullPolicy }}
-      {{- with .Values.authcred.resources }}
-      resources:
-        {{- toYaml . | nindent 6 }}
-      {{- end }}{{- /* with .Values.authcred.resources */}}
     {{- with .Values.restapi.nodeSelector }}
     nodeSelector:
       {{- toYaml . | nindent 6 }}

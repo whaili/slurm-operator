@@ -139,11 +139,8 @@ func (b *Builder) loginPodTemplate(loginset *slinkyv1alpha1.LoginSet) (corev1.Po
 			Containers: []corev1.Container{
 				loginContainer(template.Container, controller),
 			},
-			Hostname:         template.Hostname,
-			ImagePullSecrets: template.ImagePullSecrets,
-			InitContainers: []corev1.Container{
-				initconfContainer(template.InitConf),
-			},
+			Hostname:          template.Hostname,
+			ImagePullSecrets:  template.ImagePullSecrets,
 			NodeSelector:      template.NodeSelector,
 			PriorityClassName: template.PriorityClassName,
 			Tolerations:       template.Tolerations,
@@ -156,7 +153,6 @@ func (b *Builder) loginPodTemplate(loginset *slinkyv1alpha1.LoginSet) (corev1.Po
 
 func loginVolumes(loginset *slinkyv1alpha1.LoginSet, controller *slinkyv1alpha1.Controller) []corev1.Volume {
 	out := []corev1.Volume{
-		etcSlurmVolume(),
 		{
 			Name: sackdVolume,
 			VolumeSource: corev1.VolumeSource{
@@ -166,7 +162,7 @@ func loginVolumes(loginset *slinkyv1alpha1.LoginSet, controller *slinkyv1alpha1.
 			},
 		},
 		{
-			Name: slurmConfigVolume,
+			Name: slurmEtcVolume,
 			VolumeSource: corev1.VolumeSource{
 				Projected: &corev1.ProjectedVolumeSource{
 					DefaultMode: ptr.To[int32](0o600),

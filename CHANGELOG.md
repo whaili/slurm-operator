@@ -29,6 +29,8 @@ All notable changes to this project will be documented in this file.
 - Changed how a Slurm clusters are expressed via CRDs.
 - Changed lifetime of JWT tokens created by operator from infinite to 15
   minutes.
+- Changed how Slurm config files and secrets are set up in the pod, mount
+  volumes with `securityContext.fsGroup` and remove initconf sidecar.
 
 ### Removed
 

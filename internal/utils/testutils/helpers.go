@@ -47,9 +47,6 @@ func NewController(name string, slurmKeyRef, jwtHs256KeyRef slinkyv1alpha1.Secre
 						Image: "slurmctld",
 					},
 				},
-				InitConf: slinkyv1alpha1.SideCar{
-					Image: "sackd",
-				},
 				Reconfigure: slinkyv1alpha1.SideCar{
 					Image: "sackd",
 				},
@@ -157,9 +154,6 @@ func NewNodeset(name string, controller *slinkyv1alpha1.Controller, replicas int
 						Image: "slurmd",
 					},
 				},
-				InitConf: slinkyv1alpha1.SideCar{
-					Image: "sackd",
-				},
 				LogFile: slinkyv1alpha1.SideCar{
 					Image: "sackd",
 				},
@@ -189,9 +183,6 @@ func NewLoginset(name string, controller *slinkyv1alpha1.Controller, sssdConfRef
 					Container: slinkyv1alpha1.Container{
 						Image: "login",
 					},
-				},
-				InitConf: slinkyv1alpha1.SideCar{
-					Image: "sackd",
 				},
 			},
 			SssdConfRef: sssdConfRef,
@@ -241,9 +232,6 @@ func NewRestapi(name string, controller *slinkyv1alpha1.Controller) *slinkyv1alp
 					Container: slinkyv1alpha1.Container{
 						Image: "slurmrestd",
 					},
-				},
-				InitConf: slinkyv1alpha1.SideCar{
-					Image: "sackd",
 				},
 			},
 		},

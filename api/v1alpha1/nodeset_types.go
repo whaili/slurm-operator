@@ -87,10 +87,6 @@ type NodeSetSpec struct {
 type NodeSetPodTemplate struct {
 	PodTemplate `json:",inline"`
 
-	// The initconf sidecar configuration.
-	// +optional
-	InitConf SideCar `json:"initconf,omitzero"`
-
 	// The logfile sidecar configuration.
 	// +optional
 	LogFile SideCar `json:"logfile,omitzero"`

@@ -4,33 +4,14 @@
 
 set -euo pipefail
 
-# Assume env contains:
-# SLURM_USER - username or UID
+SLURM_DIR="/etc/slurm"
+INTERVAL="30s"
 
-SLURM_MOUNT=/mnt/slurm
-SLURM_DIR=/mnt/etc/slurm
-INTERVAL=30
-INIT_RECONFIGURE=false
+function getHash() {
+	echo "$(find "$SLURM_DIR" -type f -print0 | sort -z | xargs -0 md5sum | md5sum)"
+}
 
 function reconfigure() {
-	local rsync_cmd='rsync -vaLrzPci --delete --include="*.conf" --include="*.yaml" --include="prolog-*" --include="epilog-*" --exclude="*" "${SLURM_MOUNT}/" "${SLURM_DIR}"'
-
-	if [ -z "$(eval "$rsync_cmd --dry-run | grep '\./'")" ] && $INIT_RECONFIGURE; then
-		return
-	fi
-
-	# Sync Slurm config files, ignore all other files
-	eval "$rsync_cmd"
-	find "${SLURM_DIR}" -type f -name "*.conf" -print0 | xargs -0r chown -v "${SLURM_USER}:${SLURM_USER}"
-	find "${SLURM_DIR}" -type f -name "*.conf" -print0 | xargs -0r chmod -v 644
-	find "${SLURM_DIR}" -type f -name "*.yaml" -print0 | xargs -0r chown -v "${SLURM_USER}:${SLURM_USER}"
-	find "${SLURM_DIR}" -type f -name "*.yaml" -print0 | xargs -0r chmod -v 644
-	find "${SLURM_DIR}" -type f -regextype posix-extended -regex "^.*/(pro|epi)log-.*$" -print0 | xargs -0r chown -v "${SLURM_USER}:${SLURM_USER}"
-	find "${SLURM_DIR}" -type f -regextype posix-extended -regex "^.*/(pro|epi)log-.*$" -print0 | xargs -0r chmod -v 755
-
-	# Config files are not in expected directory `/etc/slurm`
-	export SLURM_CONF="$SLURM_MOUNT/slurm.conf"
-
 	# Issue cluster reconfigure request
 	echo "[$(date)] Reconfiguring Slurm..."
 	until scontrol reconfigure; do
@@ -38,13 +19,19 @@ function reconfigure() {
 		sleep 2
 	done
 	echo "[$(date)] SUCCESS"
-	INIT_RECONFIGURE=true
 }
 
 function main() {
-	echo "[$(date)] Start Slurm config change polling"
+	local lastHash=""
+	local newHash=""
+
+	echo "[$(date)] Start '$SLURM_DIR' polling"
 	while true; do
-		reconfigure
+		newHash="$(getHash)"
+		if [ "$newHash" != "$lastHash" ]; then
+			reconfigure
+			lastHash="$newHash"
+		fi
 		sleep "$INTERVAL"
 	done
 }

@@ -62,10 +62,6 @@ type LoginSetSpec struct {
 // PodTemplateSpec describes the data a pod should have when created from a template
 type LoginSetPodTemplate struct {
 	PodTemplate `json:",inline"`
-
-	// The initconf sidecar configuration.
-	// +optional
-	InitConf SideCar `json:"initconf,omitzero"`
 }
 
 // LoginSetStatus defines the observed state of LoginSet

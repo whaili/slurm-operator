@@ -56,7 +56,6 @@ func (b *Builder) BuildComputePodTemplate(nodeset *slinkyv1alpha1.NodeSet, contr
 			Hostname:         template.Hostname,
 			ImagePullSecrets: template.ImagePullSecrets,
 			InitContainers: []corev1.Container{
-				initconfContainer(template.InitConf),
 				logfileContainer(template.LogFile, slurmdLogFilePath),
 			},
 			NodeSelector:      template.NodeSelector,
@@ -71,9 +70,8 @@ func (b *Builder) BuildComputePodTemplate(nodeset *slinkyv1alpha1.NodeSet, contr
 
 func nodesetVolumes(controller *slinkyv1alpha1.Controller) []corev1.Volume {
 	out := []corev1.Volume{
-		etcSlurmVolume(),
 		{
-			Name: slurmConfigVolume,
+			Name: slurmEtcVolume,
 			VolumeSource: corev1.VolumeSource{
 				Projected: &corev1.ProjectedVolumeSource{
 					DefaultMode: ptr.To[int32](0o600),

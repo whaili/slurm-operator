@@ -82,10 +82,6 @@ type ControllerSpec struct {
 type ControllerPodTemplate struct {
 	PodTemplate `json:",inline"`
 
-	// The initconf sidecar configuration.
-	// +optional
-	InitConf SideCar `json:"initconf,omitzero"`
-
 	// The reconfigure sidecar configuration.
 	// +optional
 	Reconfigure SideCar `json:"reconfigure,omitzero"`

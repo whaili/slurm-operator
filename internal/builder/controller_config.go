@@ -67,7 +67,7 @@ func (b *Builder) BuildControllerConfig(controller *slinkyv1alpha1.Controller) (
 	return b.BuildConfigMap(opts, controller)
 }
 
-// This needs to match how initconf.sh and reconfigure.sh glob the scripts.
+// This needs to match how initconf.sh glob the scripts.
 const (
 	prologPrefix = "prolog-"
 	epilogPrefix = "epilog-"

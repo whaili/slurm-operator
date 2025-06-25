@@ -46,10 +46,6 @@ type RestApiSpec struct {
 
 type RestApiPodTemplate struct {
 	PodTemplate `json:",inline"`
-
-	// The initconf sidecar configuration.
-	// +optional
-	InitConf SideCar `json:"initconf,omitzero"`
 }
 
 // RestApiStatus defines the observed state of Restapi

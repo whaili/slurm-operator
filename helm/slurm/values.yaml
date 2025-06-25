@@ -365,13 +365,6 @@ loginsets:
       # capabilities:
       #   add:
       #     - SYS_CHROOT
-    # -- Slurm authcred (sackd) configurations.
-    authcred: {}
-      # imagePullPolicy: IfNotPresent
-      # image:
-      #   repository: ghcr.io/slinkyproject/sackd
-      #   tag: 25.05-ubuntu24.04
-      # resources: {}
     # -- The container resource limits and requests.
     # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
     resources: {}

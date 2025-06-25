@@ -127,14 +127,19 @@ func (b *Builder) controllerPodTemplate(controller *slinkyv1alpha1.Controller) (
 			},
 			Hostname: template.Hostname,
 			InitContainers: []corev1.Container{
-				initconfContainer(template.InitConf),
 				logfileContainer(template.LogFile, slurmctldLogFilePath),
 			},
 			ImagePullSecrets:  template.ImagePullSecrets,
 			NodeSelector:      template.NodeSelector,
 			PriorityClassName: template.PriorityClassName,
-			Tolerations:       template.Tolerations,
-			Volumes:           utils.MergeList(controllerVolumes(controller), template.Volumes),
+			SecurityContext: &corev1.PodSecurityContext{
+				RunAsNonRoot: ptr.To(true),
+				RunAsUser:    ptr.To(slurmUserUid),
+				RunAsGroup:   ptr.To(slurmUserGid),
+				FSGroup:      ptr.To(slurmUserGid),
+			},
+			Tolerations: template.Tolerations,
+			Volumes:     utils.MergeList(controllerVolumes(controller), template.Volumes),
 		},
 	}
 
@@ -143,9 +148,8 @@ func (b *Builder) controllerPodTemplate(controller *slinkyv1alpha1.Controller) (
 
 func controllerVolumes(controller *slinkyv1alpha1.Controller) []corev1.Volume {
 	out := []corev1.Volume{
-		etcSlurmVolume(),
 		{
-			Name: slurmConfigVolume,
+			Name: slurmEtcVolume,
 			VolumeSource: corev1.VolumeSource{
 				Projected: &corev1.ProjectedVolumeSource{
 					DefaultMode: ptr.To[int32](0o600),
@@ -257,9 +261,6 @@ func reconfigureContainer(sidecar slinkyv1alpha1.SideCar) corev1.Container {
 		Name:            "reconfigure",
 		Image:           sidecar.Image,
 		ImagePullPolicy: sidecar.ImagePullPolicy,
-		Env: []corev1.EnvVar{
-			{Name: "SLURM_USER", Value: slurmUser},
-		},
 		Command: []string{
 			"tini",
 			"-g",
@@ -270,8 +271,7 @@ func reconfigureContainer(sidecar slinkyv1alpha1.SideCar) corev1.Container {
 		},
 		Resources: sidecar.Resources,
 		VolumeMounts: []corev1.VolumeMount{
-			{Name: slurmEtcVolume, MountPath: slurmEtcMountDir},
-			{Name: slurmConfigVolume, MountPath: slurmConfigDir, ReadOnly: true},
+			{Name: slurmEtcVolume, MountPath: slurmEtcDir, ReadOnly: true},
 			{Name: slurmAuthSocketVolume, MountPath: slurmctldAuthSocketDir, ReadOnly: true},
 		},
 	}

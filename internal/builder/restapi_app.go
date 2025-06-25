@@ -95,15 +95,18 @@ func (b *Builder) restapiPodTemplate(restapi *slinkyv1alpha1.RestApi) (corev1.Po
 			Containers: []corev1.Container{
 				slurmrestdContainer(template.Container, hasAccounting),
 			},
-			Hostname:         template.Hostname,
-			ImagePullSecrets: template.ImagePullSecrets,
-			InitContainers: []corev1.Container{
-				initconfContainer(template.InitConf),
-			},
+			Hostname:          template.Hostname,
+			ImagePullSecrets:  template.ImagePullSecrets,
 			NodeSelector:      template.NodeSelector,
 			PriorityClassName: template.PriorityClassName,
-			Tolerations:       template.Tolerations,
-			Volumes:           utils.MergeList(restapiVolumes(controller), template.Volumes),
+			SecurityContext: &corev1.PodSecurityContext{
+				RunAsNonRoot: ptr.To(true),
+				RunAsUser:    ptr.To(slurmrestdUserUid),
+				RunAsGroup:   ptr.To(slurmrestdUserGid),
+				FSGroup:      ptr.To(slurmrestdUserGid),
+			},
+			Tolerations: template.Tolerations,
+			Volumes:     utils.MergeList(restapiVolumes(controller), template.Volumes),
 		},
 	}
 
@@ -112,9 +115,8 @@ func (b *Builder) restapiPodTemplate(restapi *slinkyv1alpha1.RestApi) (corev1.Po
 
 func restapiVolumes(controller *slinkyv1alpha1.Controller) []corev1.Volume {
 	out := []corev1.Volume{
-		etcSlurmVolume(),
 		{
-			Name: slurmConfigVolume,
+			Name: slurmEtcVolume,
 			VolumeSource: corev1.VolumeSource{
 				Projected: &corev1.ProjectedVolumeSource{
 					DefaultMode: ptr.To[int32](0o600),
