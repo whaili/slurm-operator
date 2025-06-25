@@ -10,7 +10,7 @@ SPDX-License-Identifier: Apache-2.0
 {{- $imageRef := printf "%s:%s" $repository $tag }}
 {{- $name := printf "%s-%s" (include "slurm.compute.name" $) $nodeset.name }}
 {{- $authcredRepository := include "slurm.authcred.image.repository" $ }}
-{{- $authcredTag := include "slurm.authcred.image.repository" $ }}
+{{- $authcredTag := include "slurm.authcred.image.tag" $ }}
 {{- $authcredImagePullPolicy := $nodeset.imagePullPolicy | default (include "slurm.imagePullPolicy" $) }}
 {{- $authcredResources := $.Values.authcred.resources }}
 {{- with $nodeset.authcred -}}
