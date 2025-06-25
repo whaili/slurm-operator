@@ -252,7 +252,7 @@ func (e *podEventHandler) deletePod(
 	}
 	nodesetKey, err := kubecontroller.KeyFunc(nodeset)
 	if err != nil {
-		utilruntime.HandleError(fmt.Errorf("couldn't get key for object %#v: %v", nodeset, err))
+		utilruntime.HandleError(fmt.Errorf("couldn't get key for object %#v: %w", nodeset, err))
 		return
 	}
 	logger.V(4).Info("Pod deleted", "delete_by", utilruntime.GetCaller(), "deletion_timestamp", pod.DeletionTimestamp, "pod", klog.KObj(pod))

@@ -28,7 +28,8 @@ func newNodeSet(name string) *slinkyv1alpha1.NodeSet {
 }
 
 func newNodeSetWithVolumes(name string, petMounts []corev1.VolumeMount, podMounts []corev1.VolumeMount) *slinkyv1alpha1.NodeSet {
-	mounts := append(petMounts, podMounts...)
+	mounts := petMounts
+	mounts = append(mounts, podMounts...)
 	claims := []corev1.PersistentVolumeClaim{}
 	for _, m := range petMounts {
 		claims = append(claims, newPVC(m.Name))

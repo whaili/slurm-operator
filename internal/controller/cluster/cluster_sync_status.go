@@ -34,7 +34,7 @@ func (r *ClusterReconciler) syncClusterStatus(
 	status.IsReady = isReady
 
 	if err := r.updateStatus(ctx, cluster, status); err != nil {
-		return fmt.Errorf("error updating Cluster(%s) status: %v", klog.KObj(cluster), err)
+		return fmt.Errorf("error updating Cluster(%s) status: %w", klog.KObj(cluster), err)
 	}
 
 	if !status.IsReady {

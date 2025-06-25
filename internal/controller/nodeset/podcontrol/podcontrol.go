@@ -281,13 +281,13 @@ func (r *realPodControl) createPersistentVolumeClaims(ctx context.Context, nodes
 		switch {
 		case apierrors.IsNotFound(err):
 			if err := r.Create(ctx, &claim); err != nil {
-				errs = append(errs, fmt.Errorf("failed to create PVC %s: %s", claim.Name, err))
+				errs = append(errs, fmt.Errorf("failed to create PVC %s: %w", claim.Name, err))
 			}
 			if err == nil || !apierrors.IsAlreadyExists(err) {
 				r.recordClaimEvent(eventCreate, nodeset, pod, &claim, err)
 			}
 		case err != nil:
-			errs = append(errs, fmt.Errorf("failed to retrieve PVC %s: %s", claim.Name, err))
+			errs = append(errs, fmt.Errorf("failed to retrieve PVC %s: %w", claim.Name, err))
 			r.recordClaimEvent(eventCreate, nodeset, pod, &claim, err)
 		default:
 			if pvc.DeletionTimestamp != nil {

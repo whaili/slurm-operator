@@ -36,7 +36,7 @@ var _ = Describe("Cluster controller", func() {
 	const (
 		clusterName      = "test-cluster"
 		clusterNamespace = "default"
-		slurmSecretName  = "slurm-token-secret"
+		slurmSecretName  = "slurm-token-secret" //nolint:gosec // disable G101
 
 		timeout  = time.Second * 30
 		duration = time.Second * 30

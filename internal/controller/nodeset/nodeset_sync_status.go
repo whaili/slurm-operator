@@ -79,7 +79,7 @@ func (r *NodeSetReconciler) syncNodeSetStatus(
 
 	selector, err := metav1.LabelSelectorAsSelector(nodeset.Spec.Selector)
 	if err != nil {
-		return fmt.Errorf("could not get label selector for NodeSet(%s): %v", klog.KObj(nodeset), err)
+		return fmt.Errorf("could not get label selector for NodeSet(%s): %w", klog.KObj(nodeset), err)
 	}
 
 	replicaStatus := r.calculateReplicaStatus(nodeset, pods, currentRevision, updateRevision)

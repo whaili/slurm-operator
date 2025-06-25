@@ -19,7 +19,8 @@ func TestIsRunningAndReady(t *testing.T) {
 		Status: corev1.ConditionTrue,
 	})
 	podB.Status.Phase = corev1.PodFailed
-	podB.Status.Conditions = append(podA.Status.Conditions, corev1.PodCondition{
+	podB.Status.Conditions = podA.Status.Conditions
+	podB.Status.Conditions = append(podB.Status.Conditions, corev1.PodCondition{
 		Type:   corev1.PodReady,
 		Status: corev1.ConditionFalse,
 	})

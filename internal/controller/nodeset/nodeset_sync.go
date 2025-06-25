@@ -94,7 +94,7 @@ func (r *NodeSetReconciler) Sync(ctx context.Context, req reconcile.Request) err
 			return r.syncStatus(ctx, nodeset, nodesetPods, currentRevision, updateRevision, collisionCount, hash, err)
 		}
 		if err := r.truncateHistory(ctx, nodeset, revisions, currentRevision, updateRevision); err != nil {
-			err = fmt.Errorf("failed to clean up revisions of NodeSet(%s): %v", klog.KObj(nodeset), err)
+			err = fmt.Errorf("failed to clean up revisions of NodeSet(%s): %w", klog.KObj(nodeset), err)
 			return r.syncStatus(ctx, nodeset, nodesetPods, currentRevision, updateRevision, collisionCount, hash, err)
 		}
 	}
@@ -128,7 +128,7 @@ func (r *NodeSetReconciler) adoptOrphanRevisions(ctx context.Context, nodeset *s
 	if len(orphanRevisions) > 0 {
 		canAdoptErr := r.canAdoptFunc(nodeset)(ctx)
 		if canAdoptErr != nil {
-			return fmt.Errorf("cannot adopt ControllerRevisions: %v", canAdoptErr)
+			return fmt.Errorf("cannot adopt ControllerRevisions: %w", canAdoptErr)
 		}
 		return r.doAdoptOrphanRevisions(nodeset, orphanRevisions)
 	}
@@ -302,16 +302,18 @@ func (r *NodeSetReconciler) syncNodeSet(
 		logger.V(2).Info("Too few NodeSet pods", "nodeset", klog.KObj(nodeset),
 			"need", replicaCount, "creating", diff)
 		return r.doPodScaleOut(ctx, nodeset, pods, diff, hash)
-	} else if diff > 0 {
+	}
+
+	if diff > 0 {
 		logger.V(2).Info("Too many NodeSet pods", "nodeset", klog.KObj(nodeset),
 			"need", replicaCount, "deleting", diff)
 		podsToDelete, podsToKeep := nodesetutils.SplitActivePods(pods, diff)
 		return r.doPodScaleIn(ctx, nodeset, podsToDelete, podsToKeep)
-	} else {
-		logger.V(2).Info("Processing NodeSet pods", "nodeset", klog.KObj(nodeset),
-			"replicas", replicaCount)
-		return r.doPodProcessing(ctx, nodeset, pods, hash)
 	}
+
+	logger.V(2).Info("Processing NodeSet pods", "nodeset", klog.KObj(nodeset),
+		"replicas", replicaCount)
+	return r.doPodProcessing(ctx, nodeset, pods, hash)
 }
 
 // doPodScaleOut handles scaling-out NodeSet pods.
