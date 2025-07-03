@@ -6,19 +6,6 @@ SPDX-License-Identifier: Apache-2.0
 {{- range $key, $loginset := $.Values.loginsets -}}
 {{- if $loginset.enabled }}
 {{- $name := printf "%s-%s" (include "slurm.login.name" $) $key }}
-{{- $sidecarRepository := $.Values.authcred.image.repository }}
-{{- $sidecarTag := $.Values.authcred.image.tag }}
-{{- $sidecarImagePullPolicy := $loginset.imagePullPolicy | default $.Values.imagePullPolicy }}
-{{- $sidecarResources := $.Values.authcred.resources }}
-{{- with $loginset.authcred -}}
-  {{- with .image -}}
-    {{- $sidecarRepository = .repository | default $sidecarRepository -}}
-    {{- $sidecarTag = .tag | default $sidecarTag -}}
-  {{- end -}}
-  {{- $sidecarImagePullPolicy = .imagePullPolicy | default $sidecarImagePullPolicy -}}
-  {{- $sidecarResources = .resources | default $sidecarResources -}}
-{{- end -}}
-{{- $sidecarImageRef := printf "%s:%s" $sidecarRepository $sidecarTag }}
 ---
 apiVersion: slinky.slurm.net/v1alpha1
 kind: LoginSet

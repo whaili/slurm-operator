@@ -152,6 +152,32 @@ controller:
     resources:
       requests:
         storage: 4Gi
+  # Reconfigure sidecar configurations.
+  reconfigure:
+    # -- The image to use, `${repository}:${tag}`.
+    # Ref: https://kubernetes.io/docs/concepts/containers/images/#image-names
+    image:
+      repository: ghcr.io/slinkyproject/sackd
+      tag: 25.05-ubuntu24.04
+    # -- The container resource limits and requests.
+    # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
+    resources: {}
+      # limits:
+        # cpu: 500m
+        # memory: 100Mi
+  # LogFile sidecar configurations.
+  logfile:
+    # -- The image to use, `${repository}:${tag}`.
+    # Ref: https://kubernetes.io/docs/concepts/containers/images/#image-names
+    image:
+      repository: ghcr.io/slinkyproject/sackd
+      tag: 25.05-ubuntu24.04
+    # -- The container resource limits and requests.
+    # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
+    resources: {}
+      # limits:
+      #   cpu: 500m
+      #   memory: 100Mi
   # -- The container resource limits and requests.
   # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
   resources: {}
@@ -288,6 +314,19 @@ accounting:
     passwordKeyRef:
       name: mariadb-password
       key: password
+  # InitConf sidecar configurations.
+  initconf:
+    # -- The image to use, `${repository}:${tag}`.
+    # Ref: https://kubernetes.io/docs/concepts/containers/images/#image-names
+    image:
+      repository: ghcr.io/slinkyproject/sackd
+      tag: 25.05-ubuntu24.04
+    # -- The container resource limits and requests.
+    # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
+    resources: {}
+      # limits:
+      #   cpu: 500m
+      #   memory: 100Mi
   # -- The container resource limits and requests.
   # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
   resources: {}
@@ -445,13 +484,19 @@ nodesets:
       configMap: {}
         # State: UP
         # MaxTime: UNLIMITED
-    # -- Sidecar override configurations.
-    sidecar: {}
-      # imagePullPolicy: IfNotPresent
-      # image:
-      #   repository: ghcr.io/slinkyproject/sackd
-      #   tag: 25.05-ubuntu24.04
-      # resources: {}
+    # LogFile sidecar configurations.
+    logfile:
+      # -- The image to use, `${repository}:${tag}`.
+      # Ref: https://kubernetes.io/docs/concepts/containers/images/#image-names
+      image:
+        repository: ghcr.io/slinkyproject/sackd
+        tag: 25.05-ubuntu24.04
+      # -- The container resource limits and requests.
+      # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
+      resources: {}
+        # limits:
+        #   cpu: 500m
+        #   memory: 100Mi
     # -- The container resource limits and requests.
     # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
     resources: {}

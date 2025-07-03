@@ -69,19 +69,19 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}{{- /* with .Values.controller.resources */}}
     reconfigure:
-      image: {{ include "format-image" .Values.authcred.image }}
+      image: {{ include "format-image" .Values.controller.reconfigure.image }}
       imagePullPolicy: {{ .Values.imagePullPolicy }}
-      {{- with .Values.authcred.resources }}
+      {{- with .Values.controller.reconfigure.resources }}
       resources:
         {{- toYaml . | nindent 8 }}
-      {{- end }}{{- /* with .Values.authcred.resources */}}
+      {{- end }}{{- /* with .Values.controller.reconfigure.resources */}}
     logfile:
-      image: {{ include "format-image" .Values.authcred.image }}
+      image: {{ include "format-image" .Values.controller.logfile.image }}
       imagePullPolicy: {{ .Values.imagePullPolicy }}
-      {{- with .Values.authcred.resources }}
+      {{- with .Values.controller.logfile.resources }}
       resources:
         {{- toYaml . | nindent 8 }}
-      {{- end }}{{- /* with .Values.authcred.resources */}}
+      {{- end }}{{- /* with .Values.controller.logfile.resources */}}
     {{- with .Values.controller.nodeSelector }}
     nodeSelector:
       {{- toYaml . | nindent 6 }}

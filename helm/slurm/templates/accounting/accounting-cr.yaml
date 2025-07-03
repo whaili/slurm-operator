@@ -50,12 +50,12 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}{{- /* with .Values.accounting.resources */}}
     initconf:
-      image: {{ include "format-image" .Values.authcred.image }}
+      image: {{ include "format-image" .Values.accounting.initconf.image }}
       imagePullPolicy: {{ .Values.imagePullPolicy }}
-      {{- with .Values.authcred.resources }}
+      {{- with .Values.accounting.initconf.resources }}
       resources:
         {{- toYaml . | nindent 8 }}
-      {{- end }}{{- /* with .Values.authcred.resources */}}
+      {{- end }}{{- /* with .Values.accounting.resources */}}
     {{- with .Values.accounting.nodeSelector }}
     nodeSelector:
       {{- toYaml . | nindent 6 }}

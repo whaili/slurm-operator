@@ -6,19 +6,6 @@ SPDX-License-Identifier: Apache-2.0
 {{- range $key, $nodeset := $.Values.nodesets -}}
 {{- if $nodeset.enabled }}
 {{- $name := printf "%s-%s" (include "slurm.compute.name" $) $key }}
-{{- $sidecarRepository := $.Values.authcred.image.repository }}
-{{- $sidecarTag := $.Values.authcred.image.tag }}
-{{- $sidecarImagePullPolicy := $nodeset.imagePullPolicy | default $.Values.imagePullPolicy }}
-{{- $sidecarResources := $.Values.authcred.resources }}
-{{- with $nodeset.authcred -}}
-  {{- with .image -}}
-    {{- $sidecarRepository = .repository | default $sidecarRepository -}}
-    {{- $sidecarTag = .tag | default $sidecarTag -}}
-  {{- end -}}
-  {{- $sidecarImagePullPolicy = .imagePullPolicy | default $sidecarImagePullPolicy -}}
-  {{- $sidecarResources = .resources | default $sidecarResources -}}
-{{- end -}}
-{{- $sidecarImageRef := printf "%s:%s" $sidecarRepository $sidecarTag }}
 ---
 apiVersion: slinky.slurm.net/v1alpha1
 kind: NodeSet
@@ -76,10 +63,12 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}{{- /* with $nodeset.volumeMounts */}}
     logfile:
-      image: {{ $sidecarImageRef }}
-      imagePullPolicy: {{ $sidecarImagePullPolicy }}
+      image: {{ include "format-image" $nodeset.logfile.image }}
+      imagePullPolicy: {{ $.Values.imagePullPolicy }}
+      {{- with $nodeset.logfile.resources }}
       resources:
-        {{- toYaml $sidecarResources | nindent 8 }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}{{- /* with $nodeset.logfile.resources */}}
     {{- with $nodeset.nodeSelector }}
     nodeSelector:
       {{- toYaml . | nindent 6 }}

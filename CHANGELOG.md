@@ -11,6 +11,8 @@ All notable changes to this project will be documented in this file.
 - Added Accounting, Controller, Restapi, and LoginSet CRDs.
 - Added Slurm ClusterName override, otherwise derived from Controller CR
   metadata.
+- Added disaggregated configuration for each sidecar, no longer overloading the
+  authcred configuration.
 
 ### Fixed
 
