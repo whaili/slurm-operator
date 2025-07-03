@@ -48,7 +48,7 @@ func NewController(name string, slurmKeyRef, jwtHs256KeyRef slinkyv1alpha1.Secre
 					},
 				},
 				Reconfigure: slinkyv1alpha1.SideCar{
-					Image: "sackd",
+					Image: "slurmctld",
 				},
 				LogFile: slinkyv1alpha1.SideCar{
 					Image: "alpine",
