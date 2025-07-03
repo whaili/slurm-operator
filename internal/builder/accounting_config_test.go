@@ -75,7 +75,7 @@ func TestBuilder_BuildAccountingConfig(t *testing.T) {
 			case err != nil:
 				return
 
-			case got.Data[slurmdbdConfFile] == "" && got.BinaryData[slurmdbdConfFile] == nil:
+			case got.Data[slurmdbdConfFile] == nil && got.StringData[slurmdbdConfFile] == "":
 				t.Errorf("got.Data[%s] = %v", slurmdbdConfFile, got.Data[slurmdbdConfFile])
 			}
 		})

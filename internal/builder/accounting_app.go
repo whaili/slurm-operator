@@ -86,7 +86,6 @@ func (b *Builder) accountingPodTemplate(accounting *slinkyv1alpha1.Accounting) (
 		Build()
 
 	template := accounting.Spec.Template
-	storageRef := accounting.AuthStorageRef()
 
 	o := corev1.PodTemplateSpec{
 		ObjectMeta: objectMeta,
@@ -98,7 +97,7 @@ func (b *Builder) accountingPodTemplate(accounting *slinkyv1alpha1.Accounting) (
 			},
 			ImagePullSecrets: template.ImagePullSecrets,
 			InitContainers: []corev1.Container{
-				initDbConfContainer(accounting.Spec.Template.InitConf, storageRef),
+				initconfContainer(accounting.Spec.Template.InitConf),
 			},
 			NodeSelector:      template.NodeSelector,
 			PriorityClassName: template.PriorityClassName,
@@ -120,7 +119,7 @@ func accountingVolumes(accounting *slinkyv1alpha1.Accounting) []corev1.Volume {
 					DefaultMode: ptr.To[int32](0o600),
 					Sources: []corev1.VolumeProjection{
 						{
-							ConfigMap: &corev1.ConfigMapProjection{
+							Secret: &corev1.SecretProjection{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: accounting.ConfigKey().Name,
 								},
@@ -194,27 +193,6 @@ func slurmdbdContainer(container slinkyv1alpha1.Container) corev1.Container {
 }
 
 const (
-	storagePassEnv = "STORAGE_PASSWORD"
-)
-
-func initDbConfContainer(sidecar slinkyv1alpha1.SideCar, secretRef *slinkyv1alpha1.SecretKeySelector) corev1.Container {
-	c := initconfContainer(sidecar)
-	env := corev1.EnvVar{
-		Name: storagePassEnv,
-		ValueFrom: &corev1.EnvVarSource{
-			SecretKeyRef: &corev1.SecretKeySelector{
-				LocalObjectReference: corev1.LocalObjectReference{
-					Name: secretRef.Name,
-				},
-				Key: secretRef.Key,
-			},
-		},
-	}
-	c.Env = append(c.Env, env)
-	return c
-}
-
-const (
 	annotationSlurmdbdConfHash = slinkyv1alpha1.SlinkyPrefix + "slurmdbd-conf-hash"
 )
 
@@ -224,7 +202,7 @@ func (b *Builder) getAccountingHashes(ctx context.Context, accounting *slinkyv1a
 		return nil, err
 	}
 
-	dbdConfig := &corev1.ConfigMap{}
+	dbdConfig := &corev1.Secret{}
 	dbdConfigKey := accounting.ConfigKey()
 	if err := b.client.Get(ctx, dbdConfigKey, dbdConfig); err != nil {
 		if !apierrors.IsNotFound(err) {

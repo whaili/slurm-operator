@@ -104,7 +104,7 @@ func NewJwtHs256KeySecret(ref slinkyv1alpha1.SecretKeySelector) *corev1.Secret {
 	}
 }
 
-func NewAccounting(name string, slurmKeyRef, jwtHs256KeyRef slinkyv1alpha1.SecretKeySelector) *slinkyv1alpha1.Accounting {
+func NewAccounting(name string, slurmKeyRef, jwtHs256KeyRef slinkyv1alpha1.SecretKeySelector, passwordRef corev1.SecretKeySelector) *slinkyv1alpha1.Accounting {
 	return &slinkyv1alpha1.Accounting{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: slinkyv1alpha1.AccountingAPIVersion,
@@ -117,6 +117,10 @@ func NewAccounting(name string, slurmKeyRef, jwtHs256KeyRef slinkyv1alpha1.Secre
 		Spec: slinkyv1alpha1.AccountingSpec{
 			SlurmKeyRef:    slurmKeyRef,
 			JwtHs256KeyRef: jwtHs256KeyRef,
+			StorageConfig: slinkyv1alpha1.StorageConfig{
+				Host:           "mariadb",
+				PasswordKeyRef: passwordRef,
+			},
 			Template: slinkyv1alpha1.AccountingPodTemplate{
 				PodTemplate: slinkyv1alpha1.PodTemplate{
 					Container: slinkyv1alpha1.Container{
@@ -127,6 +131,27 @@ func NewAccounting(name string, slurmKeyRef, jwtHs256KeyRef slinkyv1alpha1.Secre
 					Image: "sackd",
 				},
 			},
+		},
+	}
+}
+
+func NewPasswordRef(name string) corev1.SecretKeySelector {
+	return corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{
+			Name: name + "-password",
+		},
+		Key: "password",
+	}
+}
+
+func NewPasswordSecret(ref corev1.SecretKeySelector) *corev1.Secret {
+	return &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      ref.Name,
+			Namespace: corev1.NamespaceDefault,
+		},
+		Data: map[string][]byte{
+			ref.Key: []byte("password"),
 		},
 	}
 }

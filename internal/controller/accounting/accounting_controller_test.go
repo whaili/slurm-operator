@@ -20,20 +20,25 @@ var _ = Describe("Accounting controller", func() {
 		var accounting *slinkyv1alpha1.Accounting
 		var slurmKeySecret *corev1.Secret
 		var jwtHs256KeySecret *corev1.Secret
+		var passwordSecret *corev1.Secret
 
 		BeforeEach(func() {
 			slurmKeyRef := testutils.NewSlurmKeyRef(name)
 			jwtHs256KeyRef := testutils.NewJwtHs256KeyRef(name)
+			passwordRef := testutils.NewPasswordRef(name)
 			slurmKeySecret = testutils.NewSlurmKeySecret(slurmKeyRef)
 			jwtHs256KeySecret = testutils.NewJwtHs256KeySecret(jwtHs256KeyRef)
-			accounting = testutils.NewAccounting(name, slurmKeyRef, jwtHs256KeyRef)
+			passwordSecret = testutils.NewPasswordSecret(passwordRef)
+			accounting = testutils.NewAccounting(name, slurmKeyRef, jwtHs256KeyRef, passwordRef)
 			Expect(k8sClient.Create(ctx, slurmKeySecret.DeepCopy())).To(Succeed())
 			Expect(k8sClient.Create(ctx, jwtHs256KeySecret.DeepCopy())).To(Succeed())
+			Expect(k8sClient.Create(ctx, passwordSecret.DeepCopy())).To(Succeed())
 			Expect(k8sClient.Create(ctx, accounting.DeepCopy())).To(Succeed())
 		})
 
 		AfterEach(func() {
 			_ = k8sClient.Delete(ctx, accounting)
+			_ = k8sClient.Delete(ctx, passwordSecret)
 			_ = k8sClient.Delete(ctx, slurmKeySecret)
 			_ = k8sClient.Delete(ctx, jwtHs256KeySecret)
 		})

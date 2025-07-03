@@ -82,7 +82,7 @@ func TestNewController(t *testing.T) {
 				name:           "foo",
 				slurmKeyRef:    NewSlurmKeyRef("foo"),
 				jwtHs256KeyRef: NewJwtHs256KeyRef("foo"),
-				accounting:     NewAccounting("foo", NewSlurmKeyRef("foo"), NewJwtHs256KeyRef("foo")),
+				accounting:     NewAccounting("foo", NewSlurmKeyRef("foo"), NewJwtHs256KeyRef("foo"), NewPasswordRef("name")),
 			},
 		},
 	}
@@ -210,6 +210,7 @@ func TestNewAccounting(t *testing.T) {
 		name           string
 		slurmKeyRef    slinkyv1alpha1.SecretKeySelector
 		jwtHs256KeyRef slinkyv1alpha1.SecretKeySelector
+		passwordRef    corev1.SecretKeySelector
 	}
 	tests := []struct {
 		name string
@@ -226,11 +227,64 @@ func TestNewAccounting(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewAccounting(tt.args.name, tt.args.slurmKeyRef, tt.args.jwtHs256KeyRef)
+			got := NewAccounting(tt.args.name, tt.args.slurmKeyRef, tt.args.jwtHs256KeyRef, tt.args.passwordRef)
 			switch {
 			case got == nil:
 				t.Error("returned object was nil")
 			case !strings.Contains(NewObjectRef(got).Name, tt.args.name):
+				t.Error("name does not match")
+			}
+		})
+	}
+}
+
+func TestNewPasswordRef(t *testing.T) {
+	type args struct {
+		name string
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "smoke",
+			args: args{
+				name: "foo",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := NewPasswordRef(tt.args.name)
+			if !strings.Contains(got.Name, tt.args.name) {
+				t.Error("name does not match")
+			}
+		})
+	}
+}
+
+func TestNewPasswordSecret(t *testing.T) {
+	type args struct {
+		ref corev1.SecretKeySelector
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "smoke",
+			args: args{
+				ref: NewPasswordRef("foo"),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := NewPasswordSecret(tt.args.ref)
+			switch {
+			case got == nil:
+				t.Error("returned object was nil")
+			case !strings.Contains(NewObjectRef(got).Name, tt.args.ref.Name):
 				t.Error("name does not match")
 			}
 		})
