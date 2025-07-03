@@ -106,10 +106,7 @@ func logfileContainer(sidecar slinkyv1alpha1.SideCar, logfilePath string) corev1
 			},
 		},
 		Command: []string{
-			"tini",
-			"-g",
-			"--",
-			"bash",
+			"sh",
 			"-c",
 			logfileScript,
 		},

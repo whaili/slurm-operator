@@ -1,8 +1,8 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 # SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
 # SPDX-License-Identifier: Apache-2.0
 
-set -euo pipefail
+set -eu
 
 # Assume env contains:
 # SOCKET - Named socket to read from

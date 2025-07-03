@@ -170,8 +170,8 @@ controller:
     # -- The image to use, `${repository}:${tag}`.
     # Ref: https://kubernetes.io/docs/concepts/containers/images/#image-names
     image:
-      repository: ghcr.io/slinkyproject/sackd
-      tag: 25.05-ubuntu24.04
+      repository: docker.io/library/alpine
+      tag: latest
     # -- The container resource limits and requests.
     # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
     resources: {}
@@ -489,8 +489,8 @@ nodesets:
       # -- The image to use, `${repository}:${tag}`.
       # Ref: https://kubernetes.io/docs/concepts/containers/images/#image-names
       image:
-        repository: ghcr.io/slinkyproject/sackd
-        tag: 25.05-ubuntu24.04
+        repository: docker.io/library/alpine
+        tag: latest
       # -- The container resource limits and requests.
       # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
       resources: {}

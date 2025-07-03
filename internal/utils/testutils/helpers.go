@@ -51,7 +51,7 @@ func NewController(name string, slurmKeyRef, jwtHs256KeyRef slinkyv1alpha1.Secre
 					Image: "sackd",
 				},
 				LogFile: slinkyv1alpha1.SideCar{
-					Image: "sackd",
+					Image: "alpine",
 				},
 			},
 		},
@@ -155,7 +155,7 @@ func NewNodeset(name string, controller *slinkyv1alpha1.Controller, replicas int
 					},
 				},
 				LogFile: slinkyv1alpha1.SideCar{
-					Image: "sackd",
+					Image: "alpine",
 				},
 			},
 		},

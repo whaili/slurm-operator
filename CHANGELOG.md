@@ -33,6 +33,7 @@ All notable changes to this project will be documented in this file.
   minutes.
 - Changed how Slurm config files and secrets are set up in the pod, mount
   volumes with `securityContext.fsGroup` and remove initconf sidecar.
+- Changed logfile sidecar image to alpine.
 
 ### Removed
 
