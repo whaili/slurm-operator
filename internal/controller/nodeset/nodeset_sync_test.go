@@ -38,24 +38,24 @@ import (
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/builder/labels"
+	"github.com/SlinkyProject/slurm-operator/internal/clientmap"
 	"github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/podcontrol"
 	"github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/slurmcontrol"
 	nodesetutils "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/utils"
-	"github.com/SlinkyProject/slurm-operator/internal/resources"
 	"github.com/SlinkyProject/slurm-operator/internal/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/historycontrol"
 )
 
-func newNodeSetController(client client.Client, slurmClusters *resources.Clusters) *NodeSetReconciler {
+func newNodeSetController(client client.Client, clientMap *clientmap.ClientMap) *NodeSetReconciler {
 	eventRecorder := record.NewFakeRecorder(10)
 	r := &NodeSetReconciler{
 		Client:         client,
 		Scheme:         client.Scheme(),
-		SlurmClusters:  slurmClusters,
+		ClientMap:      clientMap,
 		eventRecorder:  eventRecorder,
 		historyControl: historycontrol.NewHistoryControl(client),
 		podControl:     podcontrol.NewPodControl(client, eventRecorder),
-		slurmControl:   slurmcontrol.NewSlurmControl(slurmClusters),
+		slurmControl:   slurmcontrol.NewSlurmControl(clientMap),
 		expectations:   kubecontroller.NewUIDTrackingControllerExpectations(kubecontroller.NewControllerExpectations()),
 	}
 	return r
@@ -86,14 +86,14 @@ func newNodeSet(name, controllerName string, replicas int32) *slinkyv1alpha1.Nod
 	}
 }
 
-func newSlurmClusters(controllerName string, client slurmclient.Client) *resources.Clusters {
-	controllers := resources.NewClusters()
+func newClientMap(controllerName string, client slurmclient.Client) *clientmap.ClientMap {
+	cm := clientmap.NewClientMap()
 	key := types.NamespacedName{
 		Namespace: corev1.NamespaceDefault,
 		Name:      controllerName,
 	}
-	controllers.Add(key, client)
-	return controllers
+	cm.Add(key, client)
+	return cm
 }
 
 func newNodeSetPodSlurmNode(pod *corev1.Pod) *slurmtypes.V0043Node {
@@ -412,8 +412,8 @@ func TestNodeSetReconciler_getNodeSetPods(t *testing.T) {
 func TestNodeSetReconciler_sync(t *testing.T) {
 	utilruntime.Must(slinkyv1alpha1.AddToScheme(clientgoscheme.Scheme))
 	type fields struct {
-		Client        client.Client
-		SlurmClusters *resources.Clusters
+		Client    client.Client
+		ClientMap *clientmap.ClientMap
 	}
 	type args struct {
 		ctx     context.Context
@@ -431,7 +431,7 @@ func TestNodeSetReconciler_sync(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := newNodeSetController(tt.fields.Client, tt.fields.SlurmClusters)
+			r := newNodeSetController(tt.fields.Client, tt.fields.ClientMap)
 			if err := r.sync(tt.args.ctx, tt.args.nodeset, tt.args.pods, tt.args.hash); (err != nil) != tt.wantErr {
 				t.Errorf("NodeSetReconciler.sync() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -442,8 +442,8 @@ func TestNodeSetReconciler_sync(t *testing.T) {
 func TestNodeSetReconciler_syncNodeSet(t *testing.T) {
 	utilruntime.Must(slinkyv1alpha1.AddToScheme(clientgoscheme.Scheme))
 	type fields struct {
-		Client        client.Client
-		SlurmClusters *resources.Clusters
+		Client    client.Client
+		ClientMap *clientmap.ClientMap
 	}
 	type args struct {
 		ctx     context.Context
@@ -461,7 +461,7 @@ func TestNodeSetReconciler_syncNodeSet(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := newNodeSetController(tt.fields.Client, tt.fields.SlurmClusters)
+			r := newNodeSetController(tt.fields.Client, tt.fields.ClientMap)
 			if err := r.syncNodeSet(tt.args.ctx, tt.args.nodeset, tt.args.pods, tt.args.hash); (err != nil) != tt.wantErr {
 				t.Errorf("NodeSetReconciler.syncNodeSet() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -472,8 +472,8 @@ func TestNodeSetReconciler_syncNodeSet(t *testing.T) {
 func TestNodeSetReconciler_doPodScaleOut(t *testing.T) {
 	utilruntime.Must(slinkyv1alpha1.AddToScheme(clientgoscheme.Scheme))
 	type fields struct {
-		Client        client.Client
-		SlurmClusters *resources.Clusters
+		Client    client.Client
+		ClientMap *clientmap.ClientMap
 	}
 	type args struct {
 		ctx       context.Context
@@ -492,7 +492,7 @@ func TestNodeSetReconciler_doPodScaleOut(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := newNodeSetController(tt.fields.Client, tt.fields.SlurmClusters)
+			r := newNodeSetController(tt.fields.Client, tt.fields.ClientMap)
 			if err := r.doPodScaleOut(tt.args.ctx, tt.args.nodeset, tt.args.pods, tt.args.numCreate, tt.args.hash); (err != nil) != tt.wantErr {
 				t.Errorf("NodeSetReconciler.doPodScaleOut() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -503,8 +503,8 @@ func TestNodeSetReconciler_doPodScaleOut(t *testing.T) {
 func TestNodeSetReconciler_doPodScaleIn(t *testing.T) {
 	utilruntime.Must(slinkyv1alpha1.AddToScheme(clientgoscheme.Scheme))
 	type fields struct {
-		Client        client.Client
-		SlurmClusters *resources.Clusters
+		Client    client.Client
+		ClientMap *clientmap.ClientMap
 	}
 	type args struct {
 		ctx          context.Context
@@ -522,7 +522,7 @@ func TestNodeSetReconciler_doPodScaleIn(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := newNodeSetController(tt.fields.Client, tt.fields.SlurmClusters)
+			r := newNodeSetController(tt.fields.Client, tt.fields.ClientMap)
 			if err := r.doPodScaleIn(tt.args.ctx, tt.args.nodeset, tt.args.podsToDelete, tt.args.podsToKeep); (err != nil) != tt.wantErr {
 				t.Errorf("NodeSetReconciler.doPodScaleIn() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -538,8 +538,8 @@ func TestNodeSetReconciler_processCondemned(t *testing.T) {
 		},
 	}
 	type fields struct {
-		Client        client.Client
-		SlurmClusters *resources.Clusters
+		Client    client.Client
+		ClientMap *clientmap.ClientMap
 	}
 	type args struct {
 		ctx       context.Context
@@ -590,13 +590,13 @@ func TestNodeSetReconciler_processCondemned(t *testing.T) {
 				},
 			}
 			slurmClient := newFakeClientList(sinterceptor.Funcs{}, slurmNodeList)
-			slurmClusters := newSlurmClusters(controller.Name, slurmClient)
+			clientMap := newClientMap(controller.Name, slurmClient)
 
 			return testCaseFields{
 				name: "drain",
 				fields: fields{
-					Client:        client,
-					SlurmClusters: slurmClusters,
+					Client:    client,
+					ClientMap: clientMap,
 				},
 				args: args{
 					ctx:       context.TODO(),
@@ -633,13 +633,13 @@ func TestNodeSetReconciler_processCondemned(t *testing.T) {
 			}
 			client := fake.NewFakeClient(nodeset, podList)
 			slurmClient := newFakeClientList(sinterceptor.Funcs{})
-			slurmClusters := newSlurmClusters(controller.Name, slurmClient)
+			clientMap := newClientMap(controller.Name, slurmClient)
 
 			return testCaseFields{
 				name: "delete",
 				fields: fields{
-					Client:        client,
-					SlurmClusters: slurmClusters,
+					Client:    client,
+					ClientMap: clientMap,
 				},
 				args: args{
 					ctx:       context.TODO(),
@@ -689,13 +689,13 @@ func TestNodeSetReconciler_processCondemned(t *testing.T) {
 				},
 			}
 			slurmClient := newFakeClientList(sinterceptor.Funcs{}, slurmNodeList)
-			slurmClusters := newSlurmClusters(controller.Name, slurmClient)
+			clientMap := newClientMap(controller.Name, slurmClient)
 
 			return testCaseFields{
 				name: "delete after drain",
 				fields: fields{
-					Client:        client,
-					SlurmClusters: slurmClusters,
+					Client:    client,
+					ClientMap: clientMap,
 				},
 				args: args{
 					ctx:       context.TODO(),
@@ -752,13 +752,13 @@ func TestNodeSetReconciler_processCondemned(t *testing.T) {
 				},
 			}
 			slurmClient := newFakeClientList(sinterceptor.Funcs{}, slurmNodeList)
-			slurmClusters := newSlurmClusters(controller.Name, slurmClient)
+			clientMap := newClientMap(controller.Name, slurmClient)
 
 			return testCaseFields{
 				name: "k8s error",
 				fields: fields{
-					Client:        client,
-					SlurmClusters: slurmClusters,
+					Client:    client,
+					ClientMap: clientMap,
 				},
 				args: args{
 					ctx:       context.TODO(),
@@ -809,13 +809,13 @@ func TestNodeSetReconciler_processCondemned(t *testing.T) {
 				},
 			}
 			slurmClient := newFakeClientList(slurmInterceptorFn, slurmNodeList)
-			slurmClusters := newSlurmClusters(controller.Name, slurmClient)
+			clientMap := newClientMap(controller.Name, slurmClient)
 
 			return testCaseFields{
 				name: "slurm error",
 				fields: fields{
-					Client:        client,
-					SlurmClusters: slurmClusters,
+					Client:    client,
+					ClientMap: clientMap,
 				},
 				args: args{
 					ctx:       context.TODO(),
@@ -831,7 +831,7 @@ func TestNodeSetReconciler_processCondemned(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := newNodeSetController(tt.fields.Client, tt.fields.SlurmClusters)
+			r := newNodeSetController(tt.fields.Client, tt.fields.ClientMap)
 			if err := r.processCondemned(tt.args.ctx, tt.args.nodeset, tt.args.condemned, tt.args.i); (err != nil) != tt.wantErr {
 				t.Errorf("NodeSetReconciler.processCondemned() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -852,8 +852,8 @@ func TestNodeSetReconciler_processCondemned(t *testing.T) {
 func TestNodeSetReconciler_doPodProcessing(t *testing.T) {
 	utilruntime.Must(slinkyv1alpha1.AddToScheme(clientgoscheme.Scheme))
 	type fields struct {
-		Client        client.Client
-		SlurmClusters *resources.Clusters
+		Client    client.Client
+		ClientMap *clientmap.ClientMap
 	}
 	type args struct {
 		ctx     context.Context
@@ -871,7 +871,7 @@ func TestNodeSetReconciler_doPodProcessing(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := newNodeSetController(tt.fields.Client, tt.fields.SlurmClusters)
+			r := newNodeSetController(tt.fields.Client, tt.fields.ClientMap)
 			if err := r.doPodProcessing(tt.args.ctx, tt.args.nodeset, tt.args.pods, tt.args.hash); (err != nil) != tt.wantErr {
 				t.Errorf("NodeSetReconciler.doPodProcessing() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -882,8 +882,8 @@ func TestNodeSetReconciler_doPodProcessing(t *testing.T) {
 func TestNodeSetReconciler_processReplica(t *testing.T) {
 	utilruntime.Must(slinkyv1alpha1.AddToScheme(clientgoscheme.Scheme))
 	type fields struct {
-		Client        client.Client
-		SlurmClusters *resources.Clusters
+		Client    client.Client
+		ClientMap *clientmap.ClientMap
 	}
 	type args struct {
 		ctx     context.Context
@@ -900,7 +900,7 @@ func TestNodeSetReconciler_processReplica(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := newNodeSetController(tt.fields.Client, tt.fields.SlurmClusters)
+			r := newNodeSetController(tt.fields.Client, tt.fields.ClientMap)
 			if err := r.processReplica(tt.args.ctx, tt.args.nodeset, tt.args.pod); (err != nil) != tt.wantErr {
 				t.Errorf("NodeSetReconciler.processReplica() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -918,8 +918,8 @@ func TestNodeSetReconciler_makePodCordonAndDrain(t *testing.T) {
 	nodeset := newNodeSet("foo", controller.Name, 2)
 	pod := nodesetutils.NewNodeSetPod(nodeset, controller, 0, "")
 	type fields struct {
-		Client        client.Client
-		SlurmClusters *resources.Clusters
+		Client    client.Client
+		ClientMap *clientmap.ClientMap
 	}
 	type args struct {
 		ctx     context.Context
@@ -936,7 +936,7 @@ func TestNodeSetReconciler_makePodCordonAndDrain(t *testing.T) {
 			name: "success",
 			fields: fields{
 				Client: fake.NewFakeClient(nodeset.DeepCopy(), pod.DeepCopy()),
-				SlurmClusters: func() *resources.Clusters {
+				ClientMap: func() *clientmap.ClientMap {
 					nodeList := &slurmtypes.V0043NodeList{
 						Items: []slurmtypes.V0043Node{
 							{
@@ -948,7 +948,7 @@ func TestNodeSetReconciler_makePodCordonAndDrain(t *testing.T) {
 						},
 					}
 					sclient := newFakeClientList(sinterceptor.Funcs{}, nodeList)
-					return newSlurmClusters(controller.Name, sclient)
+					return newClientMap(controller.Name, sclient)
 				}(),
 			},
 			args: args{
@@ -972,7 +972,7 @@ func TestNodeSetReconciler_makePodCordonAndDrain(t *testing.T) {
 					}).
 					WithRuntimeObjects(nodeset.DeepCopy(), pod.DeepCopy()).
 					Build(),
-				SlurmClusters: func() *resources.Clusters {
+				ClientMap: func() *clientmap.ClientMap {
 					nodeList := &slurmtypes.V0043NodeList{
 						Items: []slurmtypes.V0043Node{
 							{
@@ -984,7 +984,7 @@ func TestNodeSetReconciler_makePodCordonAndDrain(t *testing.T) {
 						},
 					}
 					sclient := newFakeClientList(sinterceptor.Funcs{}, nodeList)
-					return newSlurmClusters(controller.Name, sclient)
+					return newClientMap(controller.Name, sclient)
 				}(),
 			},
 			args: args{
@@ -998,7 +998,7 @@ func TestNodeSetReconciler_makePodCordonAndDrain(t *testing.T) {
 			name: "slurm update failure",
 			fields: fields{
 				Client: fake.NewFakeClient(nodeset.DeepCopy(), pod.DeepCopy()),
-				SlurmClusters: func() *resources.Clusters {
+				ClientMap: func() *clientmap.ClientMap {
 					nodeList := &slurmtypes.V0043NodeList{
 						Items: []slurmtypes.V0043Node{
 							{
@@ -1014,7 +1014,7 @@ func TestNodeSetReconciler_makePodCordonAndDrain(t *testing.T) {
 							return errors.New(http.StatusText(http.StatusInternalServerError))
 						},
 					}, nodeList)
-					return newSlurmClusters(controller.Name, sclient)
+					return newClientMap(controller.Name, sclient)
 				}(),
 			},
 			args: args{
@@ -1027,7 +1027,7 @@ func TestNodeSetReconciler_makePodCordonAndDrain(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := newNodeSetController(tt.fields.Client, tt.fields.SlurmClusters)
+			r := newNodeSetController(tt.fields.Client, tt.fields.ClientMap)
 			if err := r.makePodCordonAndDrain(tt.args.ctx, tt.args.nodeset, tt.args.pod); (err != nil) != tt.wantErr {
 				t.Errorf("NodeSetReconciler.makePodCordonAndDrain() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -1044,9 +1044,9 @@ func TestNodeSetReconciler_makePodCordonAndDrain(t *testing.T) {
 			}
 			// Check Slurm Node State
 			gotSlurmNode := &slurmtypes.V0043Node{}
-			sc := r.SlurmClusters.Get(tt.args.nodeset.Spec.ControllerRef.NamespacedName())
+			sc := r.ClientMap.Get(tt.args.nodeset.Spec.ControllerRef.NamespacedName())
 			if sc == nil {
-				t.Error("SlurmClusters.Get() is nil")
+				t.Error("ClientMap.Get() is nil")
 			}
 			if err := sc.Get(tt.args.ctx, slurmclient.ObjectKey(nodesetutils.GetNodeName(tt.args.pod)), gotSlurmNode); err != nil {
 				if err.Error() != http.StatusText(http.StatusNotFound) {
@@ -1077,8 +1077,8 @@ func TestNodeSetReconciler_makePodCordon(t *testing.T) {
 		},
 	}
 	type fields struct {
-		Client        client.Client
-		SlurmClusters *resources.Clusters
+		Client    client.Client
+		ClientMap *clientmap.ClientMap
 	}
 	type args struct {
 		ctx context.Context
@@ -1127,7 +1127,7 @@ func TestNodeSetReconciler_makePodCordon(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := newNodeSetController(tt.fields.Client, tt.fields.SlurmClusters)
+			r := newNodeSetController(tt.fields.Client, tt.fields.ClientMap)
 			if err := r.makePodCordon(tt.args.ctx, tt.args.pod); (err != nil) != tt.wantErr {
 				t.Errorf("NodeSetReconciler.makePodCordon() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -1157,8 +1157,8 @@ func TestNodeSetReconciler_makePodUncordonAndUndrain(t *testing.T) {
 	pod := nodesetutils.NewNodeSetPod(nodeset, controller, 0, "")
 	pod.Annotations[slinkyv1alpha1.AnnotationPodCordon] = "true"
 	type fields struct {
-		Client        client.Client
-		SlurmClusters *resources.Clusters
+		Client    client.Client
+		ClientMap *clientmap.ClientMap
 	}
 	type args struct {
 		ctx     context.Context
@@ -1175,7 +1175,7 @@ func TestNodeSetReconciler_makePodUncordonAndUndrain(t *testing.T) {
 			name: "success",
 			fields: fields{
 				Client: fake.NewFakeClient(nodeset.DeepCopy(), pod.DeepCopy()),
-				SlurmClusters: func() *resources.Clusters {
+				ClientMap: func() *clientmap.ClientMap {
 					nodeList := &slurmtypes.V0043NodeList{
 						Items: []slurmtypes.V0043Node{
 							{
@@ -1190,7 +1190,7 @@ func TestNodeSetReconciler_makePodUncordonAndUndrain(t *testing.T) {
 						},
 					}
 					sclient := newFakeClientList(sinterceptor.Funcs{}, nodeList)
-					return newSlurmClusters(controller.Name, sclient)
+					return newClientMap(controller.Name, sclient)
 				}(),
 			},
 			args: args{
@@ -1214,7 +1214,7 @@ func TestNodeSetReconciler_makePodUncordonAndUndrain(t *testing.T) {
 					}).
 					WithRuntimeObjects(nodeset.DeepCopy(), pod.DeepCopy()).
 					Build(),
-				SlurmClusters: func() *resources.Clusters {
+				ClientMap: func() *clientmap.ClientMap {
 					nodeList := &slurmtypes.V0043NodeList{
 						Items: []slurmtypes.V0043Node{
 							{
@@ -1229,7 +1229,7 @@ func TestNodeSetReconciler_makePodUncordonAndUndrain(t *testing.T) {
 						},
 					}
 					sclient := newFakeClientList(sinterceptor.Funcs{}, nodeList)
-					return newSlurmClusters(controller.Name, sclient)
+					return newClientMap(controller.Name, sclient)
 				}(),
 			},
 			args: args{
@@ -1243,7 +1243,7 @@ func TestNodeSetReconciler_makePodUncordonAndUndrain(t *testing.T) {
 			name: "slurm update failure",
 			fields: fields{
 				Client: fake.NewFakeClient(nodeset.DeepCopy(), pod.DeepCopy()),
-				SlurmClusters: func() *resources.Clusters {
+				ClientMap: func() *clientmap.ClientMap {
 					nodeList := &slurmtypes.V0043NodeList{
 						Items: []slurmtypes.V0043Node{
 							{
@@ -1262,7 +1262,7 @@ func TestNodeSetReconciler_makePodUncordonAndUndrain(t *testing.T) {
 							return errors.New(http.StatusText(http.StatusInternalServerError))
 						},
 					}, nodeList)
-					return newSlurmClusters(controller.Name, sclient)
+					return newClientMap(controller.Name, sclient)
 				}(),
 			},
 			args: args{
@@ -1275,7 +1275,7 @@ func TestNodeSetReconciler_makePodUncordonAndUndrain(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := newNodeSetController(tt.fields.Client, tt.fields.SlurmClusters)
+			r := newNodeSetController(tt.fields.Client, tt.fields.ClientMap)
 			if err := r.makePodUncordonAndUndrain(tt.args.ctx, tt.args.nodeset, tt.args.pod); (err != nil) != tt.wantErr {
 				t.Errorf("NodeSetReconciler.makePodUncordonAndUndrain() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -1292,9 +1292,9 @@ func TestNodeSetReconciler_makePodUncordonAndUndrain(t *testing.T) {
 			}
 			// Check Slurm Node State
 			gotSlurmNode := &slurmtypes.V0043Node{}
-			sc := r.SlurmClusters.Get(tt.args.nodeset.Spec.ControllerRef.NamespacedName())
+			sc := r.ClientMap.Get(tt.args.nodeset.Spec.ControllerRef.NamespacedName())
 			if sc == nil {
-				t.Error("SlurmClusters.Get() is nil")
+				t.Error("ClientMap.Get() is nil")
 			}
 			if err := sc.Get(tt.args.ctx, slurmclient.ObjectKey(nodesetutils.GetNodeName(tt.args.pod)), gotSlurmNode); err != nil {
 				if err.Error() != http.StatusText(http.StatusNotFound) {
@@ -1401,8 +1401,8 @@ func TestNodeSetReconciler_syncUpdate(t *testing.T) {
 	}
 	const hash = "12345"
 	type fields struct {
-		Client        client.Client
-		SlurmClusters *resources.Clusters
+		Client    client.Client
+		ClientMap *clientmap.ClientMap
 	}
 	type args struct {
 		ctx     context.Context
@@ -1443,8 +1443,8 @@ func TestNodeSetReconciler_syncUpdate(t *testing.T) {
 			return testCaseFields{
 				name: "OnDelete",
 				fields: fields{
-					Client:        k8sclient,
-					SlurmClusters: newSlurmClusters(controller.Name, slurmClient),
+					Client:    k8sclient,
+					ClientMap: newClientMap(controller.Name, slurmClient),
 				},
 				args: args{
 					ctx:     context.TODO(),
@@ -1484,8 +1484,8 @@ func TestNodeSetReconciler_syncUpdate(t *testing.T) {
 			return testCaseFields{
 				name: "RollingUpdate",
 				fields: fields{
-					Client:        k8sclient,
-					SlurmClusters: newSlurmClusters(controller.Name, slurmClient),
+					Client:    k8sclient,
+					ClientMap: newClientMap(controller.Name, slurmClient),
 				},
 				args: args{
 					ctx:     context.TODO(),
@@ -1499,7 +1499,7 @@ func TestNodeSetReconciler_syncUpdate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := newNodeSetController(tt.fields.Client, tt.fields.SlurmClusters)
+			r := newNodeSetController(tt.fields.Client, tt.fields.ClientMap)
 			if err := r.syncUpdate(tt.args.ctx, tt.args.nodeset, tt.args.pods, tt.args.hash); (err != nil) != tt.wantErr {
 				t.Errorf("NodeSetReconciler.syncUpdate() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -1516,8 +1516,8 @@ func TestNodeSetReconciler_syncRollingUpdate(t *testing.T) {
 	}
 	const hash = "12345"
 	type fields struct {
-		Client        client.Client
-		SlurmClusters *resources.Clusters
+		Client    client.Client
+		ClientMap *clientmap.ClientMap
 	}
 	type args struct {
 		ctx     context.Context
@@ -1563,8 +1563,8 @@ func TestNodeSetReconciler_syncRollingUpdate(t *testing.T) {
 			return testCaseFields{
 				name: "update",
 				fields: fields{
-					Client:        k8sclient,
-					SlurmClusters: newSlurmClusters(controller.Name, slurmClient),
+					Client:    k8sclient,
+					ClientMap: newClientMap(controller.Name, slurmClient),
 				},
 				args: args{
 					ctx:     context.TODO(),
@@ -1606,8 +1606,8 @@ func TestNodeSetReconciler_syncRollingUpdate(t *testing.T) {
 			return testCaseFields{
 				name: "no update",
 				fields: fields{
-					Client:        k8sclient,
-					SlurmClusters: newSlurmClusters(controller.Name, slurmClient),
+					Client:    k8sclient,
+					ClientMap: newClientMap(controller.Name, slurmClient),
 				},
 				args: args{
 					ctx:     context.TODO(),
@@ -1642,8 +1642,8 @@ func TestNodeSetReconciler_syncRollingUpdate(t *testing.T) {
 			return testCaseFields{
 				name: "update, with unhealthy",
 				fields: fields{
-					Client:        k8sclient,
-					SlurmClusters: newSlurmClusters(controller.Name, slurmClient),
+					Client:    k8sclient,
+					ClientMap: newClientMap(controller.Name, slurmClient),
 				},
 				args: args{
 					ctx:     context.TODO(),
@@ -1657,7 +1657,7 @@ func TestNodeSetReconciler_syncRollingUpdate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := newNodeSetController(tt.fields.Client, tt.fields.SlurmClusters)
+			r := newNodeSetController(tt.fields.Client, tt.fields.ClientMap)
 			if err := r.syncRollingUpdate(tt.args.ctx, tt.args.nodeset, tt.args.pods, tt.args.hash); (err != nil) != tt.wantErr {
 				t.Errorf("NodeSetReconciler.syncRollingUpdate() error = %v, wantErr %v", err, tt.wantErr)
 			}

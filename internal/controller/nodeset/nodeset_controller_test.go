@@ -153,7 +153,7 @@ var _ = Describe("Slurm NodeSet", func() {
 				g.Expect(len(podList.Items)).Should(Equal(replicas))
 			}).Should(Succeed())
 
-			slurmClusters.Add(controllerKey, newFakeClientList(interceptor.Funcs{}))
+			clientMap.Add(controllerKey, newFakeClientList(interceptor.Funcs{}))
 
 			By("Scaling in replicas")
 			Eventually(func(g Gomega) {
@@ -226,7 +226,7 @@ var _ = Describe("Slurm NodeSet", func() {
 				}
 				slurmNodes = append(slurmNodes, node)
 			}
-			slurmClusters.Add(controllerKey,
+			clientMap.Add(controllerKey,
 				newFakeClientList(interceptor.Funcs{}, &slurmtypes.V0043NodeList{
 					Items: slurmNodes,
 				}),
@@ -254,7 +254,7 @@ var _ = Describe("Slurm NodeSet", func() {
 			}).Should(Succeed())
 
 			By("Verifying Slurm nodes were drained first")
-			slurmClient := slurmClusters.Get(controllerKey)
+			slurmClient := clientMap.Get(controllerKey)
 			Eventually(func(g Gomega) {
 				slurmNodes := &slurmtypes.V0043NodeList{}
 				g.Expect(slurmClient.List(ctx, slurmNodes)).To(Succeed())
@@ -270,7 +270,7 @@ var _ = Describe("Slurm NodeSet", func() {
 			}).Should(Succeed())
 
 			By("Simulating Slurm nodes being unregistered")
-			slurmClusters.Add(controllerKey, newFakeClientList(interceptor.Funcs{}))
+			clientMap.Add(controllerKey, newFakeClientList(interceptor.Funcs{}))
 		}, SpecTimeout(testutils.Timeout))
 	})
 })

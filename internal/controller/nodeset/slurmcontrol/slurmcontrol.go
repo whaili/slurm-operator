@@ -23,8 +23,8 @@ import (
 	slurmtypes "github.com/SlinkyProject/slurm-client/pkg/types"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
+	"github.com/SlinkyProject/slurm-operator/internal/clientmap"
 	nodesetutils "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/utils"
-	"github.com/SlinkyProject/slurm-operator/internal/resources"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/podinfo"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/timestore"
 )
@@ -48,7 +48,7 @@ type SlurmControlInterface interface {
 
 // realSlurmControl is the default implementation of SlurmControlInterface.
 type realSlurmControl struct {
-	slurmClusters *resources.Clusters
+	clientMap *clientmap.ClientMap
 }
 
 // GetNodeNames implements SlurmControlInterface.
@@ -430,14 +430,14 @@ func (r *realSlurmControl) GetNodeDeadlines(ctx context.Context, nodeset *slinky
 }
 
 func (r *realSlurmControl) lookupClient(nodeset *slinkyv1alpha1.NodeSet) slurmclient.Client {
-	return r.slurmClusters.Get(nodeset.Spec.ControllerRef.NamespacedName())
+	return r.clientMap.Get(nodeset.Spec.ControllerRef.NamespacedName())
 }
 
 var _ SlurmControlInterface = &realSlurmControl{}
 
-func NewSlurmControl(clusters *resources.Clusters) SlurmControlInterface {
+func NewSlurmControl(clusters *clientmap.ClientMap) SlurmControlInterface {
 	return &realSlurmControl{
-		slurmClusters: clusters,
+		clientMap: clusters,
 	}
 }
 

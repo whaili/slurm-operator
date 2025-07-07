@@ -25,7 +25,7 @@ import (
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/builder"
-	"github.com/SlinkyProject/slurm-operator/internal/resources"
+	"github.com/SlinkyProject/slurm-operator/internal/clientmap"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/durationstore"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/refresolver"
 )
@@ -56,8 +56,8 @@ type ControllerReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 
-	SlurmClusters *resources.Clusters
-	EventCh       chan event.GenericEvent
+	ClientMap *clientmap.ClientMap
+	EventCh   chan event.GenericEvent
 
 	builder       *builder.Builder
 	refResolver   *refresolver.RefResolver

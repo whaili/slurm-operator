@@ -22,8 +22,8 @@ import (
 	slurmtypes "github.com/SlinkyProject/slurm-client/pkg/types"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
+	"github.com/SlinkyProject/slurm-operator/internal/clientmap"
 	nodesetutils "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/utils"
-	"github.com/SlinkyProject/slurm-operator/internal/resources"
 	"github.com/SlinkyProject/slurm-operator/internal/utils"
 )
 
@@ -35,8 +35,8 @@ func TestNodeSetReconciler_syncStatus(t *testing.T) {
 	}
 	const hash = "12345"
 	type fields struct {
-		Client        client.Client
-		SlurmClusters *resources.Clusters
+		Client    client.Client
+		ClientMap *clientmap.ClientMap
 	}
 	type args struct {
 		ctx             context.Context
@@ -85,13 +85,13 @@ func TestNodeSetReconciler_syncStatus(t *testing.T) {
 				}(pods),
 			}
 			sc := newFakeClientList(slurminterceptor.Funcs{}, slurmNodeList)
-			slurmClusters := newSlurmClusters(controller.Name, sc)
+			clientMap := newClientMap(controller.Name, sc)
 
 			return testCaseFields{
 				name: "Healthy, up-to-date",
 				fields: fields{
-					Client:        c,
-					SlurmClusters: slurmClusters,
+					Client:    c,
+					ClientMap: clientMap,
 				},
 				args: args{
 					ctx:             context.TODO(),
@@ -135,13 +135,13 @@ func TestNodeSetReconciler_syncStatus(t *testing.T) {
 				}(pods),
 			}
 			sc := newFakeClientList(slurminterceptor.Funcs{}, slurmNodeList)
-			slurmClusters := newSlurmClusters(controller.Name, sc)
+			clientMap := newClientMap(controller.Name, sc)
 
 			return testCaseFields{
 				name: "Created, need update",
 				fields: fields{
-					Client:        c,
-					SlurmClusters: slurmClusters,
+					Client:    c,
+					ClientMap: clientMap,
 				},
 				args: args{
 					ctx:             context.TODO(),
@@ -158,7 +158,7 @@ func TestNodeSetReconciler_syncStatus(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := newNodeSetController(tt.fields.Client, tt.fields.SlurmClusters)
+			r := newNodeSetController(tt.fields.Client, tt.fields.ClientMap)
 			if err := r.syncStatus(tt.args.ctx, tt.args.nodeset, tt.args.pods, tt.args.currentRevision, tt.args.updateRevision, tt.args.collisionCount, tt.args.hash, tt.args.errors...); (err != nil) != tt.wantErr {
 				t.Errorf("NodeSetReconciler.syncStatus() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -173,8 +173,8 @@ func TestNodeSetReconciler_syncSlurmStatus(t *testing.T) {
 		},
 	}
 	type fields struct {
-		Client        client.Client
-		SlurmClusters *resources.Clusters
+		Client    client.Client
+		ClientMap *clientmap.ClientMap
 	}
 	type args struct {
 		ctx     context.Context
@@ -211,13 +211,13 @@ func TestNodeSetReconciler_syncSlurmStatus(t *testing.T) {
 				}(pods),
 			}
 			sc := newFakeClientList(slurminterceptor.Funcs{}, slurmNodeList)
-			slurmClusters := newSlurmClusters(controller.Name, sc)
+			clientMap := newClientMap(controller.Name, sc)
 
 			return testCaseFields{
 				name: "Healthy pods",
 				fields: fields{
-					Client:        c,
-					SlurmClusters: slurmClusters,
+					Client:    c,
+					ClientMap: clientMap,
 				},
 				args: args{
 					ctx:     context.TODO(),
@@ -230,7 +230,7 @@ func TestNodeSetReconciler_syncSlurmStatus(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := newNodeSetController(tt.fields.Client, tt.fields.SlurmClusters)
+			r := newNodeSetController(tt.fields.Client, tt.fields.ClientMap)
 			if err := r.syncSlurmStatus(tt.args.ctx, tt.args.nodeset, tt.args.pods); (err != nil) != tt.wantErr {
 				t.Errorf("NodeSetReconciler.syncSlurmStatus() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -246,8 +246,8 @@ func TestNodeSetReconciler_syncNodeSetStatus(t *testing.T) {
 	}
 	const hash = "12345"
 	type fields struct {
-		Client        client.Client
-		SlurmClusters *resources.Clusters
+		Client    client.Client
+		ClientMap *clientmap.ClientMap
 	}
 	type args struct {
 		ctx             context.Context
@@ -296,13 +296,13 @@ func TestNodeSetReconciler_syncNodeSetStatus(t *testing.T) {
 				}(pods),
 			}
 			sc := newFakeClientList(slurminterceptor.Funcs{}, slurmNodeList)
-			slurmClusters := newSlurmClusters(controller.Name, sc)
+			clientMap := newClientMap(controller.Name, sc)
 
 			return testCaseFields{
 				name: "Healthy, up-to-date",
 				fields: fields{
-					Client:        c,
-					SlurmClusters: slurmClusters,
+					Client:    c,
+					ClientMap: clientMap,
 				},
 				args: args{
 					ctx:             context.TODO(),
@@ -356,13 +356,13 @@ func TestNodeSetReconciler_syncNodeSetStatus(t *testing.T) {
 				}(pods),
 			}
 			sc := newFakeClientList(slurminterceptor.Funcs{}, slurmNodeList)
-			slurmClusters := newSlurmClusters(controller.Name, sc)
+			clientMap := newClientMap(controller.Name, sc)
 
 			return testCaseFields{
 				name: "Created, need update",
 				fields: fields{
-					Client:        c,
-					SlurmClusters: slurmClusters,
+					Client:    c,
+					ClientMap: clientMap,
 				},
 				args: args{
 					ctx:             context.TODO(),
@@ -386,7 +386,7 @@ func TestNodeSetReconciler_syncNodeSetStatus(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := newNodeSetController(tt.fields.Client, tt.fields.SlurmClusters)
+			r := newNodeSetController(tt.fields.Client, tt.fields.ClientMap)
 			if err := r.syncNodeSetStatus(tt.args.ctx, tt.args.nodeset, tt.args.pods, tt.args.currentRevision, tt.args.updateRevision, tt.args.collisionCount, tt.args.hash); (err != nil) != tt.wantErr {
 				t.Errorf("NodeSetReconciler.syncNodeSetStatus() error = %v, wantErr %v", err, tt.wantErr)
 			}

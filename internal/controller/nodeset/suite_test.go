@@ -23,7 +23,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
-	"github.com/SlinkyProject/slurm-operator/internal/resources"
+	"github.com/SlinkyProject/slurm-operator/internal/clientmap"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/testutils"
 	//+kubebuilder:scaffold:imports
 )
@@ -37,12 +37,12 @@ var testEnv *envtest.Environment
 var ctx context.Context
 var cancel context.CancelFunc
 
-// slurmClusters will be used to verify the cluster controller
+// clientMap will be used to verify the cluster controller
 // makes the correct updates based on Cluster CR create, update,
 // and delete operations. Additionally a fake slurm client will
 // be injected to control slurm object cache without requiring
 // a functioning slurm control plane and rest api.
-var slurmClusters *resources.Clusters
+var clientMap *clientmap.ClientMap
 
 func init() {
 	utilruntime.Must(scheme.AddToScheme(scheme.Scheme))
@@ -89,13 +89,13 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).ToNot(HaveOccurred())
 
-	slurmClusters = resources.NewClusters()
+	clientMap = clientmap.NewClientMap()
 	eventCh := make(chan event.GenericEvent, 100)
 	err = (&NodeSetReconciler{
-		Client:        k8sManager.GetClient(),
-		Scheme:        k8sManager.GetScheme(),
-		SlurmClusters: slurmClusters,
-		EventCh:       eventCh,
+		Client:    k8sManager.GetClient(),
+		Scheme:    k8sManager.GetScheme(),
+		ClientMap: clientMap,
+		EventCh:   eventCh,
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 

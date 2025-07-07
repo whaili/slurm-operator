@@ -25,9 +25,9 @@ import (
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/builder"
+	"github.com/SlinkyProject/slurm-operator/internal/clientmap"
 	"github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/podcontrol"
 	"github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/slurmcontrol"
-	"github.com/SlinkyProject/slurm-operator/internal/resources"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/durationstore"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/historycontrol"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/refresolver"
@@ -69,8 +69,8 @@ type NodeSetReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 
-	SlurmClusters *resources.Clusters
-	EventCh       chan event.GenericEvent
+	ClientMap *clientmap.ClientMap
+	EventCh   chan event.GenericEvent
 
 	builder        *builder.Builder
 	refResolver    *refresolver.RefResolver
@@ -135,7 +135,7 @@ func (r *NodeSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	r.refResolver = refresolver.New(r.Client)
 	r.historyControl = historycontrol.NewHistoryControl(r.Client)
 	r.podControl = podcontrol.NewPodControl(r.Client, r.eventRecorder)
-	r.slurmControl = slurmcontrol.NewSlurmControl(r.SlurmClusters)
+	r.slurmControl = slurmcontrol.NewSlurmControl(r.ClientMap)
 	r.expectations = kubecontroller.NewUIDTrackingControllerExpectations(kubecontroller.NewControllerExpectations())
 	podEventHandler := &podEventHandler{
 		Reader:       mgr.GetCache(),

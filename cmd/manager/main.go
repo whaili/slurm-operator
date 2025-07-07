@@ -23,12 +23,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
+	"github.com/SlinkyProject/slurm-operator/internal/clientmap"
 	"github.com/SlinkyProject/slurm-operator/internal/controller/accounting"
 	"github.com/SlinkyProject/slurm-operator/internal/controller/controller"
 	"github.com/SlinkyProject/slurm-operator/internal/controller/loginset"
 	"github.com/SlinkyProject/slurm-operator/internal/controller/nodeset"
 	"github.com/SlinkyProject/slurm-operator/internal/controller/restapi"
-	"github.com/SlinkyProject/slurm-operator/internal/resources"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -111,13 +111,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	slurmClusters := resources.NewClusters()
+	clientMap := clientmap.NewClientMap()
 	eventCh := make(chan event.GenericEvent, 100)
 	if err = (&controller.ControllerReconciler{
-		Client:        mgr.GetClient(),
-		Scheme:        mgr.GetScheme(),
-		SlurmClusters: slurmClusters,
-		EventCh:       eventCh,
+		Client:    mgr.GetClient(),
+		Scheme:    mgr.GetScheme(),
+		ClientMap: clientMap,
+		EventCh:   eventCh,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Controller")
 		os.Exit(1)
@@ -137,10 +137,10 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&nodeset.NodeSetReconciler{
-		Client:        mgr.GetClient(),
-		Scheme:        mgr.GetScheme(),
-		SlurmClusters: slurmClusters,
-		EventCh:       eventCh,
+		Client:    mgr.GetClient(),
+		Scheme:    mgr.GetScheme(),
+		ClientMap: clientMap,
+		EventCh:   eventCh,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NodeSet")
 		os.Exit(1)

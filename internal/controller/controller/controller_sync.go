@@ -40,7 +40,7 @@ func (r *ControllerReconciler) Sync(ctx context.Context, req reconcile.Request) 
 		if apierrors.IsNotFound(err) {
 			logger.Info("Controller has been deleted", "request", req)
 			logger.V(1).Info("removed slurm client", "controller", req)
-			_ = r.SlurmClusters.Remove(req.NamespacedName)
+			_ = r.ClientMap.Remove(req.NamespacedName)
 			return nil
 		}
 		return err
@@ -103,25 +103,25 @@ func (r *ControllerReconciler) Sync(ctx context.Context, req reconcile.Request) 
 			Name: "Client",
 			Sync: func(ctx context.Context, controller *slinkyv1alpha1.Controller) error {
 				logger := log.FromContext(ctx)
-				clusterKey := client.ObjectKeyFromObject(controller)
+				controllerKey := client.ObjectKeyFromObject(controller)
 
 				server, err := r.getRestApiServer(ctx, controller)
 				if err != nil {
 					if apierrors.IsNotFound(err) {
-						_ = r.SlurmClusters.Remove(clusterKey)
+						_ = r.ClientMap.Remove(controllerKey)
 						return nil
 					}
 					return err
 				}
 
-				slurmClientOld := r.SlurmClusters.Get(clusterKey)
+				slurmClientOld := r.ClientMap.Get(controllerKey)
 				if (slurmClientOld != nil) &&
 					(slurmClientOld.GetServer() == server) {
-					logger.V(1).Info("slurm client exists. Skipping...", "cluster", clusterKey.String())
+					logger.V(1).Info("slurm client exists. Skipping...", "cluster", controllerKey.String())
 					return nil
 				}
 
-				_ = r.SlurmClusters.Remove(clusterKey)
+				_ = r.ClientMap.Remove(controllerKey)
 
 				signingKey, err := r.refResolver.GetSecretKeyRef(ctx, controller.AuthJwtHs256Ref(), controller.Namespace)
 				if err != nil {
@@ -143,8 +143,8 @@ func (r *ControllerReconciler) Sync(ctx context.Context, req reconcile.Request) 
 				}
 				nodesetcontroller.SetEventHandler(slurmClient, r.EventCh)
 
-				if r.SlurmClusters.Add(clusterKey, slurmClient) {
-					logger.V(1).Info("added slurm client", "cluster", clusterKey.String())
+				if r.ClientMap.Add(controllerKey, slurmClient) {
+					logger.V(1).Info("added slurm client", "cluster", controllerKey.String())
 				}
 
 				return nil

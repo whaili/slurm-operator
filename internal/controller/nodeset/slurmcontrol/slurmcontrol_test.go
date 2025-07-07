@@ -27,8 +27,8 @@ import (
 	"github.com/SlinkyProject/slurm-client/pkg/types"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
+	"github.com/SlinkyProject/slurm-operator/internal/clientmap"
 	nodesetutils "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/utils"
-	"github.com/SlinkyProject/slurm-operator/internal/resources"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/podinfo"
 )
 
@@ -48,14 +48,14 @@ func newNodeSet(name, controllerName string, replicas int32) *slinkyv1alpha1.Nod
 	}
 }
 
-func newSlurmClusters(controllerName string, client client.Client) *resources.Clusters {
-	controllers := resources.NewClusters()
+func newSlurmClientMap(controllerName string, client client.Client) *clientmap.ClientMap {
+	cm := clientmap.NewClientMap()
 	key := k8stypes.NamespacedName{
 		Namespace: corev1.NamespaceDefault,
 		Name:      controllerName,
 	}
-	controllers.Add(key, client)
-	return controllers
+	cm.Add(key, client)
+	return cm
 }
 
 var _ = Describe("SlurmControlInterface", func() {
@@ -110,7 +110,7 @@ var _ = Describe("SlurmControlInterface", func() {
 				},
 			}
 			sclient = fake.NewClientBuilder().WithUpdateFn(updateFn).WithObjects(node).Build()
-			controllers := newSlurmClusters(controller.Name, sclient)
+			controllers := newSlurmClientMap(controller.Name, sclient)
 			slurmcontrol = NewSlurmControl(controllers)
 
 			By("Update Slurm pod info")
@@ -148,7 +148,7 @@ var _ = Describe("SlurmControlInterface", func() {
 				},
 			}
 			sclient = fake.NewClientBuilder().WithUpdateFn(updateFn).WithObjects(node).Build()
-			controllers := newSlurmClusters(controller.Name, sclient)
+			controllers := newSlurmClientMap(controller.Name, sclient)
 			slurmcontrol = NewSlurmControl(controllers)
 
 			By("Draining matching Slurm node")
@@ -180,7 +180,7 @@ var _ = Describe("SlurmControlInterface", func() {
 				},
 			}
 			sclient = fake.NewClientBuilder().WithUpdateFn(updateFn).WithObjects(node).Build()
-			controllers := newSlurmClusters(controller.Name, sclient)
+			controllers := newSlurmClientMap(controller.Name, sclient)
 			slurmcontrol = NewSlurmControl(controllers)
 
 			By("Draining matching Slurm node")
@@ -302,7 +302,7 @@ var _ = Describe("SlurmControlInterface", func() {
 				},
 			}
 			sclient = fake.NewClientBuilder().WithLists(nodeList, jobList).Build()
-			controllers := newSlurmClusters(controller.Name, sclient)
+			controllers := newSlurmClientMap(controller.Name, sclient)
 			slurmcontrol = NewSlurmControl(controllers)
 
 			By("Getting TimeStore")
@@ -327,7 +327,7 @@ func Test_realSlurmControl_IsNodeDrain(t *testing.T) {
 	nodeset := newNodeSet("foo", controller.Name, 1)
 	pod := nodesetutils.NewNodeSetPod(nodeset, controller, 0, "")
 	type fields struct {
-		slurmClusters *resources.Clusters
+		clientMap *clientmap.ClientMap
 	}
 	type args struct {
 		ctx     context.Context
@@ -354,7 +354,7 @@ func Test_realSlurmControl_IsNodeDrain(t *testing.T) {
 				}
 				sclient := fake.NewClientBuilder().WithObjects(node).Build()
 				return fields{
-					slurmClusters: newSlurmClusters(controller.Name, sclient),
+					clientMap: newSlurmClientMap(controller.Name, sclient),
 				}
 			}(),
 			args: args{
@@ -378,7 +378,7 @@ func Test_realSlurmControl_IsNodeDrain(t *testing.T) {
 				}
 				sclient := fake.NewClientBuilder().WithObjects(node).Build()
 				return fields{
-					slurmClusters: newSlurmClusters(controller.Name, sclient),
+					clientMap: newSlurmClientMap(controller.Name, sclient),
 				}
 			}(),
 			args: args{
@@ -393,7 +393,7 @@ func Test_realSlurmControl_IsNodeDrain(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &realSlurmControl{
-				slurmClusters: tt.fields.slurmClusters,
+				clientMap: tt.fields.clientMap,
 			}
 			got, err := r.IsNodeDrain(tt.args.ctx, tt.args.nodeset, tt.args.pod)
 			if (err != nil) != tt.wantErr {
@@ -417,7 +417,7 @@ func Test_realSlurmControl_IsNodeDrained(t *testing.T) {
 	nodeset := newNodeSet("foo", controller.Name, 1)
 	pod := nodesetutils.NewNodeSetPod(nodeset, controller, 0, "")
 	type fields struct {
-		slurmClusters *resources.Clusters
+		clientMap *clientmap.ClientMap
 	}
 	type args struct {
 		ctx     context.Context
@@ -444,7 +444,7 @@ func Test_realSlurmControl_IsNodeDrained(t *testing.T) {
 				}
 				sclient := fake.NewClientBuilder().WithObjects(node).Build()
 				return fields{
-					slurmClusters: newSlurmClusters(controller.Name, sclient),
+					clientMap: newSlurmClientMap(controller.Name, sclient),
 				}
 			}(),
 			args: args{
@@ -469,7 +469,7 @@ func Test_realSlurmControl_IsNodeDrained(t *testing.T) {
 				}
 				sclient := fake.NewClientBuilder().WithObjects(node).Build()
 				return fields{
-					slurmClusters: newSlurmClusters(controller.Name, sclient),
+					clientMap: newSlurmClientMap(controller.Name, sclient),
 				}
 			}(),
 			args: args{
@@ -493,7 +493,7 @@ func Test_realSlurmControl_IsNodeDrained(t *testing.T) {
 				}
 				sclient := fake.NewClientBuilder().WithObjects(node).Build()
 				return fields{
-					slurmClusters: newSlurmClusters(controller.Name, sclient),
+					clientMap: newSlurmClientMap(controller.Name, sclient),
 				}
 			}(),
 			args: args{
@@ -518,7 +518,7 @@ func Test_realSlurmControl_IsNodeDrained(t *testing.T) {
 				}
 				sclient := fake.NewClientBuilder().WithObjects(node).Build()
 				return fields{
-					slurmClusters: newSlurmClusters(controller.Name, sclient),
+					clientMap: newSlurmClientMap(controller.Name, sclient),
 				}
 			}(),
 			args: args{
@@ -533,7 +533,7 @@ func Test_realSlurmControl_IsNodeDrained(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &realSlurmControl{
-				slurmClusters: tt.fields.slurmClusters,
+				clientMap: tt.fields.clientMap,
 			}
 			got, err := r.IsNodeDrained(tt.args.ctx, tt.args.nodeset, tt.args.pod)
 			if (err != nil) != tt.wantErr {
@@ -556,7 +556,7 @@ func Test_realSlurmControl_CalculateNodeStatus(t *testing.T) {
 	nodeset := newNodeSet("foo", controller.Name, 1)
 	nodeset2 := newNodeSet("baz", controller.Name, 1)
 	type fields struct {
-		slurmClusters *resources.Clusters
+		clientMap *clientmap.ClientMap
 	}
 	type args struct {
 		ctx     context.Context
@@ -578,7 +578,7 @@ func Test_realSlurmControl_CalculateNodeStatus(t *testing.T) {
 				}
 				sclient := fake.NewClientBuilder().WithLists(nodeList).Build()
 				return fields{
-					slurmClusters: newSlurmClusters(controller.Name, sclient),
+					clientMap: newSlurmClientMap(controller.Name, sclient),
 				}
 			}(),
 			args: args{
@@ -614,7 +614,7 @@ func Test_realSlurmControl_CalculateNodeStatus(t *testing.T) {
 				}
 				sclient := fake.NewClientBuilder().WithLists(nodeList).Build()
 				return fields{
-					slurmClusters: newSlurmClusters(controller.Name, sclient),
+					clientMap: newSlurmClientMap(controller.Name, sclient),
 				}
 			}(),
 			args: args{
@@ -648,7 +648,7 @@ func Test_realSlurmControl_CalculateNodeStatus(t *testing.T) {
 				}
 				sclient := fake.NewClientBuilder().WithLists(nodeList).Build()
 				return fields{
-					slurmClusters: newSlurmClusters(controller.Name, sclient),
+					clientMap: newSlurmClientMap(controller.Name, sclient),
 				}
 			}(),
 			args: args{
@@ -683,7 +683,7 @@ func Test_realSlurmControl_CalculateNodeStatus(t *testing.T) {
 				}
 				sclient := fake.NewClientBuilder().WithLists(nodeList).Build()
 				return fields{
-					slurmClusters: newSlurmClusters(controller.Name, sclient),
+					clientMap: newSlurmClientMap(controller.Name, sclient),
 				}
 			}(),
 			args: args{
@@ -766,7 +766,7 @@ func Test_realSlurmControl_CalculateNodeStatus(t *testing.T) {
 				}
 				sclient := fake.NewClientBuilder().WithLists(nodeList).Build()
 				return fields{
-					slurmClusters: newSlurmClusters(controller.Name, sclient),
+					clientMap: newSlurmClientMap(controller.Name, sclient),
 				}
 			}(),
 			args: args{
@@ -868,7 +868,7 @@ func Test_realSlurmControl_CalculateNodeStatus(t *testing.T) {
 				}
 				sclient := fake.NewClientBuilder().WithLists(nodeList).Build()
 				return fields{
-					slurmClusters: newSlurmClusters(controller.Name, sclient),
+					clientMap: newSlurmClientMap(controller.Name, sclient),
 				}
 			}(),
 			args: args{
@@ -980,7 +980,7 @@ func Test_realSlurmControl_CalculateNodeStatus(t *testing.T) {
 				}
 				sclient := fake.NewClientBuilder().WithLists(nodeList).Build()
 				return fields{
-					slurmClusters: newSlurmClusters(controller.Name, sclient),
+					clientMap: newSlurmClientMap(controller.Name, sclient),
 				}
 			}(),
 			args: args{
@@ -1023,7 +1023,7 @@ func Test_realSlurmControl_CalculateNodeStatus(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &realSlurmControl{
-				slurmClusters: tt.fields.slurmClusters,
+				clientMap: tt.fields.clientMap,
 			}
 			got, err := r.CalculateNodeStatus(tt.args.ctx, tt.args.nodeset, tt.args.pods)
 			if (err != nil) != tt.wantErr {

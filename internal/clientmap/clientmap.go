@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
 // SPDX-License-Identifier: Apache-2.0
 
-package resources
+package clientmap
 
 import (
 	"context"
@@ -12,18 +12,18 @@ import (
 	"github.com/SlinkyProject/slurm-client/pkg/client"
 )
 
-type Clusters struct {
+type ClientMap struct {
 	lock    sync.RWMutex
 	clients map[string]client.Client
 }
 
-func NewClusters() *Clusters {
-	return &Clusters{
+func NewClientMap() *ClientMap {
+	return &ClientMap{
 		clients: make(map[string]client.Client),
 	}
 }
 
-func (c *Clusters) Get(name types.NamespacedName) client.Client {
+func (c *ClientMap) Get(name types.NamespacedName) client.Client {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 	client, ok := c.clients[name.String()]
@@ -33,7 +33,7 @@ func (c *Clusters) Get(name types.NamespacedName) client.Client {
 	return nil
 }
 
-func (c *Clusters) Has(names ...types.NamespacedName) bool {
+func (c *ClientMap) Has(names ...types.NamespacedName) bool {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 	for _, name := range names {
@@ -44,7 +44,7 @@ func (c *Clusters) Has(names ...types.NamespacedName) bool {
 	return false
 }
 
-func (c *Clusters) add(name types.NamespacedName, client client.Client) bool {
+func (c *ClientMap) add(name types.NamespacedName, client client.Client) bool {
 	if _, ok := c.clients[name.String()]; !ok {
 		ctx := context.TODO()
 		go client.Start(ctx)
@@ -54,14 +54,14 @@ func (c *Clusters) add(name types.NamespacedName, client client.Client) bool {
 	return false
 }
 
-func (c *Clusters) Add(name types.NamespacedName, client client.Client) bool {
+func (c *ClientMap) Add(name types.NamespacedName, client client.Client) bool {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	c.remove(name)
 	return c.add(name, client)
 }
 
-func (c *Clusters) remove(name types.NamespacedName) bool {
+func (c *ClientMap) remove(name types.NamespacedName) bool {
 	if client, ok := c.clients[name.String()]; ok {
 		client.Stop()
 		delete(c.clients, name.String())
@@ -70,7 +70,7 @@ func (c *Clusters) remove(name types.NamespacedName) bool {
 	return false
 }
 
-func (c *Clusters) Remove(name types.NamespacedName) bool {
+func (c *ClientMap) Remove(name types.NamespacedName) bool {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	return c.remove(name)
