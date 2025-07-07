@@ -32,6 +32,7 @@ import (
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	nodesetutils "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/utils"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/objects"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/podinfo"
 )
 
@@ -40,20 +41,6 @@ var _ handler.EventHandler = &podEventHandler{}
 type podEventHandler struct {
 	client.Reader
 	expectations *kubecontroller.UIDTrackingControllerExpectations
-}
-
-func enqueueNodeSet(q workqueue.TypedRateLimitingInterface[reconcile.Request], nodeset *slinkyv1alpha1.NodeSet) {
-	enqueueNodeSetAfter(q, nodeset, 0)
-}
-
-func enqueueNodeSetAfter(q workqueue.TypedRateLimitingInterface[reconcile.Request], nodeset *slinkyv1alpha1.NodeSet, duration time.Duration) {
-	req := reconcile.Request{
-		NamespacedName: types.NamespacedName{
-			Namespace: nodeset.GetNamespace(),
-			Name:      nodeset.GetName(),
-		},
-	}
-	q.AddAfter(req, duration)
 }
 
 func (e *podEventHandler) Create(
@@ -94,7 +81,7 @@ func (e *podEventHandler) createPod(
 		}
 		logger.V(4).Info("Pod created", "pod", klog.KObj(pod), "detail", pod)
 		e.expectations.CreationObserved(logger, nodesetKey)
-		enqueueNodeSet(q, nodeset)
+		objects.EnqueueRequest(q, nodeset)
 		return
 	}
 
@@ -108,7 +95,7 @@ func (e *podEventHandler) createPod(
 	}
 	logger.V(4).Info("Orphan Pod created", "pod", klog.KObj(pod), "detail", pod)
 	for _, nodeset := range nodesetList {
-		enqueueNodeSet(q, nodeset)
+		objects.EnqueueRequest(q, nodeset)
 	}
 }
 
@@ -165,7 +152,7 @@ func (e *podEventHandler) updatePod(
 	if controllerRefChanged && oldControllerRef != nil {
 		// The ControllerRef was changed. Sync the old controller, if any.
 		if nodeset := e.resolveControllerRef(ctx, oldPod.Namespace, oldControllerRef); nodeset != nil {
-			enqueueNodeSet(q, nodeset)
+			objects.EnqueueRequest(q, nodeset)
 		}
 	}
 
@@ -176,7 +163,7 @@ func (e *podEventHandler) updatePod(
 			return
 		}
 		logger.V(4).Info("Pod objectMeta updated.", "pod", klog.KObj(oldPod), "oldObjectMeta", oldPod.ObjectMeta, "curObjectMeta", curPod.ObjectMeta)
-		enqueueNodeSet(q, nodeset)
+		objects.EnqueueRequest(q, nodeset)
 		// TODO: MinReadySeconds in the Pod will generate an Available condition to be added in
 		// the Pod status which in turn will trigger a requeue of the owning nodeset thus
 		// having its status updated with the newly available replica. For now, we can fake the
@@ -187,7 +174,7 @@ func (e *podEventHandler) updatePod(
 		if !podutil.IsPodReady(oldPod) && podutil.IsPodReady(curPod) && nodeset.Spec.MinReadySeconds > 0 {
 			logger.V(2).Info("pod will be enqueued after a while for availability check", "duration", nodeset.Spec.MinReadySeconds, "kind", slinkyv1alpha1.NodeSetGVK, "pod", klog.KObj(oldPod))
 			requeueDuration := (time.Duration(nodeset.Spec.MinReadySeconds) * time.Second) + time.Second
-			enqueueNodeSetAfter(q, nodeset, requeueDuration)
+			objects.EnqueueRequestAfter(q, nodeset, requeueDuration)
 		}
 		return
 	}
@@ -201,7 +188,7 @@ func (e *podEventHandler) updatePod(
 		}
 		logger.V(4).Info("Orphan Pod objectMeta updated.", "pod", klog.KObj(oldPod), "oldObjectMeta", oldPod.ObjectMeta, "curObjectMeta", curPod.ObjectMeta)
 		for _, nodeset := range nodesetList {
-			enqueueNodeSet(q, nodeset)
+			objects.EnqueueRequest(q, nodeset)
 		}
 	}
 }
@@ -257,7 +244,7 @@ func (e *podEventHandler) deletePod(
 	}
 	logger.V(4).Info("Pod deleted", "delete_by", utilruntime.GetCaller(), "deletion_timestamp", pod.DeletionTimestamp, "pod", klog.KObj(pod))
 	e.expectations.DeletionObserved(logger, nodesetKey, kubecontroller.PodKey(pod))
-	enqueueNodeSet(q, nodeset)
+	objects.EnqueueRequest(q, nodeset)
 }
 
 func (e *podEventHandler) Generic(
@@ -282,7 +269,7 @@ func (e *podEventHandler) Generic(
 		if !nodesetutils.IsPodFromNodeSet(nodeset, pod) {
 			continue
 		}
-		enqueueNodeSet(q, nodeset)
+		objects.EnqueueRequest(q, nodeset)
 	}
 }
 
