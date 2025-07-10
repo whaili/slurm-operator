@@ -8,7 +8,7 @@
   - [Table of Contents](#table-of-contents)
   - [Overview](#overview)
   - [Install](#install)
-    - [Pre-Requisites](#pre-requisites)
+    - [Optional](#optional)
     - [Slurm Operator](#slurm-operator)
     - [Slurm Cluster](#slurm-cluster)
     - [Testing](#testing)
@@ -22,20 +22,20 @@ Slurm clusters to Kubernetes.
 
 ## Install
 
-### Pre-Requisites
+### Optional
 
-Install the pre-requisite helm charts.
+Install the optional helm charts.
 
 ```bash
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
-helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo add jetstack https://charts.jetstack.io
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
+# Install certificate manager for slurm-operator's webhook.
 helm install cert-manager jetstack/cert-manager \
-	--namespace cert-manager --create-namespace --set crds.enabled=true
+	--namespace cert-manager --create-namespace
+# Install Prometheus stack for slurm-exporter.
 helm install prometheus prometheus-community/kube-prometheus-stack \
-	--namespace prometheus --create-namespace --set installCRDs=true
+	--namespace prometheus --create-namespace
 ```
 
 ### Slurm Operator
@@ -47,6 +47,15 @@ curl -L https://raw.githubusercontent.com/SlinkyProject/slurm-operator/refs/tags
   -o values-operator.yaml
 helm install slurm-operator oci://ghcr.io/slinkyproject/charts/slurm-operator \
   --values=values-operator.yaml --version=0.4.0 --namespace=slinky --create-namespace
+```
+
+If a cert-manager is not installed, then make sure to set
+`certManager.enabled=false` in values or helm install with
+`--set 'certManager.enabled=false'`.
+
+```sh
+helm install slurm-operator oci://ghcr.io/slinkyproject/charts/slurm-operator \
+  --version=0.4.0 --set 'certManager.enabled=false' --namespace=slinky --create-namespace
 ```
 
 Make sure the cluster deployed successfully with:
