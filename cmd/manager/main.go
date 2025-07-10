@@ -29,6 +29,7 @@ import (
 	"github.com/SlinkyProject/slurm-operator/internal/controller/loginset"
 	"github.com/SlinkyProject/slurm-operator/internal/controller/nodeset"
 	"github.com/SlinkyProject/slurm-operator/internal/controller/restapi"
+	"github.com/SlinkyProject/slurm-operator/internal/controller/slurmclient"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -117,7 +118,6 @@ func main() {
 		Client:    mgr.GetClient(),
 		Scheme:    mgr.GetScheme(),
 		ClientMap: clientMap,
-		EventCh:   eventCh,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Controller")
 		os.Exit(1)
@@ -150,6 +150,15 @@ func main() {
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "LoginSet")
+		os.Exit(1)
+	}
+	if err = (&slurmclient.SlurmClientReconciler{
+		Client:    mgr.GetClient(),
+		Scheme:    mgr.GetScheme(),
+		ClientMap: clientMap,
+		EventCh:   eventCh,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "SlurmClient")
 		os.Exit(1)
 	}
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {

@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
 // SPDX-License-Identifier: Apache-2.0
 
-package controller
+package slurmclient
 
 import (
 	"context"
@@ -11,18 +11,20 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/clientmap"
+	"github.com/SlinkyProject/slurm-operator/internal/controller/controller"
+	"github.com/SlinkyProject/slurm-operator/internal/controller/restapi"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/testutils"
 	//+kubebuilder:scaffold:imports
 )
@@ -43,13 +45,9 @@ var cancel context.CancelFunc
 // a functioning slurm control plane and rest api.
 var clientMap *clientmap.ClientMap
 
-func init() {
-	utilruntime.Must(slinkyv1alpha1.AddToScheme(scheme.Scheme))
-}
-
 func TestHandlers(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Controller Suite")
+	RunSpecs(t, "SlurmClient Controller Suite")
 }
 
 var _ = BeforeSuite(func() {
@@ -88,10 +86,24 @@ var _ = BeforeSuite(func() {
 	Expect(err).ToNot(HaveOccurred())
 
 	clientMap = clientmap.NewClientMap()
-	err = (&ControllerReconciler{
+	err = (&SlurmClientReconciler{
 		Client:    k8sManager.GetClient(),
 		Scheme:    k8sManager.GetScheme(),
 		ClientMap: clientMap,
+		EventCh:   make(chan event.GenericEvent, 10),
+	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&controller.ControllerReconciler{
+		Client:    k8sManager.GetClient(),
+		Scheme:    k8sManager.GetScheme(),
+		ClientMap: clientMap,
+	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&restapi.RestapiReconciler{
+		Client: k8sManager.GetClient(),
+		Scheme: k8sManager.GetScheme(),
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 

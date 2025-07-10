@@ -51,6 +51,10 @@ spec:
             - --restapi-workers
             - {{ . | quote }}
             {{- end }}{{- /* with .Values.operator.restapiWorkers */}}
+            {{- with .Values.operator.slurmclientWorkers }}
+            - --slurmclient-workers
+            - {{ . | quote }}
+            {{- end }}{{- /* with .Values.operator.slurmclientWorkers */}}
             {{- with .Values.operator.logLevel }}
             - --zap-log-level
             - {{ . | quote }}

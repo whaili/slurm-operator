@@ -66,6 +66,8 @@ operator:
   nodesetWorkers: 4
   # -- Set the max concurrent workers for the Restapi controller.
   restapiWorkers: 4
+  # -- Set the max concurrent workers for the SlurmClient controller.
+  slurmclientWorkers: 2
   # -- Set the log level by string (e.g. error, info, debug) or number (e.g. 1..5).
   logLevel: info
 
