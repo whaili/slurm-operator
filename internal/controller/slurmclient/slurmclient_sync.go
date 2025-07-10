@@ -58,23 +58,39 @@ func (r *SlurmClientReconciler) Sync(ctx context.Context, req reconcile.Request)
 		return err
 	}
 
-	slurmClientOld := r.ClientMap.Get(controllerKey)
-	if (slurmClientOld != nil) &&
-		(slurmClientOld.GetServer() == server) {
-		logger.V(1).Info("slurm client exists. Skipping...", "cluster", controllerKey.String())
-		return nil
-	}
-
-	_ = r.ClientMap.Remove(controllerKey)
-
 	signingKey, err := r.refResolver.GetSecretKeyRef(ctx, controller.AuthJwtHs256Ref(), controller.Namespace)
 	if err != nil {
 		return err
 	}
 
-	authToken, err := slurmjwt.NewToken(signingKey).NewSignedToken()
+	lifetime := 15 * time.Minute
+	refresh := lifetime * 4 / 5
+	authToken, err := slurmjwt.NewToken(signingKey).
+		WithLifetime(lifetime).
+		NewSignedToken()
 	if err != nil {
 		return fmt.Errorf("failed to create Slurm auth token: %w", err)
+	}
+
+	authTokenClaims, err := slurmjwt.ParseTokenClaims(authToken, signingKey)
+	if err != nil {
+		return fmt.Errorf("failed to parse Slurm auth token: %w", err)
+	}
+	exp, err := authTokenClaims.GetExpirationTime()
+	if err != nil {
+		return fmt.Errorf("failed to get expiration time: %w", err)
+	}
+
+	if t := durationStore.Peek(controllerKey.String()); t == 0 {
+		logger.Info("Refresh token before expiration", "exp", exp, "refresh", time.Now().Add(refresh))
+		durationStore.Push(controllerKey.String(), refresh)
+	}
+
+	// There is an existing client, handle in-place updates
+	if slurmClient := r.ClientMap.Get(controllerKey); slurmClient != nil {
+		slurmClient.SetServer(server)
+		slurmClient.SetToken(authToken)
+		return nil
 	}
 
 	config := &slurmclient.Config{

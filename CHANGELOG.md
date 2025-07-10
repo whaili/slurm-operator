@@ -27,6 +27,8 @@ All notable changes to this project will be documented in this file.
 - Changed default storageClassName to empty.
 - Changed to Slurm v43 API.
 - Changed how a Slurm clusters are expressed via CRDs.
+- Changed lifetime of JWT tokens created by operator from infinite to 15
+  minutes.
 
 ### Removed
 
