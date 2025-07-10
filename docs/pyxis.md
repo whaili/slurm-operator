@@ -22,9 +22,11 @@ support.
 
 Configure `plugstack.conf` to include the pyxis configuration.
 
-> **Warning**: In `plugstack.conf`, you must use glob syntax to avoid slurmctld
-> failure while trying to resolve the paths in the includes. Only the login and
-> slurmd pods should actually have the pyxis libraries installed.
+> [!WARNING]
+>
+> In `plugstack.conf`, you must use glob syntax to avoid slurmctld failure while
+> trying to resolve the paths in the includes. Only the login and slurmd pods
+> should actually have the pyxis libraries installed.
 
 ```yaml
 slurm:
@@ -79,9 +81,11 @@ pyxis: imported docker image: alpine:latest
 PRETTY_NAME="Alpine Linux v3.21"
 ```
 
-> **Warning**: SPANK plugins will only work on specific Slurm node that have
-> them and is configured to use them. It is best to constrain where jobs run
-> with `--partition=<partition>`, `--batch=<features>`, and/or
+> [!WARNING]
+>
+> SPANK plugins will only work on specific Slurm node that have them and is
+> configured to use them. It is best to constrain where jobs run with
+> `--partition=<partition>`, `--batch=<features>`, and/or
 > `--constraint=<features>` to ensure a compatible computing environment.
 
 If the login container has `securityContext.privileged=true`, enroot activity is
