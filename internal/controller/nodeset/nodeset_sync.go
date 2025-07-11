@@ -299,20 +299,17 @@ func (r *NodeSetReconciler) syncNodeSet(
 	diff := len(pods) - replicaCount
 	if diff < 0 {
 		diff = -diff
-		logger.V(2).Info("Too few NodeSet pods", "nodeset", klog.KObj(nodeset),
-			"need", replicaCount, "creating", diff)
+		logger.V(2).Info("Too few NodeSet pods", "need", replicaCount, "creating", diff)
 		return r.doPodScaleOut(ctx, nodeset, pods, diff, hash)
 	}
 
 	if diff > 0 {
-		logger.V(2).Info("Too many NodeSet pods", "nodeset", klog.KObj(nodeset),
-			"need", replicaCount, "deleting", diff)
+		logger.V(2).Info("Too many NodeSet pods", "need", replicaCount, "deleting", diff)
 		podsToDelete, podsToKeep := nodesetutils.SplitActivePods(pods, diff)
 		return r.doPodScaleIn(ctx, nodeset, podsToDelete, podsToKeep)
 	}
 
-	logger.V(2).Info("Processing NodeSet pods", "nodeset", klog.KObj(nodeset),
-		"replicas", replicaCount)
+	logger.V(2).Info("Processing NodeSet pods", "replicas", replicaCount)
 	return r.doPodProcessing(ctx, nodeset, pods, hash)
 }
 
@@ -389,7 +386,7 @@ func (r *NodeSetReconciler) doPodScaleOut(
 	// retry the slow start process.
 	if skippedPods := numCreate - successfulCreations; skippedPods > 0 {
 		logger.V(2).Info("Slow-start failure. Skipping creation of pods, decrementing expectations",
-			"podsSkipped", skippedPods, "kind", slinkyv1alpha1.NodeSetGVK, "nodeset", klog.KObj(nodeset))
+			"podsSkipped", skippedPods, "kind", slinkyv1alpha1.NodeSetGVK)
 		for range skippedPods {
 			// Decrement the expected number of creates because the informer won't observe this pod
 			r.expectations.CreationObserved(logger, key)
@@ -452,7 +449,7 @@ func (r *NodeSetReconciler) doPodScaleIn(
 			r.expectations.DeletionObserved(logger, key, podKey)
 			if !apierrors.IsNotFound(err) {
 				logger.V(2).Info("Failed to delete pod, decremented expectations",
-					"pod", podKey, "kind", slinkyv1alpha1.NodeSetGVK, "nodeset", klog.KObj(nodeset))
+					"pod", podKey, "kind", slinkyv1alpha1.NodeSetGVK)
 				return err
 			}
 		}
@@ -492,7 +489,7 @@ func (r *NodeSetReconciler) processCondemned(
 
 	if utils.IsTerminating(pod) {
 		logger.V(3).Info("NodeSet Pod is terminating, skipping further processing",
-			"nodeSet", klog.KObj(nodeset), "pod", klog.KObj(pod))
+			"pod", klog.KObj(pod))
 		return nil
 	}
 
@@ -502,7 +499,7 @@ func (r *NodeSetReconciler) processCondemned(
 	}
 	if utils.IsRunningAndReady(pod) && !isDrained {
 		logger.V(2).Info("NodeSet Pod is draining, pending termination for scale-in",
-			"nodeSet", klog.KObj(nodeset), "pod", klog.KObj(pod))
+			"pod", klog.KObj(pod))
 		// Decrement expectations and requeue reconcile because the Slurm node is not drained yet.
 		// We must wait until fully drained to terminate the pod.
 		durationStore.Push(key, 30*time.Second)
@@ -510,7 +507,7 @@ func (r *NodeSetReconciler) processCondemned(
 	}
 
 	logger.V(2).Info("NodeSet Pod is terminating for scale-in",
-		"nodeSet", klog.KObj(nodeset), "pod", klog.KObj(pod))
+		"pod", klog.KObj(pod))
 	if err := r.podControl.DeleteNodeSetPod(ctx, nodeset, pod); err != nil {
 		if !apierrors.IsNotFound(err) {
 			return err

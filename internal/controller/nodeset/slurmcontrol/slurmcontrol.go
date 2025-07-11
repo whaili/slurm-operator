@@ -58,8 +58,7 @@ func (r *realSlurmControl) GetNodeNames(ctx context.Context, nodeset *slinkyv1al
 
 	slurmClient := r.lookupClient(nodeset)
 	if slurmClient == nil {
-		logger.V(2).Info("no client for nodeset, cannot do GetNodeNames()",
-			"nodeset", klog.KObj(nodeset))
+		logger.V(2).Info("no client for nodeset, cannot do GetNodeNames()")
 		return nil, nil
 	}
 
@@ -302,8 +301,7 @@ func (r *realSlurmControl) CalculateNodeStatus(ctx context.Context, nodeset *sli
 
 	slurmClient := r.lookupClient(nodeset)
 	if slurmClient == nil {
-		logger.V(2).Info("no client for nodeset, cannot do CalculateNodeStatus()",
-			"nodeset", klog.KObj(nodeset))
+		logger.V(2).Info("no client for nodeset, cannot do CalculateNodeStatus()")
 		return status, nil
 	}
 
@@ -384,8 +382,7 @@ func (r *realSlurmControl) GetNodeDeadlines(ctx context.Context, nodeset *slinky
 
 	slurmClient := r.lookupClient(nodeset)
 	if slurmClient == nil {
-		logger.V(2).Info("no client for nodeset, cannot do GetNodeDeadlines()",
-			"nodeset", klog.KObj(nodeset))
+		logger.V(2).Info("no client for nodeset, cannot do GetNodeDeadlines()")
 		return ts, nil
 	}
 
