@@ -72,9 +72,7 @@ func parseFlags(flags *Flags) {
 
 func main() {
 	var flags Flags
-	opts := zap.Options{
-		Development: true,
-	}
+	opts := zap.Options{}
 	opts.BindFlags(flag.CommandLine)
 	parseFlags(&flags)
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
