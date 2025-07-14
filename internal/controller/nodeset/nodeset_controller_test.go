@@ -19,7 +19,7 @@ import (
 	"k8s.io/utils/set"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 
-	v0041 "github.com/SlinkyProject/slurm-client/api/v0041"
+	api "github.com/SlinkyProject/slurm-client/api/v0043"
 	slurmclient "github.com/SlinkyProject/slurm-client/pkg/client"
 	"github.com/SlinkyProject/slurm-client/pkg/client/fake"
 	"github.com/SlinkyProject/slurm-client/pkg/client/interceptor"
@@ -33,19 +33,19 @@ import (
 func newFakeClientList(interceptorFuncs interceptor.Funcs, initObjLists ...object.ObjectList) slurmclient.Client {
 	updateFn := func(_ context.Context, obj object.Object, req any, opts ...slurmclient.UpdateOption) error {
 		switch o := obj.(type) {
-		case *slurmtypes.V0041Node:
-			r, ok := req.(v0041.V0041UpdateNodeMsg)
+		case *slurmtypes.V0043Node:
+			r, ok := req.(api.V0043UpdateNodeMsg)
 			if !ok {
 				return errors.New("failed to cast request object")
 			}
-			stateSet := set.New(ptr.Deref(o.State, []v0041.V0041NodeState{})...)
-			statesReq := ptr.Deref(r.State, []v0041.V0041UpdateNodeMsgState{})
+			stateSet := set.New(ptr.Deref(o.State, []api.V0043NodeState{})...)
+			statesReq := ptr.Deref(r.State, []api.V0043UpdateNodeMsgState{})
 			for _, stateReq := range statesReq {
 				switch stateReq {
-				case v0041.V0041UpdateNodeMsgStateUNDRAIN:
-					stateSet.Delete(v0041.V0041NodeStateDRAIN)
+				case api.V0043UpdateNodeMsgStateUNDRAIN:
+					stateSet.Delete(api.V0043NodeStateDRAIN)
 				default:
-					stateSet.Insert(v0041.V0041NodeState(stateReq))
+					stateSet.Insert(api.V0043NodeState(stateReq))
 				}
 			}
 			o.State = ptr.To(stateSet.UnsortedList())
@@ -150,13 +150,13 @@ var _ = Describe("Nodeset controller", func() {
 			By("Simulating Slurm functionality")
 			// Simulate Kubernetes marking pods as healthy,
 			// and Slurm registering the pods that were just created.
-			slurmNodes := make([]slurmtypes.V0041Node, 0)
+			slurmNodes := make([]slurmtypes.V0043Node, 0)
 			for _, pod := range podList.Items {
 				// Register Slurm node for pod
-				node := slurmtypes.V0041Node{
-					V0041Node: v0041.V0041Node{
+				node := slurmtypes.V0043Node{
+					V0043Node: api.V0043Node{
 						Name:  ptr.To(nodesetutils.GetNodeName(&pod)),
-						State: ptr.To([]v0041.V0041NodeState{v0041.V0041NodeStateIDLE}),
+						State: ptr.To([]api.V0043NodeState{api.V0043NodeStateIDLE}),
 					},
 				}
 				slurmNodes = append(slurmNodes, node)
@@ -166,7 +166,7 @@ var _ = Describe("Nodeset controller", func() {
 			// NOTE: we need to do this after we know what the pod are, otherwise Slurm node
 			// names will not match.
 			slurmClusters.Add(types.NamespacedName{Name: clusterName, Namespace: nodesetNamespace},
-				newFakeClientList(interceptor.Funcs{}, &slurmtypes.V0041NodeList{
+				newFakeClientList(interceptor.Funcs{}, &slurmtypes.V0043NodeList{
 					Items: slurmNodes,
 				}),
 			)
@@ -197,10 +197,10 @@ var _ = Describe("Nodeset controller", func() {
 			clusterKey := types.NamespacedName{Namespace: nodesetNamespace, Name: clusterName}
 			slurmClient := slurmClusters.Get(clusterKey)
 			Eventually(func(g Gomega) {
-				slurmNodes := &slurmtypes.V0041NodeList{}
+				slurmNodes := &slurmtypes.V0043NodeList{}
 				g.Expect(slurmClient.List(ctx, slurmNodes)).To(Succeed())
 				for _, node := range slurmNodes.Items {
-					g.Expect(node.GetStateAsSet().Has(v0041.V0041NodeStateDRAIN)).Should(BeTrue())
+					g.Expect(node.GetStateAsSet().Has(api.V0043NodeStateDRAIN)).Should(BeTrue())
 				}
 			}, timeout, interval).Should(Succeed())
 

@@ -110,7 +110,7 @@ Slurm is a full featured HPC workload manager. To highlight a few features:
 - **Kubernetes Version**: >=
   [v1.29](https://kubernetes.io/blog/2023/12/13/kubernetes-v1-29-release/)
 - **Slurm Version**: >=
-  [24.11](https://www.schedmd.com/slurm-version-24-11-0-is-now-available/)
+  [25.05](https://www.schedmd.com/slurm-version-25-05-0-is-now-available/)
 
 ## Installation
 

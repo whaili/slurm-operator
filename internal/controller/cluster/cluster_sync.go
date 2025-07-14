@@ -135,7 +135,7 @@ func (r *ClusterReconciler) slurmClientUpdate(
 	}
 	options := &slurmclient.ClientOptions{
 		DisableFor: []object.Object{
-			&slurmtypes.V0041ControllerPing{},
+			&slurmtypes.V0043ControllerPing{},
 		},
 	}
 	slurmClient, err := slurmclient.NewClient(config, options)

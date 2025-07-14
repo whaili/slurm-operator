@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	v0041 "github.com/SlinkyProject/slurm-client/api/v0041"
+	api "github.com/SlinkyProject/slurm-client/api/v0043"
 	slurmclient "github.com/SlinkyProject/slurm-client/pkg/client"
 	"github.com/SlinkyProject/slurm-client/pkg/client/fake"
 	"github.com/SlinkyProject/slurm-client/pkg/client/interceptor"
@@ -105,9 +105,9 @@ var _ = Describe("Cluster controller", func() {
 			// successful ping response in the cache
 			slurmClusters.Add(types.NamespacedName{Name: clusterName, Namespace: clusterNamespace},
 				newFakeClientList(interceptor.Funcs{},
-					&slurmtypes.V0041ControllerPingList{
-						Items: []slurmtypes.V0041ControllerPing{
-							{V0041ControllerPing: v0041.V0041ControllerPing{Hostname: ptr.To("localhost"), Pinged: ptr.To(slurmtypes.V0041ControllerPingPingedUP)}},
+					&slurmtypes.V0043ControllerPingList{
+						Items: []slurmtypes.V0043ControllerPing{
+							{V0043ControllerPing: api.V0043ControllerPing{Hostname: ptr.To("localhost"), Pinged: ptr.To(slurmtypes.V0043ControllerPingPingedUP)}},
 						},
 					},
 				))

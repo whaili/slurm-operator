@@ -20,5 +20,6 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Changed default storageClassName to empty.
+- Changed to Slurm v43 API.
 
 ### Removed

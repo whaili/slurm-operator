@@ -324,10 +324,10 @@ func (e *podEventHandler) getPodNodeSets(ctx context.Context, pod *corev1.Pod) [
 // SetEventHandler is a helper function to make slurm node updates propagate to
 // the nodeset controller via configured event channel.
 func SetEventHandler(client slurmclient.Client, eventCh chan event.GenericEvent) {
-	informer := client.GetInformer(slurmtypes.ObjectTypeV0041Node)
+	informer := client.GetInformer(slurmtypes.ObjectTypeV0043Node)
 	informer.SetEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			node, ok := obj.(*slurmtypes.V0041Node)
+			node, ok := obj.(*slurmtypes.V0043Node)
 			if !ok {
 				return
 			}
@@ -336,11 +336,11 @@ func SetEventHandler(client slurmclient.Client, eventCh chan event.GenericEvent)
 			eventCh <- podEvent(podInfo)
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
-			oldNode, ok := oldObj.(*slurmtypes.V0041Node)
+			oldNode, ok := oldObj.(*slurmtypes.V0043Node)
 			if !ok {
 				return
 			}
-			newNode, ok := newObj.(*slurmtypes.V0041Node)
+			newNode, ok := newObj.(*slurmtypes.V0043Node)
 			if !ok {
 				return
 			}
@@ -352,7 +352,7 @@ func SetEventHandler(client slurmclient.Client, eventCh chan event.GenericEvent)
 			eventCh <- podEvent(podInfo)
 		},
 		DeleteFunc: func(obj interface{}) {
-			node, ok := obj.(*slurmtypes.V0041Node)
+			node, ok := obj.(*slurmtypes.V0043Node)
 			if !ok {
 				return
 			}

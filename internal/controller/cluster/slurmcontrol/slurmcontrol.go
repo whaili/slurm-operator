@@ -40,7 +40,7 @@ func (r *realSlurmControl) PingController(ctx context.Context, cluster *slinkyv1
 		return false, nil
 	}
 
-	pingList := &slurmtypes.V0041ControllerPingList{}
+	pingList := &slurmtypes.V0043ControllerPingList{}
 	if err := slurmClient.List(ctx, pingList); err != nil {
 		if tolerateError(err) {
 			return false, nil
@@ -48,7 +48,7 @@ func (r *realSlurmControl) PingController(ctx context.Context, cluster *slinkyv1
 		return false, err
 	}
 	for _, ping := range pingList.Items {
-		if ptr.Deref(ping.Pinged, "") == slurmtypes.V0041ControllerPingPingedUP {
+		if ptr.Deref(ping.Pinged, "") == slurmtypes.V0043ControllerPingPingedUP {
 			return true, nil
 		}
 	}

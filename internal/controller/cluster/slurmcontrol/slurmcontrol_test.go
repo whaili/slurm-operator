@@ -15,7 +15,7 @@ import (
 	k8stypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 
-	v0041 "github.com/SlinkyProject/slurm-client/api/v0041"
+	api "github.com/SlinkyProject/slurm-client/api/v0043"
 	"github.com/SlinkyProject/slurm-client/pkg/client"
 	"github.com/SlinkyProject/slurm-client/pkg/client/fake"
 	"github.com/SlinkyProject/slurm-client/pkg/types"
@@ -48,10 +48,10 @@ var _ = Describe("SlurmControlInterface", func() {
 					Name:      clusterName,
 				},
 			}
-			controllerPing := &types.V0041ControllerPing{
-				V0041ControllerPing: v0041.V0041ControllerPing{
+			controllerPing := &types.V0043ControllerPing{
+				V0043ControllerPing: api.V0043ControllerPing{
 					Hostname: ptr.To("foo"),
-					Pinged:   ptr.To(types.V0041ControllerPingPingedUP),
+					Pinged:   ptr.To(types.V0043ControllerPingPingedUP),
 				},
 			}
 			client := fake.NewClientBuilder().WithObjects(controllerPing).Build()
@@ -72,10 +72,10 @@ var _ = Describe("SlurmControlInterface", func() {
 					Name:      clusterName,
 				},
 			}
-			controllerPing := &types.V0041ControllerPing{
-				V0041ControllerPing: v0041.V0041ControllerPing{
+			controllerPing := &types.V0043ControllerPing{
+				V0043ControllerPing: api.V0043ControllerPing{
 					Hostname: ptr.To("foo"),
-					Pinged:   ptr.To(types.V0041ControllerPingPingedDOWN),
+					Pinged:   ptr.To(types.V0043ControllerPingPingedDOWN),
 				},
 			}
 			client := fake.NewClientBuilder().WithObjects(controllerPing).Build()
