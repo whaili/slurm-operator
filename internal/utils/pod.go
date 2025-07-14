@@ -18,7 +18,12 @@ func IsPodCordon(pod *corev1.Pod) bool {
 
 // isRunningAndReady returns true if pod is in the PodRunning Phase, if it has a condition of PodReady.
 func IsRunningAndReady(pod *corev1.Pod) bool {
-	return pod.Status.Phase == corev1.PodRunning && podutil.IsPodReady(pod)
+	return IsRunning(pod) && podutil.IsPodReady(pod)
+}
+
+// isRunning returns true if pod is in the PodRunning Phase.
+func IsRunning(pod *corev1.Pod) bool {
+	return pod.Status.Phase == corev1.PodRunning
 }
 
 func IsRunningAndAvailable(pod *corev1.Pod, minReadySeconds int32) bool {

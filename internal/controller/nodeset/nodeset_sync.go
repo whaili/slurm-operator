@@ -487,6 +487,11 @@ func (r *NodeSetReconciler) processCondemned(
 	pod := condemned[i]
 	key := utils.KeyFunc(pod)
 
+	podKey := client.ObjectKeyFromObject(pod)
+	if err := r.Get(ctx, podKey, pod); err != nil {
+		return err
+	}
+
 	if utils.IsTerminating(pod) {
 		logger.V(3).Info("NodeSet Pod is terminating, skipping further processing",
 			"pod", klog.KObj(pod))
@@ -497,7 +502,8 @@ func (r *NodeSetReconciler) processCondemned(
 	if err != nil {
 		return err
 	}
-	if utils.IsRunningAndReady(pod) && !isDrained {
+
+	if utils.IsRunning(pod) && !isDrained {
 		logger.V(2).Info("NodeSet Pod is draining, pending termination for scale-in",
 			"pod", klog.KObj(pod))
 		// Decrement expectations and requeue reconcile because the Slurm node is not drained yet.

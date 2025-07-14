@@ -16,6 +16,8 @@ All notable changes to this project will be documented in this file.
 - Fixed nodeset pod's sackd image tag default value.
 - Fixed webhook timeout being read from unintended values path.
 - Fixed operator replicas being read form unintended values path.
+- Fixed race condition where a stale NodeSet pod status leads to the Slurm node
+  being terminated instead of drained.
 
 ### Changed
 
