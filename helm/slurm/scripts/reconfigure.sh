@@ -13,7 +13,7 @@ INTERVAL=30
 INIT_RECONFIGURE=false
 
 function reconfigure() {
-	local rsync_cmd='rsync -vaLrzPci --delete --include="*.conf" --include="prolog-*" --include="epilog-*" --exclude="*" "${SLURM_MOUNT}/" "${SLURM_DIR}"'
+	local rsync_cmd='rsync -vaLrzPci --delete --include="*.conf" --include="*.yaml" --include="prolog-*" --include="epilog-*" --exclude="*" "${SLURM_MOUNT}/" "${SLURM_DIR}"'
 
 	if [ -z "$(eval "$rsync_cmd --dry-run | grep '\./'")" ] && $INIT_RECONFIGURE; then
 		return
@@ -23,6 +23,8 @@ function reconfigure() {
 	eval "$rsync_cmd"
 	find "${SLURM_DIR}" -type f -name "*.conf" -print0 | xargs -0r chown -v "${SLURM_USER}:${SLURM_USER}"
 	find "${SLURM_DIR}" -type f -name "*.conf" -print0 | xargs -0r chmod -v 644
+	find "${SLURM_DIR}" -type f -name "*.yaml" -print0 | xargs -0r chown -v "${SLURM_USER}:${SLURM_USER}"
+	find "${SLURM_DIR}" -type f -name "*.yaml" -print0 | xargs -0r chmod -v 644
 	find "${SLURM_DIR}" -type f -regextype posix-extended -regex "^.*/(pro|epi)log-.*$" -print0 | xargs -0r chown -v "${SLURM_USER}:${SLURM_USER}"
 	find "${SLURM_DIR}" -type f -regextype posix-extended -regex "^.*/(pro|epi)log-.*$" -print0 | xargs -0r chmod -v 755
 
