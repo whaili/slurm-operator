@@ -137,8 +137,13 @@ slurm:
     #   # Ref: https://slurm.schedmd.com/plugstack.conf.html
     # topology.conf: |
     #   # Ref: https://slurm.schedmd.com/topology.conf.html
-    # topology.yaml: |
-    #   # Ref: https://slurm.schedmd.com/topology.yaml.html
+    topology.yaml: |
+      - topology: foo
+        cluster_default: false
+        tree:
+          switches:
+            - switch: sw_root
+              children: s[1-2]
   #
   # -- (map[string]string)
   # The Prolog scripts for compute nodesets, as a map.
