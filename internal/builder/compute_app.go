@@ -44,9 +44,13 @@ func (b *Builder) BuildComputePodTemplate(nodeset *slinkyv1alpha1.NodeSet, contr
 
 	template := nodeset.Spec.Template
 
-	o := corev1.PodTemplateSpec{
-		ObjectMeta: objectMeta,
-		Spec: corev1.PodSpec{
+	opts := PodTemplateOpts{
+		Key: key,
+		Metadata: slinkyv1alpha1.Metadata{
+			Annotations: objectMeta.Annotations,
+			Labels:      objectMeta.Labels,
+		},
+		base: corev1.PodSpec{
 			AutomountServiceAccountToken: ptr.To(false),
 			EnableServiceLinks:           ptr.To(false),
 			Affinity:                     template.Affinity,
@@ -63,7 +67,10 @@ func (b *Builder) BuildComputePodTemplate(nodeset *slinkyv1alpha1.NodeSet, contr
 			Tolerations:       template.Tolerations,
 			Volumes:           utils.MergeList(nodesetVolumes(controller), template.Volumes),
 		},
+		merge: template.ToPodSpec(),
 	}
+
+	o := b.buildPodTemplate(opts)
 
 	return o
 }

@@ -53,7 +53,9 @@ func newNodeSetWithVolumes(name string, petMounts []corev1.VolumeMount, podMount
 			PodMetadata: slinkyv1alpha1.Metadata{
 				Labels: map[string]string{"foo": "bar"},
 			},
-			Volumes: vols,
+			PodSpec: slinkyv1alpha1.PodSpec{
+				Volumes: vols,
+			},
 		},
 		Slurmd: slinkyv1alpha1.Container{
 			Image:        "nginx",

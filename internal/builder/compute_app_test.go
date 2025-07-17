@@ -47,7 +47,9 @@ func TestBuilder_BuildComputePodTemplate(t *testing.T) {
 								"weight=5",
 							}, " "),
 							PodTemplate: slinkyv1alpha1.PodTemplate{
-								Hostname: "foo-",
+								PodSpec: slinkyv1alpha1.PodSpec{
+									Hostname: "foo-",
+								},
 							},
 						},
 					},

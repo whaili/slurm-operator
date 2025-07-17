@@ -77,7 +77,6 @@ func (b *Builder) accountingPodTemplate(accounting *slinkyv1alpha1.Accounting) (
 	}
 
 	objectMeta := metadata.NewBuilder(key).
-		WithMetadata(accounting.Spec.Template.PodMetadata).
 		WithLabels(labels.NewBuilder().WithAccountingLabels(accounting).Build()).
 		WithAnnotations(hashMap).
 		WithAnnotations(map[string]string{
@@ -87,24 +86,27 @@ func (b *Builder) accountingPodTemplate(accounting *slinkyv1alpha1.Accounting) (
 
 	template := accounting.Spec.Template
 
-	o := corev1.PodTemplateSpec{
-		ObjectMeta: objectMeta,
-		Spec: corev1.PodSpec{
+	opts := PodTemplateOpts{
+		Key: key,
+		Metadata: slinkyv1alpha1.Metadata{
+			Annotations: objectMeta.Annotations,
+			Labels:      objectMeta.Labels,
+		},
+		base: corev1.PodSpec{
 			AutomountServiceAccountToken: ptr.To(false),
 			Affinity:                     template.Affinity,
 			Containers: []corev1.Container{
 				slurmdbdContainer(template.Slurmdbd),
 			},
-			ImagePullSecrets: template.ImagePullSecrets,
 			InitContainers: []corev1.Container{
 				initconfContainer(accounting.Spec.Template.InitConf),
 			},
-			NodeSelector:      template.NodeSelector,
-			PriorityClassName: template.PriorityClassName,
-			Tolerations:       template.Tolerations,
-			Volumes:           utils.MergeList(accountingVolumes(accounting), template.Volumes),
+			Volumes: utils.MergeList(accountingVolumes(accounting), template.Volumes),
 		},
+		merge: template.ToPodSpec(),
 	}
+
+	o := b.buildPodTemplate(opts)
 
 	return o, nil
 }

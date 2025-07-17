@@ -130,9 +130,13 @@ func (b *Builder) loginPodTemplate(loginset *slinkyv1alpha1.LoginSet) (corev1.Po
 
 	template := loginset.Spec.Template
 
-	o := corev1.PodTemplateSpec{
-		ObjectMeta: objectMeta,
-		Spec: corev1.PodSpec{
+	opts := PodTemplateOpts{
+		Key: key,
+		Metadata: slinkyv1alpha1.Metadata{
+			Annotations: objectMeta.Annotations,
+			Labels:      objectMeta.Labels,
+		},
+		base: corev1.PodSpec{
 			AutomountServiceAccountToken: ptr.To(false),
 			EnableServiceLinks:           ptr.To(false),
 			Affinity:                     template.Affinity,
@@ -146,7 +150,10 @@ func (b *Builder) loginPodTemplate(loginset *slinkyv1alpha1.LoginSet) (corev1.Po
 			Tolerations:       template.Tolerations,
 			Volumes:           utils.MergeList(loginVolumes(loginset, controller), template.Volumes),
 		},
+		merge: template.ToPodSpec(),
 	}
+
+	o := b.buildPodTemplate(opts)
 
 	return o, nil
 }

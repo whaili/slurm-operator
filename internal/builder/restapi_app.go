@@ -87,9 +87,13 @@ func (b *Builder) restapiPodTemplate(restapi *slinkyv1alpha1.RestApi) (corev1.Po
 
 	template := restapi.Spec.Template
 
-	o := corev1.PodTemplateSpec{
-		ObjectMeta: objectMeta,
-		Spec: corev1.PodSpec{
+	opts := PodTemplateOpts{
+		Key: key,
+		Metadata: slinkyv1alpha1.Metadata{
+			Annotations: objectMeta.Annotations,
+			Labels:      objectMeta.Labels,
+		},
+		base: corev1.PodSpec{
 			AutomountServiceAccountToken: ptr.To(false),
 			Affinity:                     template.Affinity,
 			Containers: []corev1.Container{
@@ -108,7 +112,10 @@ func (b *Builder) restapiPodTemplate(restapi *slinkyv1alpha1.RestApi) (corev1.Po
 			Tolerations: template.Tolerations,
 			Volumes:     utils.MergeList(restapiVolumes(controller), template.Volumes),
 		},
+		merge: template.ToPodSpec(),
 	}
+
+	o := b.buildPodTemplate(opts)
 
 	return o, nil
 }
