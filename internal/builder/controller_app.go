@@ -122,7 +122,7 @@ func (b *Builder) controllerPodTemplate(controller *slinkyv1alpha1.Controller) (
 			AutomountServiceAccountToken: ptr.To(false),
 			Affinity:                     template.Affinity,
 			Containers: []corev1.Container{
-				slurmctldContainer(template.Container),
+				slurmctldContainer(template.Slurmctld),
 				reconfigureContainer(template.Reconfigure),
 			},
 			Hostname: template.Hostname,

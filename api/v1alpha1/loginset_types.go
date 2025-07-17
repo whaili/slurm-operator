@@ -62,6 +62,10 @@ type LoginSetSpec struct {
 // PodTemplateSpec describes the data a pod should have when created from a template
 type LoginSetPodTemplate struct {
 	PodTemplate `json:",inline"`
+
+	// The login container configuration.
+	// +optional
+	Login Container `json:"login,omitempty"`
 }
 
 // LoginSetStatus defines the observed state of LoginSet

@@ -82,6 +82,10 @@ type ControllerSpec struct {
 type ControllerPodTemplate struct {
 	PodTemplate `json:",inline"`
 
+	// The slurmctld container configuration.
+	// +optional
+	Slurmctld Container `json:"slurmctld,omitempty"`
+
 	// The reconfigure sidecar configuration.
 	// +optional
 	Reconfigure SideCar `json:"reconfigure,omitzero"`

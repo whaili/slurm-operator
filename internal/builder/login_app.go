@@ -137,7 +137,7 @@ func (b *Builder) loginPodTemplate(loginset *slinkyv1alpha1.LoginSet) (corev1.Po
 			EnableServiceLinks:           ptr.To(false),
 			Affinity:                     template.Affinity,
 			Containers: []corev1.Container{
-				loginContainer(template.Container, controller),
+				loginContainer(template.Login, controller),
 			},
 			Hostname:          template.Hostname,
 			ImagePullSecrets:  template.ImagePullSecrets,

@@ -93,7 +93,7 @@ func (b *Builder) accountingPodTemplate(accounting *slinkyv1alpha1.Accounting) (
 			AutomountServiceAccountToken: ptr.To(false),
 			Affinity:                     template.Affinity,
 			Containers: []corev1.Container{
-				slurmdbdContainer(template.Container),
+				slurmdbdContainer(template.Slurmdbd),
 			},
 			ImagePullSecrets: template.ImagePullSecrets,
 			InitContainers: []corev1.Container{

@@ -93,7 +93,7 @@ func (b *Builder) restapiPodTemplate(restapi *slinkyv1alpha1.RestApi) (corev1.Po
 			AutomountServiceAccountToken: ptr.To(false),
 			Affinity:                     template.Affinity,
 			Containers: []corev1.Container{
-				slurmrestdContainer(template.Container, hasAccounting),
+				slurmrestdContainer(template.Slurmrestd, hasAccounting),
 			},
 			Hostname:          template.Hostname,
 			ImagePullSecrets:  template.ImagePullSecrets,

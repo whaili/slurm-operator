@@ -40,7 +40,7 @@ spec:
     extraConf: {{ include "slurm.compute.extraConf" $nodeset | quote }}
     {{- end }}{{- /* if (include "slurm.compute.extraConf" $nodeset) */}}
     hostname: "{{ $key }}-"
-    container:
+    slurmd:
       image: {{ include "format-image" $nodeset.image }}
       imagePullPolicy: {{ $.Values.imagePullPolicy }}
       {{- if $nodeset.useResourceLimits }}

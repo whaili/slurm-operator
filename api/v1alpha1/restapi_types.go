@@ -46,6 +46,10 @@ type RestApiSpec struct {
 
 type RestApiPodTemplate struct {
 	PodTemplate `json:",inline"`
+
+	// The slurmrestd container configuration.
+	// +optional
+	Slurmrestd Container `json:"slurmrestd,omitempty"`
 }
 
 // RestApiStatus defines the observed state of Restapi

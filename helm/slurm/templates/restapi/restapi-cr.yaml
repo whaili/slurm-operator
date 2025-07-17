@@ -29,7 +29,7 @@ spec:
     imagePullSecrets:
       {{- toYaml . | nindent 6 }}
     {{- end }}{{- /* with .Values.imagePullSecrets */}}
-    container:
+    slurmrestd:
       image: {{ include "format-image" .Values.restapi.image }}
       imagePullPolicy: {{ .Values.imagePullPolicy }}
       {{- with .Values.restapi.env }}

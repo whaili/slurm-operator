@@ -87,6 +87,10 @@ type NodeSetSpec struct {
 type NodeSetPodTemplate struct {
 	PodTemplate `json:",inline"`
 
+	// The slurmd container configuration.
+	// +optional
+	Slurmd Container `json:"slurmd,omitempty"`
+
 	// The logfile sidecar configuration.
 	// +optional
 	LogFile SideCar `json:"logfile,omitzero"`

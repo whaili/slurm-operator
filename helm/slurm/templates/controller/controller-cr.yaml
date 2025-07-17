@@ -57,7 +57,7 @@ spec:
     imagePullSecrets:
       {{- toYaml . | nindent 6 }}
     {{- end }}{{- /* with .Values.imagePullSecrets */}}
-    container:
+    slurmctld:
       image: {{ include "format-image" .Values.controller.image }}
       imagePullPolicy: {{ .Values.imagePullPolicy }}
       {{- with .Values.controller.args }}

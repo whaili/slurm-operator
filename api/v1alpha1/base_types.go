@@ -68,10 +68,6 @@ type PodTemplate struct {
 	// +listMapKey=name
 	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
 
-	// Container defines the main container.
-	// +optional
-	Container Container `json:"container,omitempty"`
-
 	// Specifies the hostname of the Pod
 	// If not specified, the pod's hostname will be set to a system-defined value.
 	// +optional

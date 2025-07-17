@@ -56,6 +56,10 @@ type AccountingSpec struct {
 type AccountingPodTemplate struct {
 	PodTemplate `json:",inline"`
 
+	// The slurmdbd container configuration.
+	// +optional
+	Slurmdbd Container `json:"slurmdbd,omitempty"`
+
 	// The initconf sidecar configuration.
 	// +optional
 	InitConf SideCar `json:"initconf,omitzero"`

@@ -42,10 +42,8 @@ func NewController(name string, slurmKeyRef, jwtHs256KeyRef slinkyv1alpha1.Secre
 			JwtHs256KeyRef: jwtHs256KeyRef,
 			AccountingRef:  accountingRef,
 			Template: slinkyv1alpha1.ControllerPodTemplate{
-				PodTemplate: slinkyv1alpha1.PodTemplate{
-					Container: slinkyv1alpha1.Container{
-						Image: "slurmctld",
-					},
+				Slurmctld: slinkyv1alpha1.Container{
+					Image: "slurmctld",
 				},
 				Reconfigure: slinkyv1alpha1.SideCar{
 					Image: "slurmctld",
@@ -122,10 +120,8 @@ func NewAccounting(name string, slurmKeyRef, jwtHs256KeyRef slinkyv1alpha1.Secre
 				PasswordKeyRef: passwordRef,
 			},
 			Template: slinkyv1alpha1.AccountingPodTemplate{
-				PodTemplate: slinkyv1alpha1.PodTemplate{
-					Container: slinkyv1alpha1.Container{
-						Image: "slurmdbd",
-					},
+				Slurmdbd: slinkyv1alpha1.Container{
+					Image: "slurmdbd",
 				},
 				InitConf: slinkyv1alpha1.SideCar{
 					Image: "sackd",
@@ -174,10 +170,8 @@ func NewNodeset(name string, controller *slinkyv1alpha1.Controller, replicas int
 			ControllerRef: controllerRef,
 			Replicas:      ptr.To(replicas),
 			Template: slinkyv1alpha1.NodeSetPodTemplate{
-				PodTemplate: slinkyv1alpha1.PodTemplate{
-					Container: slinkyv1alpha1.Container{
-						Image: "slurmd",
-					},
+				Slurmd: slinkyv1alpha1.Container{
+					Image: "slurmd",
 				},
 				LogFile: slinkyv1alpha1.SideCar{
 					Image: "alpine",
@@ -204,10 +198,8 @@ func NewLoginset(name string, controller *slinkyv1alpha1.Controller, sssdConfRef
 		Spec: slinkyv1alpha1.LoginSetSpec{
 			ControllerRef: controllerRef,
 			Template: slinkyv1alpha1.LoginSetPodTemplate{
-				PodTemplate: slinkyv1alpha1.PodTemplate{
-					Container: slinkyv1alpha1.Container{
-						Image: "login",
-					},
+				Login: slinkyv1alpha1.Container{
+					Image: "login",
 				},
 			},
 			SssdConfRef: sssdConfRef,
@@ -253,10 +245,8 @@ func NewRestapi(name string, controller *slinkyv1alpha1.Controller) *slinkyv1alp
 		Spec: slinkyv1alpha1.RestApiSpec{
 			ControllerRef: controllerRef,
 			Template: slinkyv1alpha1.RestApiPodTemplate{
-				PodTemplate: slinkyv1alpha1.PodTemplate{
-					Container: slinkyv1alpha1.Container{
-						Image: "slurmrestd",
-					},
+				Slurmrestd: slinkyv1alpha1.Container{
+					Image: "slurmrestd",
 				},
 			},
 		},

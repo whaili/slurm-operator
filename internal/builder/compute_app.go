@@ -100,10 +100,10 @@ func slurmdContainer(nodeset *slinkyv1alpha1.NodeSet, controller *slinkyv1alpha1
 
 	out := corev1.Container{
 		Name:            labels.ComputeApp,
-		Env:             template.Container.Env,
+		Env:             template.Slurmd.Env,
 		Args:            slurmdArgs(nodeset, controller),
-		Image:           template.Container.Image,
-		ImagePullPolicy: template.Container.ImagePullPolicy,
+		Image:           template.Slurmd.Image,
+		ImagePullPolicy: template.Slurmd.ImagePullPolicy,
 		Ports: []corev1.ContainerPort{
 			{
 				Name:          labels.ComputeApp,
@@ -111,7 +111,7 @@ func slurmdContainer(nodeset *slinkyv1alpha1.NodeSet, controller *slinkyv1alpha1
 				Protocol:      corev1.ProtocolTCP,
 			},
 		},
-		Resources: template.Container.Resources,
+		Resources: template.Slurmd.Resources,
 		StartupProbe: &corev1.Probe{
 			ProbeHandler: corev1.ProbeHandler{
 				Exec: &corev1.ExecAction{
@@ -158,7 +158,7 @@ func slurmdContainer(nodeset *slinkyv1alpha1.NodeSet, controller *slinkyv1alpha1
 				},
 			},
 		},
-		VolumeDevices: template.Container.VolumeDevices,
+		VolumeDevices: template.Slurmd.VolumeDevices,
 		VolumeMounts: []corev1.VolumeMount{
 			{Name: slurmEtcVolume, MountPath: slurmEtcDir, ReadOnly: true},
 			{Name: slurmLogFileVolume, MountPath: slurmLogFileDir},
@@ -171,7 +171,7 @@ func slurmdArgs(nodeset *slinkyv1alpha1.NodeSet, controller *slinkyv1alpha1.Cont
 	args := []string{"-Z"}
 	args = append(args, configlessArgs(controller)...)
 	args = append(args, slurmdConfArgs(nodeset)...)
-	return utils.MergeList(args, nodeset.Spec.Template.Container.Args)
+	return utils.MergeList(args, nodeset.Spec.Template.Slurmd.Args)
 }
 
 func slurmdConfArgs(nodeset *slinkyv1alpha1.NodeSet) []string {

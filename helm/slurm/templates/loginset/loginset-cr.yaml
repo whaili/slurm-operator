@@ -40,7 +40,7 @@ spec:
     imagePullSecrets:
       {{- toYaml . | nindent 6 }}
     {{- end }}{{- /* with $.Values.imagePullSecrets */}}
-    container:
+    login:
       image: {{ include "format-image" $loginset.image }}
       imagePullPolicy: {{ $.Values.imagePullPolicy }}
       {{- with $loginset.env }}
