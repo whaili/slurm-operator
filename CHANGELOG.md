@@ -7,7 +7,6 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Added NodeSet level authcred configuration.
-- Added topology.yaml to config files
 
 ### Fixed
 
