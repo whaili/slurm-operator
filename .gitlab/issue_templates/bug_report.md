@@ -7,26 +7,25 @@ The SchedMD official issue tracker is at <https://support.schedmd.com/>.
 ## Summary
 
 <!--
-Describe what this is for and why it is needed.
-Link relevant issues which this addresses. (e.g. Resolves #123)
+Describe what the bug is.
+Are there any workarounds?
 -->
 
-## Breaking Changes
+## Expected Behavior
 
 <!--
-Does this cause any breaking changes to users?
-Explain why the breakage has to happen.
+Describe what you expect should happen.
 -->
 
-## Testing Notes
+## Steps to Reproduce
 
 <!--
-Provide information on how to test this.
+Provide step to reproduce the bug.
 -->
 
 ## Additional Context
 
 <!--
 Provide any other additional information here.
-(e.g. which commits are critical or superfluous; why this implementation)
+(e.g. source code snippets/links; conjecture of root cause)
 -->
