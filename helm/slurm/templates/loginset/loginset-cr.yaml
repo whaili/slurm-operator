@@ -20,8 +20,8 @@ spec:
     name: {{ include "slurm.fullname" $ }}
     namespace: {{ include "slurm.namespace" $ }}
   {{- with $loginset.extraSshdConfig }}
-  extraSshdConfig:
-    {{- toYaml . | nindent 4 }}
+  extraSshdConfig: |
+    {{- . | nindent 4 }}
   {{- end }}{{- /* with $loginset.extraSshdConfig */}}
   sssdConfRef:
     name: {{ $name }}-sssd-conf
