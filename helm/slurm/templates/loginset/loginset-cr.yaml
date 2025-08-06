@@ -6,6 +6,15 @@ SPDX-License-Identifier: Apache-2.0
 {{- range $key, $loginset := $.Values.loginsets -}}
 {{- if $loginset.enabled }}
 {{- $name := printf "%s-%s" (include "slurm.login.name" $) $key }}
+{{- $podTemplate := $loginset.podTemplate -}}
+{{- $labels := fromYaml (include "slurm.labels" $) -}}
+{{- $labels = merge $labels (dict "loginset.slinky.slurm.net/name" $name) -}}
+{{- $metadata := merge (dict "labels" $labels) ($podTemplate.metadata | default dict) -}}
+{{- $_ := set $podTemplate "metadata" $metadata -}}
+{{- $imagePullSecrets := concat list ($podTemplate.imagePullSecrets | default list) ($.Values.imagePullSecrets | default list) -}}
+{{- $_ := set $podTemplate "imagePullSecrets" $imagePullSecrets -}}
+{{- $priorityClassName := $podTemplate.priorityClassName | default $.Values.priorityClassName -}}
+{{- $_ := set $podTemplate "priorityClassName" $priorityClassName -}}
 ---
 apiVersion: slinky.slurm.net/v1alpha1
 kind: LoginSet
@@ -32,50 +41,9 @@ spec:
   {{- end }}{{- /* with $loginset.rootSshAuthorizedKeys */}}
   replicas: {{ $loginset.replicas }}
   template:
-    metadata:
-      labels:
-        loginset.slinky.slurm.net/name: {{ $name }}
-        {{- include "slurm.labels" $ | nindent 8 }}
-    {{- with $.Values.imagePullSecrets }}
-    imagePullSecrets:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}{{- /* with $.Values.imagePullSecrets */}}
+    {{- include "format-podTemplate" $podTemplate | nindent 4 }}
     login:
-      image: {{ include "format-image" $loginset.image }}
-      imagePullPolicy: {{ $.Values.imagePullPolicy }}
-      {{- with $loginset.env }}
-      env:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}{{- /* with $loginset.env */}}
-      {{- with $loginset.resources }}
-      resources:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}{{- /* with $loginset.resources */}}
-      {{- with $loginset.securityContext }}
-      securityContext:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}{{- /* with $loginset.securityContext */}}
-      {{- with $loginset.volumeMounts }}
-      volumeMounts:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}{{- /* with $loginset.volumeMounts */}}
-    {{- with $loginset.nodeSelector }}
-    nodeSelector:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}{{- /* with $loginset.nodeSelector */}}
-    {{- with $loginset.affinity }}
-    affinity:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}{{- /* with $loginset.affinity */}}
-    {{- with $loginset.tolerations }}
-    tolerations:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}{{- /* with $loginset.tolerations */}}
-    priorityClassName: {{ $.Values.priorityClassName }}
-    {{- with $loginset.volumes }}
-    volumes:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}{{- /* with $loginset.volumes */}}
+      {{- include "format-container" $loginset.login | nindent 6 }}
   {{- with $loginset.service }}
   service:
     {{- toYaml . | nindent 4 }}

@@ -60,8 +60,27 @@ Format image reference from image object.
 {{- define "format-image" -}}
 {{- $repository := required "image repository is required" .repository -}}
 {{- $tag := required "image tag is required" .tag -}}
-{{- printf "%s:%s" $repository $tag | quote -}}
-{{- end }}
+{{- printf "%s:%s" $repository $tag | toString -}}
+{{- end -}}
+
+{{/*
+Format container object.
+*/}}
+{{- define "format-container" -}}
+{{- $container := omit . "image" -}}
+{{- $_ := set $container "image" (include "format-image" .image) -}}
+{{ toYaml $container }}
+{{- end -}}
+
+{{/*
+Format pod template object.
+*/}}
+{{- define "format-podTemplate" -}}
+{{- $template := omit . "metadata" -}}
+metadata:
+  {{- toYaml .metadata | nindent 2 }}
+{{ toYaml $template }}
+{{- end -}}
 
 {{/*
 Converts a list to a key value CSV.

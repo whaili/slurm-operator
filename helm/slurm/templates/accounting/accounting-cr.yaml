@@ -4,6 +4,14 @@ SPDX-License-Identifier: Apache-2.0
 */}}
 
 {{- if .Values.accounting.enabled }}
+{{- $podTemplate := .Values.accounting.podTemplate -}}
+{{- $labels := fromYaml (include "slurm.labels" $) -}}
+{{- $metadata := merge (dict "labels" $labels) ($podTemplate.metadata | default dict) -}}
+{{- $_ := set $podTemplate "metadata" $metadata -}}
+{{- $imagePullSecrets := concat list ($podTemplate.imagePullSecrets | default list) (.Values.imagePullSecrets | default list) -}}
+{{- $_ := set $podTemplate "imagePullSecrets" $imagePullSecrets -}}
+{{- $priorityClassName := $podTemplate.priorityClassName | default .Values.priorityClassName -}}
+{{- $_ := set $podTemplate "priorityClassName" $priorityClassName -}}
 apiVersion: slinky.slurm.net/v1alpha1
 kind: Accounting
 metadata:
@@ -31,44 +39,11 @@ spec:
     {{- include "slurm.accounting.extraConf" . | nindent 4 }}
   {{- end }}{{- /* if (include "slurm.accounting.extraConf" .) */}}
   template:
-    metadata:
-      labels:
-        {{- include "slurm.labels" . | nindent 8 }}
-    {{- with .Values.imagePullSecrets }}
-    imagePullSecrets:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}{{- /* with .Values.imagePullSecrets */}}
-    slurmrestd:
-      image: {{ include "format-image" .Values.accounting.image }}
-      imagePullPolicy: {{ .Values.imagePullPolicy }}
-      {{- with .Values.accounting.args }}
-      args:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}{{- /* with .Values.accounting.args */}}
-      {{- with .Values.accounting.resources }}
-      resources:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}{{- /* with .Values.accounting.resources */}}
+    {{- include "format-podTemplate" $podTemplate | nindent 4 }}
+    slurmdbd:
+      {{- include "format-container" .Values.accounting.slurmdbd | nindent 6 }}
     initconf:
-      image: {{ include "format-image" .Values.accounting.initconf.image }}
-      imagePullPolicy: {{ .Values.imagePullPolicy }}
-      {{- with .Values.accounting.initconf.resources }}
-      resources:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}{{- /* with .Values.accounting.resources */}}
-    {{- with .Values.accounting.nodeSelector }}
-    nodeSelector:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}{{- /* with .Values.accounting.nodeSelector */}}
-    {{- with .Values.accounting.affinity }}
-    affinity:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}{{- /* with .Values.accounting.affinity */}}
-    {{- with .Values.accounting.tolerations }}
-    tolerations:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}{{- /* with .Values.accounting.tolerations */}}
-    priorityClassName: {{ .Values.priorityClassName }}
+      {{- include "format-container" .Values.accounting.initconf | nindent 6 }}
   {{- with .Values.accounting.storageConfig }}
   storageConfig:
     {{- toYaml . | nindent 4 }}

@@ -3,6 +3,14 @@ SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
 SPDX-License-Identifier: Apache-2.0
 */}}
 
+{{- $podTemplate := .Values.restapi.podTemplate -}}
+{{- $labels := fromYaml (include "slurm.labels" $) -}}
+{{- $metadata := merge (dict "labels" $labels) ($podTemplate.metadata | default dict) -}}
+{{- $_ := set $podTemplate "metadata" $metadata -}}
+{{- $imagePullSecrets := concat ($podTemplate.imagePullSecrets | default list) (.Values.imagePullSecrets | default list) -}}
+{{- $_ := set $podTemplate "imagePullSecrets" $imagePullSecrets -}}
+{{- $priorityClassName := $podTemplate.priorityClassName | default .Values.priorityClassName -}}
+{{- $_ := set $podTemplate "priorityClassName" $priorityClassName -}}
 apiVersion: slinky.slurm.net/v1alpha1
 kind: RestApi
 metadata:
@@ -22,38 +30,6 @@ spec:
     {{- toYaml . | nindent 4 }}
   {{- end }}{{- /* with .Values.restapi.service */}}
   template:
-    metadata:
-      labels:
-        {{- include "slurm.labels" . | nindent 8 }}
-    {{- with .Values.imagePullSecrets }}
-    imagePullSecrets:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}{{- /* with .Values.imagePullSecrets */}}
+    {{- include "format-podTemplate" $podTemplate | nindent 4 }}
     slurmrestd:
-      image: {{ include "format-image" .Values.restapi.image }}
-      imagePullPolicy: {{ .Values.imagePullPolicy }}
-      {{- with .Values.restapi.env }}
-      env:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}{{- /* with .Values.restapi.env */}}
-      {{- with .Values.restapi.args }}
-      args:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}{{- /* with .Values.restapi.args */}}
-      {{- with .Values.restapi.resources }}
-      resources:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}{{- /* with .Values.restapi.resources */}}
-    {{- with .Values.restapi.nodeSelector }}
-    nodeSelector:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}{{- /* with .Values.restapi.nodeSelector */}}
-    {{- with .Values.restapi.affinity }}
-    affinity:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}{{- /* with .Values.restapi.affinity */}}
-    {{- with .Values.restapi.tolerations }}
-    tolerations:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}{{- /* with .Values.restapi.tolerations */}}
-    priorityClassName: {{ .Values.priorityClassName }}
+      {{- include "format-container" .Values.restapi.slurmrestd | nindent 6 }}

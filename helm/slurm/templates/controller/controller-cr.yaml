@@ -3,6 +3,14 @@ SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
 SPDX-License-Identifier: Apache-2.0
 */}}
 
+{{- $podTemplate := .Values.controller.podTemplate -}}
+{{- $labels := fromYaml (include "slurm.labels" $) -}}
+{{- $metadata := merge (dict "labels" $labels) ($podTemplate.metadata | default dict) -}}
+{{- $_ := set $podTemplate "metadata" $metadata -}}
+{{- $imagePullSecrets := concat list ($podTemplate.imagePullSecrets | default list) (.Values.imagePullSecrets | default list) -}}
+{{- $_ := set $podTemplate "imagePullSecrets" $imagePullSecrets -}}
+{{- $priorityClassName := $podTemplate.priorityClassName | default .Values.priorityClassName -}}
+{{- $_ := set $podTemplate "priorityClassName" $priorityClassName -}}
 apiVersion: slinky.slurm.net/v1alpha1
 kind: Controller
 metadata:
@@ -50,51 +58,13 @@ spec:
     {{- toYaml . | nindent 4 }}
   {{- end }}{{- /* with .Values.epilogScripts */}}
   template:
-    metadata:
-      labels:
-        {{- include "slurm.labels" . | nindent 8 }}
-    {{- with .Values.imagePullSecrets }}
-    imagePullSecrets:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}{{- /* with .Values.imagePullSecrets */}}
+    {{- include "format-podTemplate" $podTemplate | nindent 4 }}
     slurmctld:
-      image: {{ include "format-image" .Values.controller.image }}
-      imagePullPolicy: {{ .Values.imagePullPolicy }}
-      {{- with .Values.controller.args }}
-      args:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}{{- /* with .Values.controller.args */}}
-      {{- with .Values.controller.resources }}
-      resources:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}{{- /* with .Values.controller.resources */}}
+      {{- include "format-container" .Values.controller.slurmctld | nindent 6 }}
     reconfigure:
-      image: {{ include "format-image" .Values.controller.reconfigure.image }}
-      imagePullPolicy: {{ .Values.imagePullPolicy }}
-      {{- with .Values.controller.reconfigure.resources }}
-      resources:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}{{- /* with .Values.controller.reconfigure.resources */}}
+      {{- include "format-container" .Values.controller.reconfigure | nindent 6 }}
     logfile:
-      image: {{ include "format-image" .Values.controller.logfile.image }}
-      imagePullPolicy: {{ .Values.imagePullPolicy }}
-      {{- with .Values.controller.logfile.resources }}
-      resources:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}{{- /* with .Values.controller.logfile.resources */}}
-    {{- with .Values.controller.nodeSelector }}
-    nodeSelector:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}{{- /* with .Values.controller.nodeSelector */}}
-    {{- with .Values.controller.affinity }}
-    affinity:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}{{- /* with .Values.controller.affinity */}}
-    {{- with .Values.controller.tolerations }}
-    tolerations:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}{{- /* with .Values.controller.tolerations */}}
-    priorityClassName: {{ .Values.priorityClassName }}
+      {{- include "format-container" .Values.controller.logfile | nindent 6 }}
   {{- with .Values.controller.persistence }}
   persistence:
     {{- toYaml . | nindent 4 }}

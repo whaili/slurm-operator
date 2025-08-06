@@ -6,6 +6,23 @@ SPDX-License-Identifier: Apache-2.0
 {{- range $key, $nodeset := $.Values.nodesets -}}
 {{- if $nodeset.enabled }}
 {{- $name := printf "%s-%s" (include "slurm.compute.name" $) $key }}
+{{- $podTemplate := $nodeset.podTemplate -}}
+{{- $labels := fromYaml (include "slurm.labels" $) -}}
+{{- $labels = merge $labels (dict "nodeset.slinky.slurm.net/name" $name) -}}
+{{- $metadata := merge (dict "labels" $labels) ($podTemplate.metadata | default dict) -}}
+{{- $_ := set $podTemplate "metadata" $metadata -}}
+{{- $imagePullSecrets := concat list ($podTemplate.imagePullSecrets | default list) ($.Values.imagePullSecrets | default list) -}}
+{{- $_ := set $podTemplate "imagePullSecrets" $imagePullSecrets -}}
+{{- $priorityClassName := $podTemplate.priorityClassName | default $.Values.priorityClassName -}}
+{{- $_ := set $podTemplate "priorityClassName" $priorityClassName -}}
+{{- if $nodeset.useResourceLimits }}
+  {{- $envLimts := list (dict "name" "POD_CPUS" "value" (include "slurm.compute.podCpus" $nodeset.slurmd | toString)) (dict "name" "POD_MEMORY" "value" (include "slurm.compute.podMemory" $nodeset.slurmd | toString)) -}}
+  {{- $slurmdEnv := concat list ($nodeset.slurmd.env | default list) $envLimts -}}
+  {{- $_ := set $nodeset.slurmd "env" $slurmdEnv -}}
+{{- end }}{{- /* if $nodeset.useResourceLimits */}}
+{{- if (include "slurm.compute.extraConf" $nodeset) }}
+  {{- $_ := set $podTemplate "extraConf" (include "slurm.compute.extraConf" $nodeset) -}}
+{{- end -}}{{- /* if (include "slurm.compute.extraConf" $nodeset) */}}
 ---
 apiVersion: slinky.slurm.net/v1alpha1
 kind: NodeSet
@@ -23,69 +40,17 @@ spec:
   partition:
     enabled: {{ $nodeset.enabled | default false }}
     {{- if (include "slurm.compute.PartitionConfig" $nodeset.partition) }}
-    config: {{ include "slurm.compute.PartitionConfig" $nodeset.partition | quote }}
+    config: {{ include "slurm.compute.PartitionConfig" $nodeset.partition }}
     {{- end }}{{- /* if (include "slurm.compute.PartitionConfig" $nodeset.partition) */}}
   {{- end }}{{- /* with $nodeset.partition */}}
   replicas: {{ $nodeset.replicas }}
   template:
-    metadata:
-      labels:
-        nodeset.slinky.slurm.net/name: {{ $name }}
-        {{- include "slurm.labels" $ | nindent 8 }}
-    {{- with $.Values.imagePullSecrets }}
-    imagePullSecrets:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}{{- /* with $.Values.imagePullSecrets */}}
-    {{- if (include "slurm.compute.extraConf" $nodeset) }}
-    extraConf: {{ include "slurm.compute.extraConf" $nodeset | quote }}
-    {{- end }}{{- /* if (include "slurm.compute.extraConf" $nodeset) */}}
+    {{- include "format-podTemplate" $podTemplate | nindent 4 }}
     hostname: "{{ $key }}-"
     slurmd:
-      image: {{ include "format-image" $nodeset.image }}
-      imagePullPolicy: {{ $.Values.imagePullPolicy }}
-      {{- if $nodeset.useResourceLimits }}
-      env:
-        - name: POD_CPUS
-          value: {{ include "slurm.compute.podCpus" $nodeset | toString | quote }}
-        - name: POD_MEMORY
-          value: {{ include "slurm.compute.podMemory" $nodeset | toString | quote }}
-      {{- end }}{{- /* if $nodeset.useResourceLimits */}}
-      {{- with $nodeset.args }}
-      args:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}{{- /* with $nodeset.args */}}
-      {{- with $nodeset.resources }}
-      resources:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}{{- /* with $nodeset.resources */}}
-      {{- with $nodeset.volumeMounts }}
-      volumeMounts:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}{{- /* with $nodeset.volumeMounts */}}
+      {{- include "format-container" $nodeset.slurmd | nindent 6 }}
     logfile:
-      image: {{ include "format-image" $nodeset.logfile.image }}
-      imagePullPolicy: {{ $.Values.imagePullPolicy }}
-      {{- with $nodeset.logfile.resources }}
-      resources:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}{{- /* with $nodeset.logfile.resources */}}
-    {{- with $nodeset.nodeSelector }}
-    nodeSelector:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}{{- /* with $nodeset.nodeSelector */}}
-    {{- with $nodeset.affinity }}
-    affinity:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}{{- /* with $nodeset.affinity */}}
-    {{- with $nodeset.tolerations }}
-    tolerations:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}{{- /* with $nodeset.tolerations */}}
-    priorityClassName: {{ $.Values.priorityClassName }}
-    {{- with $nodeset.volumes }}
-    volumes:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}{{- /* with $nodeset.volumes */}}
+      {{- include "format-container" $nodeset.logfile | nindent 6 }}
   updateStrategy:
     type: RollingUpdate
     rollingUpdate:

@@ -110,15 +110,6 @@ authcred:
 
 # Slurm controller (slurmctld) configuration.
 controller:
-  # -- The image to use, `${repository}:${tag}`.
-  # Ref: https://kubernetes.io/docs/concepts/containers/images/#image-names
-  image:
-    repository: ghcr.io/slinkyproject/slurmctld
-    tag: 25.05-ubuntu24.04
-  # -- Arguments passed to the image.
-  # Ref: https://slurm.schedmd.com/slurmctld.html#SECTION_OPTIONS
-  args: []
-    # - -vvv
   # -- Extra Slurm configuration lines appended to `slurm.conf`.
   # Ref: https://slurm.schedmd.com/slurm.conf.html
   extraConf: null
@@ -152,6 +143,23 @@ controller:
     resources:
       requests:
         storage: 4Gi
+  # slurmctld container configurations.
+  slurmctld:
+    # -- The image to use, `${repository}:${tag}`.
+    # Ref: https://kubernetes.io/docs/concepts/containers/images/#image-names
+    image:
+      repository: ghcr.io/slinkyproject/slurmctld
+      tag: 25.05-ubuntu24.04
+    # -- Arguments passed to the image.
+    # Ref: https://slurm.schedmd.com/slurmctld.html#SECTION_OPTIONS
+    args: []
+      # - -vvv
+    # -- The container resource limits and requests.
+    # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
+    resources: {}
+      # limits:
+      #   cpu: 1
+      #   memory: 1Gi
   # Reconfigure sidecar configurations.
   reconfigure:
     # -- The image to use, `${repository}:${tag}`.
@@ -178,25 +186,27 @@ controller:
       # limits:
       #   cpu: 500m
       #   memory: 100Mi
-  # -- The container resource limits and requests.
-  # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
-  resources: {}
-    # limits:
-    #   cpu: 1
-    #   memory: 1Gi
-  # -- (map[string]string) Node label selector for pod assignment.
-  # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
-  nodeSelector:
-    kubernetes.io/os: linux
-  # -- Affinity for pod assignment.
-  # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
-  affinity: {}
-  # -- Tolerations for pod assignment.
-  # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
-  tolerations: []
-    # - key: key1
-    #   operator: Exists
-    #   effect: NoSchedule
+  # -- (corev1.PodSpec) Extend the pod template, and/or override certain configurations.
+  # Ref: https://kubernetes.io/docs/concepts/workloads/pods/#pod-templates
+  podTemplate:
+    # -- Labels and annotations.
+    # Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+    metadata: {}
+      # annotations: {}
+      # labels: {}
+    # -- (map[string]string) Node label selector for pod assignment.
+    # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
+    nodeSelector:
+      kubernetes.io/os: linux
+    # -- Affinity for pod assignment.
+    # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
+    affinity: {}
+    # -- Tolerations for pod assignment.
+    # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+    tolerations: []
+      # - key: key1
+      #   operator: Exists
+      #   effect: NoSchedule
   # -- The service configuration.
   # Ref: https://kubernetes.io/docs/concepts/services-networking/service/
   service: {}
@@ -208,41 +218,51 @@ controller:
 
 # Slurm REST API (slurmrestd) configuration.
 restapi:
-  # -- The image to use, `${repository}:${tag}`.
-  # Ref: https://kubernetes.io/docs/concepts/containers/images/#image-names
-  image:
-    repository: ghcr.io/slinkyproject/slurmrestd
-    tag: 25.05-ubuntu24.04
-  # -- Environment passed to the image.
-  # Ref: https://slurm.schedmd.com/slurmrestd.html#SECTION_ENVIRONMENT-VARIABLES
-  env: []
-    # - name: SLURMRESTD_YAML
-    #   value: pretty
-  # -- Arguments passed to the image.
-  # Ref: https://slurm.schedmd.com/slurmrestd.html#SECTION_OPTIONS
-  args: []
-    # - -vvv
   # -- Number of replicas to deploy.
   replicas: 1
-  # -- The container resource limits and requests.
-  # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
-  resources: {}
-    # limits:
-    #   cpu: 1
-    #   memory: 1Gi
-  # -- (map[string]string) Node label selector for pod assignment.
-  # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
-  nodeSelector:
-    kubernetes.io/os: linux
-  # -- Affinity for pod assignment.
-  # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
-  affinity: {}
-  # -- Tolerations for pod assignment.
-  # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
-  tolerations: []
-    # - key: key1
-    #   operator: Exists
-    #   effect: NoSchedule
+  # slurmrestd container configurations.
+  slurmrestd:
+    # -- The image to use, `${repository}:${tag}`.
+    # Ref: https://kubernetes.io/docs/concepts/containers/images/#image-names
+    image:
+      repository: ghcr.io/slinkyproject/slurmrestd
+      tag: 25.05-ubuntu24.04
+    # -- Environment passed to the image.
+    # Ref: https://slurm.schedmd.com/slurmrestd.html#SECTION_ENVIRONMENT-VARIABLES
+    env: []
+      # - name: SLURMRESTD_YAML
+      #   value: pretty
+    # -- Arguments passed to the image.
+    # Ref: https://slurm.schedmd.com/slurmrestd.html#SECTION_OPTIONS
+    args: []
+      # - -vvv
+    # -- The container resource limits and requests.
+    # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
+    resources: {}
+      # limits:
+      #   cpu: 1
+      #   memory: 1Gi
+  # -- (corev1.PodSpec) Extend the pod template, and/or override certain configurations.
+  # Ref: https://kubernetes.io/docs/concepts/workloads/pods/#pod-templates
+  podTemplate:
+    # -- Labels and annotations.
+    # Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+    metadata: {}
+      # annotations: {}
+      # labels: {}
+    # -- (map[string]string) Node label selector for pod assignment.
+    # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
+    nodeSelector:
+      kubernetes.io/os: linux
+    # -- Affinity for pod assignment.
+    # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
+    affinity: {}
+    # -- Tolerations for pod assignment.
+    # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+    tolerations: []
+      # - key: key1
+      #   operator: Exists
+      #   effect: NoSchedule
   # -- The service configuration.
   # Ref: https://kubernetes.io/docs/concepts/services-networking/service/
   service: {}
@@ -269,15 +289,6 @@ accounting:
   # -- Enables Slurm accounting subsystem, stores job/step historical records.
   # Ref: https://slurm.schedmd.com/accounting.html#Overview
   enabled: false
-  # -- The image to use, `${repository}:${tag}`.
-  # Ref: https://kubernetes.io/docs/concepts/containers/images/#image-names
-  image:
-    repository: ghcr.io/slinkyproject/slurmdbd
-    tag: 25.05-ubuntu24.04
-  # -- Arguments passed to the image.
-  # Ref: https://slurm.schedmd.com/slurmdbd.html#SECTION_OPTIONS
-  args: []
-    # - -vvv
   # -- Extra Slurm configuration lines appended to `slurmdbd.conf`.
   # Ref: https://slurm.schedmd.com/slurm.conf.html
   extraConf: null
@@ -314,6 +325,23 @@ accounting:
     passwordKeyRef:
       name: mariadb-password
       key: password
+  # slurmdbd container configurations.
+  slurmdbd:
+    # -- The image to use, `${repository}:${tag}`.
+    # Ref: https://kubernetes.io/docs/concepts/containers/images/#image-names
+    image:
+      repository: ghcr.io/slinkyproject/slurmdbd
+      tag: 25.05-ubuntu24.04
+    # -- Arguments passed to the image.
+    # Ref: https://slurm.schedmd.com/slurmdbd.html#SECTION_OPTIONS
+    args: []
+      # - -vvv
+    # -- The container resource limits and requests.
+    # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
+    resources: {}
+      # limits:
+      #   cpu: 1
+      #   memory: 1Gi
   # InitConf sidecar configurations.
   initconf:
     # -- The image to use, `${repository}:${tag}`.
@@ -327,25 +355,27 @@ accounting:
       # limits:
       #   cpu: 500m
       #   memory: 100Mi
-  # -- The container resource limits and requests.
-  # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
-  resources: {}
-    # limits:
-    #   cpu: 1
-    #   memory: 1Gi
-  # -- (map[string]string) Node label selector for pod assignment.
-  # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
-  nodeSelector:
-    kubernetes.io/os: linux
-  # -- Affinity for pod assignment.
-  # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
-  affinity: {}
-  # -- Tolerations for pod assignment.
-  # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
-  tolerations: []
-    # - key: key1
-    #   operator: Exists
-    #   effect: NoSchedule
+  # -- (corev1.PodSpec) Extend the pod template, and/or override certain configurations.
+  # Ref: https://kubernetes.io/docs/concepts/workloads/pods/#pod-templates
+  podTemplate:
+    # -- Labels and annotations.
+    # Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+    metadata: {}
+      # annotations: {}
+      # labels: {}
+    # -- (map[string]string) Node label selector for pod assignment.
+    # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
+    nodeSelector:
+      kubernetes.io/os: linux
+    # -- Affinity for pod assignment.
+    # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
+    affinity: {}
+    # -- Tolerations for pod assignment.
+    # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+    tolerations: []
+      # - key: key1
+      #   operator: Exists
+      #   effect: NoSchedule
   # -- The service configuration.
   # Ref: https://kubernetes.io/docs/concepts/services-networking/service/
   service: {}
@@ -362,15 +392,35 @@ loginsets:
     enabled: false
     # -- Number of replicas to deploy.
     replicas: 1
-    # -- The image to use, `${repository}:${tag}`.
-    # Ref: https://kubernetes.io/docs/concepts/containers/images/#image-names
-    image:
-      repository: ghcr.io/slinkyproject/login
-      tag: 25.05-ubuntu24.04
-    # -- Environment passed to the image.
-    env: {}
-      # - name: SACKD_OPTIONS
-      #   value: -vvv
+    # login container configurations.
+    login:
+      # -- The image to use, `${repository}:${tag}`.
+      # Ref: https://kubernetes.io/docs/concepts/containers/images/#image-names
+      image:
+        repository: ghcr.io/slinkyproject/login
+        tag: 25.05-ubuntu24.04
+      # -- Environment passed to the image.
+      env: []
+        # - name: SACKD_OPTIONS
+        #   value: -vvv
+      # -- The container security context to use.
+      # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
+      securityContext:
+        privileged: false
+        # capabilities:
+        #   add:
+        #     - SYS_CHROOT
+      # -- The container resource limits and requests.
+      # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
+      resources: {}
+        # limits:
+        #   cpu: 1
+        #   memory: 1Gi
+      # -- List of volume mounts to use.
+      # Ref: https://kubernetes.io/docs/concepts/storage/volumes/
+      volumeMounts: []
+        # - name: nfs-home
+        #   mountPath: /home
     # -- SSH public keys to write into `/root/.ssh/authorized_keys`.
     rootSshAuthorizedKeys: null
     # -- Extra configuration lines appended to `/etc/ssh/sshd_config`.
@@ -397,32 +447,34 @@ loginsets:
       ldap_search_base = dc=example,dc=com
       ldap_user_search_base = ou=Users,dc=example,dc=com
       ldap_group_search_base = ou=Groups,dc=example,dc=com
-    # -- The container security context to use.
-    # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
-    securityContext:
-      privileged: false
-      # capabilities:
-      #   add:
-      #     - SYS_CHROOT
-    # -- The container resource limits and requests.
-    # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
-    resources: {}
-      # limits:
-      #   cpu: 1
-      #   memory: 1Gi
-    # -- (map[string]string) Node label selector for pod assignment.
-    # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
-    nodeSelector:
-      kubernetes.io/os: linux
-    # -- Affinity for pod assignment.
-    # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
-    affinity: {}
-    # -- Tolerations for pod assignment.
-    # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
-    tolerations: []
-      # - key: key1
-      #   operator: Exists
-      #   effect: NoSchedule
+    # -- (corev1.PodSpec) Extend the pod template, and/or override certain configurations.
+    # Ref: https://kubernetes.io/docs/concepts/workloads/pods/#pod-templates
+    podTemplate:
+      # -- Labels and annotations.
+      # Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+      metadata: {}
+        # annotations: {}
+        # labels: {}
+      # -- (map[string]string) Node label selector for pod assignment.
+      # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
+      nodeSelector:
+        kubernetes.io/os: linux
+      # -- Affinity for pod assignment.
+      # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
+      affinity: {}
+      # -- Tolerations for pod assignment.
+      # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+      tolerations: []
+        # - key: key1
+        #   operator: Exists
+        #   effect: NoSchedule
+      # -- List of volumes to use.
+      # Ref: https://kubernetes.io/docs/concepts/storage/volumes/
+      volumes: []
+        # - name: nfs-home
+        #   nfs:
+        #     server: nfs-server.example.com
+        #     path: /exports/home
     # -- The service configuration.
     # Ref: https://kubernetes.io/docs/concepts/services-networking/service/
     service:
@@ -431,18 +483,6 @@ loginsets:
       # loadBalancerIP: ""
       # externalIPs: []
       # externalName: ""
-    # -- List of volumes to use.
-    # Ref: https://kubernetes.io/docs/concepts/storage/volumes/
-    volumes: []
-      # - name: nfs-home
-      #   nfs:
-      #     server: nfs-server.example.com
-      #     path: /exports/home
-    # -- List of volume mounts to use.
-    # Ref: https://kubernetes.io/docs/concepts/storage/volumes/
-    volumeMounts: []
-      # - name: nfs-home
-      #   mountPath: /home
 
 # Slurm NodeSet (slurmd) configurations.
 nodesets:
@@ -452,15 +492,6 @@ nodesets:
     enabled: true
     # -- Number of replicas to deploy.
     replicas: 1
-    # -- The image to use, `${repository}:${tag}`.
-    # Ref: https://kubernetes.io/docs/concepts/containers/images/#image-names
-    image:
-      repository: ghcr.io/slinkyproject/slurmd
-      tag: 25.05-ubuntu24.04
-    # -- Arguments passed to the image.
-    # Ref: https://slurm.schedmd.com/slurmd.html#SECTION_OPTIONS
-    args: []
-      # - -vvv
     # -- Extra configuration added to the `--conf` argument.
     # Ref: https://slurm.schedmd.com/slurm.conf.html#SECTION_NODE-CONFIGURATION
     extraConf: null
@@ -484,6 +515,30 @@ nodesets:
       configMap: {}
         # State: UP
         # MaxTime: UNLIMITED
+    # -- Enable propagation of container `resources.limits` into slurmd.
+    useResourceLimits: true
+    # slurmd container configurations.
+    slurmd:
+      # -- The image to use, `${repository}:${tag}`.
+      # Ref: https://kubernetes.io/docs/concepts/containers/images/#image-names
+      image:
+        repository: ghcr.io/slinkyproject/slurmd
+        tag: 25.05-ubuntu24.04
+      # -- Arguments passed to the image.
+      # Ref: https://slurm.schedmd.com/slurmd.html#SECTION_OPTIONS
+      args: []
+        # - -vvv
+      # -- The container resource limits and requests.
+      # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
+      resources: {}
+        # limits:
+        #   cpu: 1
+        #   memory: 1Gi
+      # -- List of volume mounts to use.
+      # Ref: https://kubernetes.io/docs/concepts/storage/volumes/
+      volumeMounts: []
+        # - name: nfs-home
+        #   mountPath: /home
     # LogFile sidecar configurations.
     logfile:
       # -- The image to use, `${repository}:${tag}`.
@@ -497,39 +552,33 @@ nodesets:
         # limits:
         #   cpu: 500m
         #   memory: 100Mi
-    # -- The container resource limits and requests.
-    # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
-    resources: {}
-      # limits:
-      #   cpu: 1
-      #   memory: 1Gi
-    # -- Enable propagation of container `resources.limits` into slurmd.
-    useResourceLimits: true
-    # -- (map[string]string) Node label selector for pod assignment.
-    # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
-    nodeSelector:
-      kubernetes.io/os: linux
-    # -- Affinity for pod assignment.
-    # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
-    affinity: {}
-    # -- Tolerations for pod assignment.
-    # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
-    tolerations: []
-      # - key: nvidia.com/gpu
-      #   value: Exists
-      #   effect: NoSchedule
-    # -- List of volumes to use.
-    # Ref: https://kubernetes.io/docs/concepts/storage/volumes/
-    volumes: []
-      # - name: nfs-home
-      #   nfs:
-      #     server: nfs-server.example.com
-      #     path: /exports/home
-    # -- List of volume mounts to use.
-    # Ref: https://kubernetes.io/docs/concepts/storage/volumes/
-    volumeMounts: []
-      # - name: nfs-home
-      #   mountPath: /home
+    # -- (corev1.PodSpec) Extend the pod template, and/or override certain configurations.
+    # Ref: https://kubernetes.io/docs/concepts/workloads/pods/#pod-templates
+    podTemplate:
+      # -- Labels and annotations.
+      # Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+      metadata: {}
+        # annotations: {}
+        # labels: {}
+      # -- (map[string]string) Node label selector for pod assignment.
+      # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
+      nodeSelector:
+        kubernetes.io/os: linux
+      # -- Affinity for pod assignment.
+      # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
+      affinity: {}
+      # -- Tolerations for pod assignment.
+      # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+      tolerations: []
+        # - key: nvidia.com/gpu
+        #   effect: NoSchedule
+      # -- List of volumes to use.
+      # Ref: https://kubernetes.io/docs/concepts/storage/volumes/
+      volumes: []
+        # - name: nfs-home
+        #   nfs:
+        #     server: nfs-server.example.com
+        #     path: /exports/home
 
 # Slurm partition configurations.
 partitions:
