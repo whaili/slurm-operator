@@ -97,16 +97,6 @@ Ref: https://github.com/helm/helm/issues/9379
 {{- end -}}
 
 {{/*
-Converts a map into []string.
-Handles `map[string]string` and `map[string][]string` cases.
-Ref: https://github.com/helm/helm/issues/9379
-*/}}
-{{- define "toList" -}}
-{{- $items := include "_toList" . | default list | splitList ";" -}}
-{{- toYaml $items -}}
-{{- end -}}
-
-{{/*
 Parse resources object and convert units.
 Ref: https://github.com/helm/helm/issues/11376#issuecomment-1256831105
 */}}
