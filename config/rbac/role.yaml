@@ -59,6 +59,7 @@ rules:
   - loginsets
   - nodesets
   - restapis
+  - tokens
   verbs:
   - create
   - delete
@@ -75,6 +76,7 @@ rules:
   - loginsets/finalizers
   - nodesets/finalizers
   - restapis/finalizers
+  - tokens/finalizers
   verbs:
   - update
 - apiGroups:
@@ -85,6 +87,7 @@ rules:
   - loginsets/status
   - nodesets/status
   - restapis/status
+  - tokens/status
   verbs:
   - get
   - patch

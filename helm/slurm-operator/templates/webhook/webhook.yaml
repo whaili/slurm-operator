@@ -176,6 +176,32 @@ webhooks:
       - v1beta1
       - v1alpha1
     sideEffects: None
+  - name: tokens.{{- include "slurm-operator.apiGroup" . }}
+    rules:
+      - apiGroups:
+          - {{ include "slurm-operator.apiGroup" . }}
+        apiVersions:
+          - "*"
+        resources:
+          - tokens
+        operations:
+          - CREATE
+          - UPDATE
+        scope: Namespaced
+    clientConfig:
+      {{- if not .Values.certManager.enabled }}
+      caBundle: {{ $ca.Cert | b64enc | quote }}
+      {{- end }}{{- /* if not .Values.certManager.enabled */}}
+      service:
+        namespace: {{ include "slurm-operator.namespace" . }}
+        name: {{ include "slurm-operator.webhook.name" . }}
+        path: /validate-slinky-slurm-net-v1alpha1-token
+    timeoutSeconds: {{ .Values.webhook.timeoutSeconds | default 10 }}
+    admissionReviewVersions:
+      - v1
+      - v1beta1
+      - v1alpha1
+    sideEffects: None
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
@@ -321,6 +347,34 @@ webhooks:
         namespace: {{ include "slurm-operator.namespace" . }}
         name: {{ include "slurm-operator.webhook.name" . }}
         path: /mutate-slinky-slurm-net-v1alpha1-restapi
+    {{- with .Values.webhook.timeoutSeconds }}
+    timeoutSeconds: {{ . }}
+    {{- end }}{{- /* with .Values.webhook.timeoutSeconds */}}
+    admissionReviewVersions:
+      - v1
+      - v1beta1
+      - v1alpha1
+    sideEffects: None
+  - name: tokens.{{- include "slurm-operator.apiGroup" . }}
+    rules:
+      - apiGroups:
+          - {{ include "slurm-operator.apiGroup" . }}
+        apiVersions:
+          - "*"
+        resources:
+          - tokens
+        operations:
+          - CREATE
+          - UPDATE
+        scope: Namespaced
+    clientConfig:
+      {{- if not .Values.certManager.enabled }}
+      caBundle: {{ $ca.Cert | b64enc | quote }}
+      {{- end }}{{- /* if not .Values.certManager.enabled */}}
+      service:
+        namespace: {{ include "slurm-operator.namespace" . }}
+        name: {{ include "slurm-operator.webhook.name" . }}
+        path: /mutate-slinky-slurm-net-v1alpha1-token
     {{- with .Values.webhook.timeoutSeconds }}
     timeoutSeconds: {{ . }}
     {{- end }}{{- /* with .Values.webhook.timeoutSeconds */}}

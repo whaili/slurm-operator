@@ -5,4 +5,5 @@ resources:
 - slinky_v1alpha1_loginset.yaml
 - slinky_v1alpha1_nodeset.yaml
 - slinky_v1alpha1_restapi.yaml
+- slinky_v1alpha1_token.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

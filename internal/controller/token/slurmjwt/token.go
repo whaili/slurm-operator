@@ -40,6 +40,11 @@ func (t *Token) WithLifetime(lifetime time.Duration) *Token {
 	return t
 }
 
+func (t *Token) WithUsername(username string) *Token {
+	t.username = username
+	return t
+}
+
 // Ref: https://slurm.schedmd.com/jwt.html#compatibility
 type TokenClaims struct {
 	jwt.RegisteredClaims `json:",inline"`

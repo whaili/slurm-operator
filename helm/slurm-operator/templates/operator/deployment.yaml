@@ -51,6 +51,10 @@ spec:
             - --restapi-workers
             - {{ . | quote }}
             {{- end }}{{- /* with .Values.operator.restapiWorkers */}}
+            {{- with .Values.operator.tokenWorkers }}
+            - --token-workers
+            - {{ . | quote }}
+            {{- end }}{{- /* with .Values.operator.tokenWorkers */}}
             {{- with .Values.operator.slurmclientWorkers }}
             - --slurmclient-workers
             - {{ . | quote }}

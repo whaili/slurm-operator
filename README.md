@@ -170,6 +170,7 @@ kubectl delete customresourcedefinitions.apiextensions.k8s.io clusters.slinky.sl
 kubectl delete customresourcedefinitions.apiextensions.k8s.io loginsets.slinky.slurm.net
 kubectl delete customresourcedefinitions.apiextensions.k8s.io nodesets.slinky.slurm.net
 kubectl delete customresourcedefinitions.apiextensions.k8s.io restapis.slinky.slurm.net
+kubectl delete customresourcedefinitions.apiextensions.k8s.io tokens.slinky.slurm.net
 ```
 
 ## Documentation

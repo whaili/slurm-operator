@@ -252,3 +252,25 @@ func NewRestapi(name string, controller *slinkyv1alpha1.Controller) *slinkyv1alp
 		},
 	}
 }
+
+func NewToken(name string, jwtHs256KeySecret *corev1.Secret) *slinkyv1alpha1.Token {
+	return &slinkyv1alpha1.Token{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: slinkyv1alpha1.TokenAPIVersion,
+			Kind:       slinkyv1alpha1.TokenKind,
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: corev1.NamespaceDefault,
+		},
+		Spec: slinkyv1alpha1.TokenSpec{
+			Username: "slurm",
+			JwtHs256KeyRef: corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: jwtHs256KeySecret.Name,
+				},
+				Key: "jwt_hs256.key",
+			},
+		},
+	}
+}

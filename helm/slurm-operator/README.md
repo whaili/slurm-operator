@@ -39,6 +39,7 @@ Helm Chart for Slurm HPC Workload Manager Operator
 | operator.serviceAccount.create | bool | `true` | Allows chart to create the service account. |
 | operator.serviceAccount.name | string | `""` | Set the service account to use (and create). |
 | operator.slurmclientWorkers | int | `2` | Set the max concurrent workers for the SlurmClient controller. |
+| operator.tokenWorkers | int | `4` | Set the max concurrent workers for the Token controller. |
 | operator.tolerations | list | `[]` | Tolerations for pod assignment. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
 | priorityClassName | string | `""` | Set the priority class to use. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass |
 | webhook.affinity | object | `{}` | Affinity for pod assignment. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity |

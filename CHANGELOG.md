@@ -17,6 +17,8 @@ All notable changes to this project will be documented in this file.
 - Added slurm-operator-crds helm chart to manage CRDs.
 - Added slurm-operator helm chart options for CRDs.
 - Added `initContainers` to Slurm helm chart.
+- Added the Token CRD to define a secret containing a JWT, generated from an
+  HS256 Key.
 
 ### Fixed
 

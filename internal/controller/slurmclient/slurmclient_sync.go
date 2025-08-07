@@ -24,7 +24,7 @@ import (
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/builder"
 	nodesetcontroller "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset"
-	"github.com/SlinkyProject/slurm-operator/internal/controller/slurmclient/slurmjwt"
+	"github.com/SlinkyProject/slurm-operator/internal/controller/token/slurmjwt"
 )
 
 // Sync implements control logic for synchronizing a Restapi.

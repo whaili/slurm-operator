@@ -211,6 +211,7 @@ If the CRDs were not installed via ``slurm-operator-crds`` helm chart:
    kubectl delete customresourcedefinitions.apiextensions.k8s.io loginsets.slinky.slurm.net
    kubectl delete customresourcedefinitions.apiextensions.k8s.io nodesets.slinky.slurm.net
    kubectl delete customresourcedefinitions.apiextensions.k8s.io restapis.slinky.slurm.net
+   kubectl delete customresourcedefinitions.apiextensions.k8s.io tokens.slinky.slurm.net
 
 Documentation
 -------------

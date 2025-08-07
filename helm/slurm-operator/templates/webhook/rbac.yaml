@@ -29,6 +29,7 @@ rules:
   - loginsets
   - nodesets
   - restapis
+  - tokens
   verbs:
   - create
   - delete

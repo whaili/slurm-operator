@@ -104,6 +104,26 @@ webhooks:
     resources:
     - restapis
   sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-slinky-slurm-net-v1alpha1-token
+  failurePolicy: Fail
+  name: mtoken.kb.io
+  rules:
+  - apiGroups:
+    - slinky.slurm.net
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - tokens
+  sideEffects: None
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
@@ -209,4 +229,24 @@ webhooks:
     - UPDATE
     resources:
     - restapis
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-slinky-slurm-net-v1alpha1-token
+  failurePolicy: Fail
+  name: vtoken.kb.io
+  rules:
+  - apiGroups:
+    - slinky.slurm.net
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - tokens
   sideEffects: None

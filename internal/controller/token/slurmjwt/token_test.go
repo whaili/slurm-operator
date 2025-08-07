@@ -39,6 +39,7 @@ func TestToken_NewSignedToken(t *testing.T) {
 			name: "With Options",
 			fields: fields{
 				token: NewToken(crypto.NewSigningKey()).
+					WithUsername("foo").
 					WithLifetime(30 * time.Second),
 			},
 			wantOk: true,
