@@ -33,7 +33,7 @@ Determine worker extraConf (e.g. `--conf <extraConf>`)
 {{/*
 Determine worker partition config
 */}}
-{{- define "slurm.worker.PartitionConfig" -}}
+{{- define "slurm.worker.partitionConfig" -}}
 {{- $config := list -}}
 {{- if .config -}}
   {{- $config = list .config -}}

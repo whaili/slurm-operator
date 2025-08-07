@@ -39,9 +39,9 @@ spec:
   {{- with $nodeset.partition }}
   partition:
     enabled: {{ $nodeset.enabled | default false }}
-    {{- if (include "slurm.worker.PartitionConfig" $nodeset.partition) }}
-    config: {{ include "slurm.worker.PartitionConfig" $nodeset.partition }}
-    {{- end }}{{- /* if (include "slurm.worker.PartitionConfig" $nodeset.partition) */}}
+    {{- if (include "slurm.worker.partitionConfig" $nodeset.partition) }}
+    config: {{ include "slurm.worker.partitionConfig" $nodeset.partition }}
+    {{- end }}{{- /* if (include "slurm.worker.partitionConfig" $nodeset.partition) */}}
   {{- end }}{{- /* with $nodeset.partition */}}
   replicas: {{ $nodeset.replicas }}
   template:
