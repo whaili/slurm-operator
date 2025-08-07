@@ -198,6 +198,9 @@ func slurmdConfArgs(nodeset *slinkyv1alpha1.NodeSet) []string {
 	for _, item := range extraConf {
 		pair := strings.SplitN(item, "=", 2)
 		key := cases.Title(language.English).String(pair[0])
+		if len(pair) != 2 {
+			panic(fmt.Sprintf("malformed --conf item: %v", item))
+		}
 		val := pair[1]
 		if key == "Features" || key == "Feature" {
 			// Slurm treats trailing 's' as optional. We have to
