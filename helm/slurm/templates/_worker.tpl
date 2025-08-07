@@ -4,23 +4,23 @@ SPDX-License-Identifier: Apache-2.0
 */}}
 
 {{/*
-Define compute name
+Define worker name
 */}}
-{{- define "slurm.compute.name" -}}
-{{- printf "%s-compute" (include "slurm.fullname" .) -}}
+{{- define "slurm.worker.name" -}}
+{{- printf "%s-worker" (include "slurm.fullname" .) -}}
 {{- end }}
 
 {{/*
-Define compute port
+Define worker port
 */}}
-{{- define "slurm.compute.port" -}}
+{{- define "slurm.worker.port" -}}
 {{- print "6818" -}}
 {{- end }}
 
 {{/*
-Determine compute extraConf (e.g. `--conf <extraConf>`)
+Determine worker extraConf (e.g. `--conf <extraConf>`)
 */}}
-{{- define "slurm.compute.extraConf" -}}
+{{- define "slurm.worker.extraConf" -}}
 {{- $extraConf := list -}}
 {{- if .extraConf -}}
   {{- $extraConf = splitList " " .extraConf -}}
@@ -31,9 +31,9 @@ Determine compute extraConf (e.g. `--conf <extraConf>`)
 {{- end }}
 
 {{/*
-Determine compute partition config
+Determine worker partition config
 */}}
-{{- define "slurm.compute.PartitionConfig" -}}
+{{- define "slurm.worker.PartitionConfig" -}}
 {{- $config := list -}}
 {{- if .config -}}
   {{- $config = list .config -}}
@@ -46,7 +46,7 @@ Determine compute partition config
 {{/*
 Returns the parsed resource limits for POD_CPUS.
 */}}
-{{- define "slurm.compute.podCpus" -}}
+{{- define "slurm.worker.podCpus" -}}
 {{- $out := 0 -}}
 {{- with .resources }}{{- with .limits }}{{- with .cpu }}
   {{- $out = include "resource-quantity" . | float64 | ceil | int -}}
@@ -57,7 +57,7 @@ Returns the parsed resource limits for POD_CPUS.
 {{/*
 Returns the parsed resource limits for POD_MEMORY, in Megabytes.
 */}}
-{{- define "slurm.compute.podMemory" -}}
+{{- define "slurm.worker.podMemory" -}}
 {{- $out := 0 -}}
 {{- with .resources }}{{- with .limits }}{{- with .memory }}
   {{- $megabytes := (include "resource-quantity" "1M") | float64 -}}
