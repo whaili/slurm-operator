@@ -110,39 +110,6 @@ authcred:
 
 # Slurm controller (slurmctld) configuration.
 controller:
-  # -- Extra Slurm configuration lines appended to `slurm.conf`.
-  # Ref: https://slurm.schedmd.com/slurm.conf.html
-  extraConf: null
-  # -- (map[string]string \| map[string][]string) Extra Slurm configuration lines appended to `slurm.conf`.
-  # If `extraConf` is not empty, it takes precedence.
-  # Ref: https://slurm.schedmd.com/slurmdbd.conf.html
-  extraConfMap: {}
-    # DebugFlags: []
-    # MinJobAge: 2
-    # SchedulerParameters: []
-    # SlurmctldDebug: debug2
-    # SlurmSchedLogLevel: 1
-    # SlurmdDebug: debug2
-  # Enable persistence using Persistent Volume Claims.
-  # Ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes/
-  persistence:
-    # -- Enable persistence for slurmctld, retain save-state across recreations.
-    enabled: true
-    # -- Name of the existing `PersistentVolumeClaim` to use instead of creating one.
-    # If this is not empty, then certain other fields will be ignored.
-    existingClaim: null
-    # -- (string) The name of the `StorageClass` for the created `PersistentVolumeClaim`.
-    # Ref: https://kubernetes.io/docs/concepts/storage/storage-classes/
-    storageClassName: null
-    # Create the `PersistentVolumeClaim` with the desired access modes.
-    # Ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes
-    accessModes:
-      - ReadWriteOnce
-    # -- The minimum resources for the `PersistentVolumeClaim` to be created with.
-    # Ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources
-    resources:
-      requests:
-        storage: 4Gi
   # slurmctld container configurations.
   slurmctld:
     # -- The image to use, `${repository}:${tag}`.
@@ -186,6 +153,39 @@ controller:
       # limits:
       #   cpu: 500m
       #   memory: 100Mi
+  # Enable persistence using Persistent Volume Claims.
+  # Ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes/
+  persistence:
+    # -- Enable persistence for slurmctld, retain save-state across recreations.
+    enabled: true
+    # -- Name of the existing `PersistentVolumeClaim` to use instead of creating one.
+    # If this is not empty, then certain other fields will be ignored.
+    existingClaim: null
+    # -- (string) The name of the `StorageClass` for the created `PersistentVolumeClaim`.
+    # Ref: https://kubernetes.io/docs/concepts/storage/storage-classes/
+    storageClassName: null
+    # Create the `PersistentVolumeClaim` with the desired access modes.
+    # Ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes
+    accessModes:
+      - ReadWriteOnce
+    # -- The minimum resources for the `PersistentVolumeClaim` to be created with.
+    # Ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources
+    resources:
+      requests:
+        storage: 4Gi
+  # -- Extra Slurm configuration lines appended to `slurm.conf`.
+  # Ref: https://slurm.schedmd.com/slurm.conf.html
+  extraConf: null
+  # -- (map[string]string \| map[string][]string) Extra Slurm configuration lines appended to `slurm.conf`.
+  # If `extraConf` is not empty, it takes precedence.
+  # Ref: https://slurm.schedmd.com/slurmdbd.conf.html
+  extraConfMap: {}
+    # DebugFlags: []
+    # MinJobAge: 2
+    # SchedulerParameters: []
+    # SlurmctldDebug: debug2
+    # SlurmSchedLogLevel: 1
+    # SlurmdDebug: debug2
   # -- (corev1.PodSpec) Extend the pod template, and/or override certain configurations.
   # Ref: https://kubernetes.io/docs/concepts/workloads/pods/#pod-templates
   podTemplate:
@@ -297,42 +297,6 @@ accounting:
   # -- Enables Slurm accounting subsystem, stores job/step historical records.
   # Ref: https://slurm.schedmd.com/accounting.html#Overview
   enabled: false
-  # -- Extra Slurm configuration lines appended to `slurmdbd.conf`.
-  # Ref: https://slurm.schedmd.com/slurm.conf.html
-  extraConf: null
-  # -- (map[string]string \| map[string][]string) Extra Slurm configuration lines appended to `slurmdbd.conf`.
-  # If `extraConf` is not empty, it takes precedence.
-  # Ref: https://slurm.schedmd.com/slurmdbd.conf.html
-  extraConfMap: {}
-    # CommitDelay: 1
-    # DebugLevel: debug2
-    # DebugFlags: []
-    # PurgeEventAfter=1month
-    # PurgeJobAfter=12month
-    # PurgeResvAfter=1month
-    # PurgeStepAfter=1month
-    # PurgeSuspendAfter=1month
-    # PurgeTXNAfter=12month
-    # PurgeUsageAfter=24month
-  # The storage configuration.
-  storageConfig:
-    # -- The name of the host where the database is running.
-    # Ref: https://slurm.schedmd.com/slurmdbd.conf.html#OPT_StorageHost
-    host: mariadb
-    # -- The port number to communicate with the database with.
-    # Ref: https://slurm.schedmd.com/slurmdbd.conf.html#OPT_StoragePort
-    port: 3306
-    # -- The name of the database where records are written into.
-    # Ref: https://slurm.schedmd.com/slurmdbd.conf.html#OPT_StorageLoc
-    database: slurm_acct_db
-    # -- The name of the user used to connect to the database with.
-    # Ref: https://slurm.schedmd.com/slurmdbd.conf.html#OPT_StorageUser
-    username: slurm
-    # -- (secretKeyRef) The password used to connect to the database, from secret reference.
-    # Ref: https://slurm.schedmd.com/slurmdbd.conf.html#OPT_StoragePass
-    passwordKeyRef:
-      name: mariadb-password
-      key: password
   # slurmdbd container configurations.
   slurmdbd:
     # -- The image to use, `${repository}:${tag}`.
@@ -363,6 +327,42 @@ accounting:
       # limits:
       #   cpu: 500m
       #   memory: 100Mi
+  # The storage configuration.
+  storageConfig:
+    # -- The name of the host where the database is running.
+    # Ref: https://slurm.schedmd.com/slurmdbd.conf.html#OPT_StorageHost
+    host: mariadb
+    # -- The port number to communicate with the database with.
+    # Ref: https://slurm.schedmd.com/slurmdbd.conf.html#OPT_StoragePort
+    port: 3306
+    # -- The name of the database where records are written into.
+    # Ref: https://slurm.schedmd.com/slurmdbd.conf.html#OPT_StorageLoc
+    database: slurm_acct_db
+    # -- The name of the user used to connect to the database with.
+    # Ref: https://slurm.schedmd.com/slurmdbd.conf.html#OPT_StorageUser
+    username: slurm
+    # -- (secretKeyRef) The password used to connect to the database, from secret reference.
+    # Ref: https://slurm.schedmd.com/slurmdbd.conf.html#OPT_StoragePass
+    passwordKeyRef:
+      name: mariadb-password
+      key: password
+  # -- Extra Slurm configuration lines appended to `slurmdbd.conf`.
+  # Ref: https://slurm.schedmd.com/slurm.conf.html
+  extraConf: null
+  # -- (map[string]string \| map[string][]string) Extra Slurm configuration lines appended to `slurmdbd.conf`.
+  # If `extraConf` is not empty, it takes precedence.
+  # Ref: https://slurm.schedmd.com/slurmdbd.conf.html
+  extraConfMap: {}
+    # CommitDelay: 1
+    # DebugLevel: debug2
+    # DebugFlags: []
+    # PurgeEventAfter=1month
+    # PurgeJobAfter=12month
+    # PurgeResvAfter=1month
+    # PurgeStepAfter=1month
+    # PurgeSuspendAfter=1month
+    # PurgeTXNAfter=12month
+    # PurgeUsageAfter=24month
   # -- (corev1.PodSpec) Extend the pod template, and/or override certain configurations.
   # Ref: https://kubernetes.io/docs/concepts/workloads/pods/#pod-templates
   podTemplate:
@@ -508,31 +508,6 @@ nodesets:
     enabled: true
     # -- Number of replicas to deploy.
     replicas: 1
-    # -- Extra configuration added to the `--conf` argument.
-    # Ref: https://slurm.schedmd.com/slurm.conf.html#SECTION_NODE-CONFIGURATION
-    extraConf: null
-    # -- (map[string]string \| map[string][]string) Extra configuration added to the `--conf` argument.
-    # If `extraConf` is not empty, it takes precedence.
-    # Ref: https://slurm.schedmd.com/slurm.conf.html#SECTION_NODE-CONFIGURATION
-    extraConfMap: {}
-      # Features: []
-      # Gres: []
-      # Weight: 1
-    # Partition configuration for this NodeSet.
-    partition:
-      # -- Enable NodeSet partition creation.
-      enabled: true
-      # -- The Slurm partition configuration options added to the partition line added to the partition line.
-      # Ref: https://slurm.schedmd.com/slurm.conf.html#SECTION_PARTITION-CONFIGURATION
-      config: null
-      # -- (map[string]string \| map[string][]string) The Slurm partition configuration options added to the partition line.
-      # If `config` is not empty, it takes precedence.
-      # Ref: https://slurm.schedmd.com/slurm.conf.html#SECTION_PARTITION-CONFIGURATION
-      configMap: {}
-        # State: UP
-        # MaxTime: UNLIMITED
-    # -- Enable propagation of container `resources.limits` into slurmd.
-    useResourceLimits: true
     # slurmd container configurations.
     slurmd:
       # -- The image to use, `${repository}:${tag}`.
@@ -568,6 +543,31 @@ nodesets:
         # limits:
         #   cpu: 500m
         #   memory: 100Mi
+    # -- Extra configuration added to the `--conf` argument.
+    # Ref: https://slurm.schedmd.com/slurm.conf.html#SECTION_NODE-CONFIGURATION
+    extraConf: null
+    # -- (map[string]string \| map[string][]string) Extra configuration added to the `--conf` argument.
+    # If `extraConf` is not empty, it takes precedence.
+    # Ref: https://slurm.schedmd.com/slurm.conf.html#SECTION_NODE-CONFIGURATION
+    extraConfMap: {}
+      # Features: []
+      # Gres: []
+      # Weight: 1
+    # Partition configuration for this NodeSet.
+    partition:
+      # -- Enable NodeSet partition creation.
+      enabled: true
+      # -- The Slurm partition configuration options added to the partition line added to the partition line.
+      # Ref: https://slurm.schedmd.com/slurm.conf.html#SECTION_PARTITION-CONFIGURATION
+      config: null
+      # -- (map[string]string \| map[string][]string) The Slurm partition configuration options added to the partition line.
+      # If `config` is not empty, it takes precedence.
+      # Ref: https://slurm.schedmd.com/slurm.conf.html#SECTION_PARTITION-CONFIGURATION
+      configMap: {}
+        # State: UP
+        # MaxTime: UNLIMITED
+    # -- Enable propagation of container `resources.limits` into slurmd.
+    useResourceLimits: true
     # -- (corev1.PodSpec) Extend the pod template, and/or override certain configurations.
     # Ref: https://kubernetes.io/docs/concepts/workloads/pods/#pod-templates
     podTemplate:
