@@ -42,6 +42,7 @@ All notable changes to this project will be documented in this file.
   volumes with `securityContext.fsGroup` and remove initconf sidecar.
 - Changed logfile sidecar image to alpine.
 - Changed reconfigure sidecar image to slurmctld.
+- Changed Slurm chart to use Token CR for slurm-exporter JWT.
 
 ### Removed
 

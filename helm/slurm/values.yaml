@@ -94,20 +94,6 @@ epilogScripts: {}
   #   set -euo pipefail
   #   exit 0
 
-# Slurm authcred (sackd) configurations.
-authcred:
-  # -- The image to use, `${repository}:${tag}`.
-  # Ref: https://kubernetes.io/docs/concepts/containers/images/#image-names
-  image:
-    repository: ghcr.io/slinkyproject/sackd
-    tag: 25.05-ubuntu24.04
-  # -- The container resource limits and requests.
-  # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
-  resources: {}
-    # limits:
-    #   cpu: 1
-    #   memory: 1Gi
-
 # Slurm controller (slurmctld) configuration.
 controller:
   # slurmctld container configurations.

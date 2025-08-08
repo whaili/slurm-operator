@@ -34,8 +34,6 @@ Helm Chart for Slurm HPC Workload Manager
 | accounting.storageConfig.passwordKeyRef | secretKeyRef | `{"key":"password","name":"mariadb-password"}` | The password used to connect to the database, from secret reference. Ref: https://slurm.schedmd.com/slurmdbd.conf.html#OPT_StoragePass |
 | accounting.storageConfig.port | int | `3306` | The port number to communicate with the database with. Ref: https://slurm.schedmd.com/slurmdbd.conf.html#OPT_StoragePort |
 | accounting.storageConfig.username | string | `"slurm"` | The name of the user used to connect to the database with. Ref: https://slurm.schedmd.com/slurmdbd.conf.html#OPT_StorageUser |
-| authcred.image | object | `{"repository":"ghcr.io/slinkyproject/sackd","tag":"25.05-ubuntu24.04"}` | The image to use, `${repository}:${tag}`. Ref: https://kubernetes.io/docs/concepts/containers/images/#image-names |
-| authcred.resources | object | `{}` | The container resource limits and requests. Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container |
 | clusterName | string | `nil` | The cluster name, which uniquely identifies the Slurm cluster. If empty, one will be derived from the Controller CR object. Ref: https://slurm.schedmd.com/slurm.conf.html#OPT_ClusterName |
 | configFiles | map[string]string | `{}` | Extra Slurm config files to be mounted. Ref: https://slurm.schedmd.com/man_index.html#configuration_files |
 | controller.extraConf | string | `nil` | Extra Slurm configuration lines appended to `slurm.conf`. Ref: https://slurm.schedmd.com/slurm.conf.html |
