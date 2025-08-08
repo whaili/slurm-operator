@@ -6,7 +6,6 @@ package slurmclient
 import (
 	"context"
 	"flag"
-	"fmt"
 	"sync"
 	"time"
 
@@ -29,7 +28,7 @@ import (
 )
 
 const (
-	SlurmClientControllerName = "slurmclient-controller"
+	ControllerName = "slurmclient-controller"
 
 	// BackoffGCInterval is the time that has to pass before next iteration of backoff GC is run
 	BackoffGCInterval = 1 * time.Minute
@@ -98,16 +97,32 @@ func (r *SlurmClientReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *SlurmClientReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	if r.EventCh == nil {
-		return fmt.Errorf("EventCh cannot be nil")
-	}
-	r.refResolver = refresolver.New(r.Client)
-	r.eventRecorder = record.NewBroadcaster().NewRecorder(r.Scheme, corev1.EventSource{Component: SlurmClientControllerName})
 	return ctrl.NewControllerManagedBy(mgr).
-		Named(SlurmClientControllerName).
+		Named(ControllerName).
 		For(&slinkyv1alpha1.Controller{}).
 		WithOptions(controller.Options{
 			MaxConcurrentReconciles: maxConcurrentReconciles,
 		}).
 		Complete(r)
+}
+
+func NewReconciler(c client.Client, cm *clientmap.ClientMap, ec chan event.GenericEvent) *SlurmClientReconciler {
+	s := c.Scheme()
+	es := corev1.EventSource{Component: ControllerName}
+	if cm == nil {
+		panic("ClientMap cannot be nil")
+	}
+	if ec == nil {
+		panic("EventCh cannot be nil")
+	}
+	return &SlurmClientReconciler{
+		Client: c,
+		Scheme: s,
+
+		ClientMap: cm,
+		EventCh:   ec,
+
+		refResolver:   refresolver.New(c),
+		eventRecorder: record.NewBroadcaster().NewRecorder(s, es),
+	}
 }

@@ -85,26 +85,15 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).ToNot(HaveOccurred())
 
+	eventCh := make(chan event.GenericEvent, 10)
 	clientMap = clientmap.NewClientMap()
-	err = (&SlurmClientReconciler{
-		Client:    k8sManager.GetClient(),
-		Scheme:    k8sManager.GetScheme(),
-		ClientMap: clientMap,
-		EventCh:   make(chan event.GenericEvent, 10),
-	}).SetupWithManager(k8sManager)
+	err = NewReconciler(k8sManager.GetClient(), clientMap, eventCh).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&controller.ControllerReconciler{
-		Client:    k8sManager.GetClient(),
-		Scheme:    k8sManager.GetScheme(),
-		ClientMap: clientMap,
-	}).SetupWithManager(k8sManager)
+	err = controller.NewReconciler(k8sManager.GetClient(), clientMap).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&restapi.RestapiReconciler{
-		Client: k8sManager.GetClient(),
-		Scheme: k8sManager.GetScheme(),
-	}).SetupWithManager(k8sManager)
+	err = restapi.NewReconciler(k8sManager.GetClient()).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
 	go func() {

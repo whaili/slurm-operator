@@ -91,12 +91,7 @@ var _ = BeforeSuite(func() {
 
 	clientMap = clientmap.NewClientMap()
 	eventCh := make(chan event.GenericEvent, 100)
-	err = (&NodeSetReconciler{
-		Client:    k8sManager.GetClient(),
-		Scheme:    k8sManager.GetScheme(),
-		ClientMap: clientMap,
-		EventCh:   eventCh,
-	}).SetupWithManager(k8sManager)
+	err = NewReconciler(k8sManager.GetClient(), clientMap, eventCh).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
 	go func() {

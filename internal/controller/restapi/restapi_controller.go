@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	RestapiControllerName = "restapi-controller"
+	ControllerName = "restapi-controller"
 
 	// BackoffGCInterval is the time that has to pass before next iteration of backoff GC is run
 	BackoffGCInterval = 1 * time.Minute
@@ -101,11 +101,8 @@ func (r *RestapiReconciler) Reconcile(ctx context.Context, req ctrl.Request) (re
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *RestapiReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	r.builder = builder.New(r.Client)
-	r.refResolver = refresolver.New(r.Client)
-	r.eventRecorder = record.NewBroadcaster().NewRecorder(r.Scheme, corev1.EventSource{Component: RestapiControllerName})
 	return ctrl.NewControllerManagedBy(mgr).
-		Named(RestapiControllerName).
+		Named(ControllerName).
 		For(&slinkyv1alpha1.RestApi{}).
 		Owns(&appsv1.Deployment{}).
 		Owns(&corev1.Service{}).
@@ -123,4 +120,17 @@ func (r *RestapiReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			MaxConcurrentReconciles: maxConcurrentReconciles,
 		}).
 		Complete(r)
+}
+
+func NewReconciler(c client.Client) *RestapiReconciler {
+	s := c.Scheme()
+	es := corev1.EventSource{Component: ControllerName}
+	return &RestapiReconciler{
+		Client: c,
+		Scheme: s,
+
+		builder:       builder.New(c),
+		refResolver:   refresolver.New(c),
+		eventRecorder: record.NewBroadcaster().NewRecorder(s, es),
+	}
 }

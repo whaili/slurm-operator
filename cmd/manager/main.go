@@ -115,55 +115,31 @@ func main() {
 
 	clientMap := clientmap.NewClientMap()
 	eventCh := make(chan event.GenericEvent, 100)
-	if err = (&controller.ControllerReconciler{
-		Client:    mgr.GetClient(),
-		Scheme:    mgr.GetScheme(),
-		ClientMap: clientMap,
-	}).SetupWithManager(mgr); err != nil {
+	if err := controller.NewReconciler(mgr.GetClient(), clientMap).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Controller")
 		os.Exit(1)
 	}
-	if err = (&restapi.RestapiReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
+	if err := restapi.NewReconciler(mgr.GetClient()).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Restapi")
 		os.Exit(1)
 	}
-	if err = (&accounting.AccountingReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
+	if err := accounting.NewReconciler(mgr.GetClient()).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Accounting")
 		os.Exit(1)
 	}
-	if err = (&nodeset.NodeSetReconciler{
-		Client:    mgr.GetClient(),
-		Scheme:    mgr.GetScheme(),
-		ClientMap: clientMap,
-		EventCh:   eventCh,
-	}).SetupWithManager(mgr); err != nil {
+	if err := nodeset.NewReconciler(mgr.GetClient(), clientMap, eventCh).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NodeSet")
 		os.Exit(1)
 	}
-	if err = (&loginset.LoginSetReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
+	if err := loginset.NewReconciler(mgr.GetClient()).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "LoginSet")
 		os.Exit(1)
 	}
-	if err = (&slurmclient.SlurmClientReconciler{
-		Client:    mgr.GetClient(),
-		Scheme:    mgr.GetScheme(),
-		ClientMap: clientMap,
-		EventCh:   eventCh,
-	}).SetupWithManager(mgr); err != nil {
+	if err := slurmclient.NewReconciler(mgr.GetClient(), clientMap, eventCh).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "SlurmClient")
 		os.Exit(1)
 	}
-	if err = token.NewReconciler(mgr.GetClient()).
-		SetupWithManager(mgr); err != nil {
+	if err := token.NewReconciler(mgr.GetClient()).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Token")
 		os.Exit(1)
 	}

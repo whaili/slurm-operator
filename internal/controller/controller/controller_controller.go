@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	ControllerControllerName = "controller-controller"
+	ControllerName = "controller-controller"
 
 	// BackoffGCInterval is the time that has to pass before next iteration of backoff GC is run
 	BackoffGCInterval = 1 * time.Minute
@@ -104,11 +104,8 @@ func (r *ControllerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *ControllerReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	r.builder = builder.New(r.Client)
-	r.refResolver = refresolver.New(r.Client)
-	r.eventRecorder = record.NewBroadcaster().NewRecorder(r.Scheme, corev1.EventSource{Component: ControllerControllerName})
 	return ctrl.NewControllerManagedBy(mgr).
-		Named(ControllerControllerName).
+		Named(ControllerName).
 		For(&slinkyv1alpha1.Controller{}).
 		Owns(&appsv1.StatefulSet{}).
 		Owns(&corev1.Service{}).
@@ -125,4 +122,19 @@ func (r *ControllerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			MaxConcurrentReconciles: maxConcurrentReconciles,
 		}).
 		Complete(r)
+}
+
+func NewReconciler(c client.Client, cm *clientmap.ClientMap) *ControllerReconciler {
+	s := c.Scheme()
+	es := corev1.EventSource{Component: ControllerName}
+	return &ControllerReconciler{
+		Client: c,
+		Scheme: s,
+
+		ClientMap: cm,
+
+		builder:       builder.New(c),
+		refResolver:   refresolver.New(c),
+		eventRecorder: record.NewBroadcaster().NewRecorder(s, es),
+	}
 }

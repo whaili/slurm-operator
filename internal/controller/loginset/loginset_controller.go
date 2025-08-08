@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	LoginSetControllerName = "loginset-controller"
+	ControllerName = "loginset-controller"
 
 	// BackoffGCInterval is the time that has to pass before next iteration of backoff GC is run
 	BackoffGCInterval = 1 * time.Minute
@@ -101,11 +101,8 @@ func (r *LoginSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (r
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *LoginSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	r.eventRecorder = record.NewBroadcaster().NewRecorder(r.Scheme, corev1.EventSource{Component: LoginSetControllerName})
-	r.builder = builder.New(r.Client)
-	r.refResolver = refresolver.New(r.Client)
 	return ctrl.NewControllerManagedBy(mgr).
-		Named(LoginSetControllerName).
+		Named(ControllerName).
 		For(&slinkyv1alpha1.LoginSet{}).
 		Owns(&appsv1.Deployment{}).
 		Owns(&corev1.Service{}).
@@ -123,4 +120,17 @@ func (r *LoginSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			MaxConcurrentReconciles: maxConcurrentReconciles,
 		}).
 		Complete(r)
+}
+
+func NewReconciler(c client.Client) *LoginSetReconciler {
+	s := c.Scheme()
+	es := corev1.EventSource{Component: ControllerName}
+	return &LoginSetReconciler{
+		Client: c,
+		Scheme: s,
+
+		builder:       builder.New(c),
+		refResolver:   refresolver.New(c),
+		eventRecorder: record.NewBroadcaster().NewRecorder(s, es),
+	}
 }

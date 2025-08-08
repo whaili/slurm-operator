@@ -34,7 +34,7 @@ import (
 )
 
 const (
-	NodeSetControllerName = "nodeset-controller"
+	ControllerName = "nodeset-controller"
 
 	// BackoffGCInterval is the time that has to pass before next iteration of backoff GC is run
 	BackoffGCInterval = 1 * time.Minute
@@ -130,7 +130,7 @@ func (r *NodeSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (re
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *NodeSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	r.eventRecorder = record.NewBroadcaster().NewRecorder(r.Scheme, corev1.EventSource{Component: NodeSetControllerName})
+	r.eventRecorder = record.NewBroadcaster().NewRecorder(r.Scheme, corev1.EventSource{Component: ControllerName})
 	r.builder = builder.New(r.Client)
 	r.refResolver = refresolver.New(r.Client)
 	r.historyControl = historycontrol.NewHistoryControl(r.Client)
@@ -142,7 +142,7 @@ func (r *NodeSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		expectations: r.expectations,
 	}
 	return ctrl.NewControllerManagedBy(mgr).
-		Named(NodeSetControllerName).
+		Named(ControllerName).
 		For(&slinkyv1alpha1.NodeSet{}).
 		Owns(&corev1.Pod{}).
 		Watches(&corev1.Pod{}, podEventHandler).
@@ -159,4 +159,31 @@ func (r *NodeSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			MaxConcurrentReconciles: maxConcurrentReconciles,
 		}).
 		Complete(r)
+}
+
+func NewReconciler(c client.Client, cm *clientmap.ClientMap, ec chan event.GenericEvent) *NodeSetReconciler {
+	s := c.Scheme()
+	es := corev1.EventSource{Component: ControllerName}
+	er := record.NewBroadcaster().NewRecorder(s, es)
+	if cm == nil {
+		panic("ClientMap cannot be nil")
+	}
+	if ec == nil {
+		panic("EventCh cannot be nil")
+	}
+	return &NodeSetReconciler{
+		Client: c,
+		Scheme: s,
+
+		ClientMap: cm,
+		EventCh:   ec,
+
+		builder:        builder.New(c),
+		refResolver:    refresolver.New(c),
+		historyControl: historycontrol.NewHistoryControl(c),
+		podControl:     podcontrol.NewPodControl(c, er),
+		slurmControl:   slurmcontrol.NewSlurmControl(cm),
+		eventRecorder:  er,
+		expectations:   kubecontroller.NewUIDTrackingControllerExpectations(kubecontroller.NewControllerExpectations()),
+	}
 }
