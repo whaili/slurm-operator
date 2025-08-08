@@ -286,26 +286,20 @@ func (in *ControllerSpec) DeepCopyInto(out *ControllerSpec) {
 	in.JwtHs256KeyRef.DeepCopyInto(&out.JwtHs256KeyRef)
 	out.AccountingRef = in.AccountingRef
 	in.Template.DeepCopyInto(&out.Template)
-	if in.ConfigFiles != nil {
-		in, out := &in.ConfigFiles, &out.ConfigFiles
-		*out = make(map[string]string, len(*in))
-		for key, val := range *in {
-			(*out)[key] = val
-		}
+	if in.ConfigFileRefs != nil {
+		in, out := &in.ConfigFileRefs, &out.ConfigFileRefs
+		*out = make([]ObjectReference, len(*in))
+		copy(*out, *in)
 	}
-	if in.PrologScripts != nil {
-		in, out := &in.PrologScripts, &out.PrologScripts
-		*out = make(map[string]string, len(*in))
-		for key, val := range *in {
-			(*out)[key] = val
-		}
+	if in.PrologScriptRefs != nil {
+		in, out := &in.PrologScriptRefs, &out.PrologScriptRefs
+		*out = make([]ObjectReference, len(*in))
+		copy(*out, *in)
 	}
-	if in.EpilogScripts != nil {
-		in, out := &in.EpilogScripts, &out.EpilogScripts
-		*out = make(map[string]string, len(*in))
-		for key, val := range *in {
-			(*out)[key] = val
-		}
+	if in.EpilogScriptRefs != nil {
+		in, out := &in.EpilogScriptRefs, &out.EpilogScriptRefs
+		*out = make([]ObjectReference, len(*in))
+		copy(*out, *in)
 	}
 	in.Persistence.DeepCopyInto(&out.Persistence)
 	in.Service.DeepCopyInto(&out.Service)

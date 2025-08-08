@@ -10,21 +10,27 @@ import (
 	"regexp"
 	"slices"
 
+	corev1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
+	"github.com/SlinkyProject/slurm-operator/internal/utils"
 )
 
 // TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
-type ControllerWebhook struct{}
+type ControllerWebhook struct {
+	client.Client
+}
 
 // log is for logging in this package.
 var controllerlog = logf.Log.WithName("controller-resource")
@@ -61,7 +67,7 @@ func (r *ControllerWebhook) ValidateCreate(ctx context.Context, obj runtime.Obje
 	controller := obj.(*slinkyv1alpha1.Controller)
 	controllerlog.Info("validate create", "controller", klog.KObj(controller))
 
-	warns, errs := validateController(controller)
+	warns, errs := r.validateController(ctx, controller)
 
 	// https://slurm.schedmd.com/slurm.conf.html#OPT_ClusterName
 	controllerName := controller.ClusterName()
@@ -89,7 +95,7 @@ func (r *ControllerWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.O
 	oldController := oldObj.(*slinkyv1alpha1.Controller)
 	controllerlog.Info("validate update", "newController", klog.KObj(newController))
 
-	warns, errs := validateController(newController)
+	warns, errs := r.validateController(ctx, newController)
 
 	if newController.ClusterName() != oldController.ClusterName() {
 		errs = append(errs, errors.New("cannot change ClusterName after deployment"))
@@ -118,12 +124,11 @@ func (r *ControllerWebhook) ValidateDelete(ctx context.Context, obj runtime.Obje
 	return nil, nil
 }
 
-func validateController(obj *slinkyv1alpha1.Controller) (admission.Warnings, []error) {
+func (r *ControllerWebhook) validateController(ctx context.Context, obj *slinkyv1alpha1.Controller) (admission.Warnings, []error) {
 	var warns admission.Warnings
 	var errs []error
 
 	// Ref: https://slurm.schedmd.com/man_index.html#configuration_files
-	configFiles := obj.Spec.ConfigFiles
 	denyConfigFiles := []string{
 		"slurm.conf",
 		"slurmdbd.conf",
@@ -144,11 +149,26 @@ func validateController(obj *slinkyv1alpha1.Controller) (admission.Warnings, []e
 		"topology.conf",
 		"topology.yaml",
 	}
-	for _, file := range configFiles {
-		if slices.Contains(denyConfigFiles, file) {
-			errs = append(errs, fmt.Errorf("the configFile is reserved for slurm-operator use: %s", file))
-		} else if slices.Contains(knownConfigFiles, file) {
-			warns = append(warns, fmt.Sprintf("the configFile is unknown to Slurm, make sure to include it in another config file otherwise it is ignored: %s", file))
+
+	refs := obj.Spec.ConfigFileRefs
+	for _, ref := range refs {
+		configMap := &corev1.ConfigMap{}
+		configMapKey := types.NamespacedName{
+			Name:      ref.Name,
+			Namespace: obj.Namespace,
+		}
+		if err := r.Get(ctx, configMapKey, configMap); err != nil {
+			errs = append(errs, err)
+			continue
+		}
+		configFiles := utils.Keys(configMap.Data)
+		controllerlog.V(1).Info("configMap files", "files", configFiles)
+		for _, file := range configFiles {
+			if slices.Contains(denyConfigFiles, file) {
+				errs = append(errs, fmt.Errorf("the configFile is reserved for slurm-operator use: %s", file))
+			} else if !slices.Contains(knownConfigFiles, file) {
+				warns = append(warns, fmt.Sprintf("the configFile is unknown to Slurm, make sure to include it in another config file otherwise it is ignored: %s", file))
+			}
 		}
 	}
 

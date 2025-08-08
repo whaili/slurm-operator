@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -29,7 +30,30 @@ func TestBuilder_BuildControllerConfig(t *testing.T) {
 		{
 			name: "default",
 			fields: fields{
-				client: fake.NewFakeClient(),
+				client: fake.NewClientBuilder().
+					WithObjects(&corev1.ConfigMap{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: "prolog",
+						},
+						Data: map[string]string{
+							"00-exit.sh": strings.Join([]string{
+								"#!/usr/bin/sh",
+								"exit 0",
+							}, "\n"),
+						},
+					}).
+					WithObjects(&corev1.ConfigMap{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: "epilog",
+						},
+						Data: map[string]string{
+							"00-exit.sh": strings.Join([]string{
+								"#!/usr/bin/sh",
+								"exit 0",
+							}, "\n"),
+						},
+					}).
+					Build(),
 			},
 			args: args{
 				controller: &slinkyv1alpha1.Controller{
@@ -40,17 +64,11 @@ func TestBuilder_BuildControllerConfig(t *testing.T) {
 						ExtraConf: strings.Join([]string{
 							"MinJobAge=2",
 						}, "\n"),
-						PrologScripts: map[string]string{
-							"00-exit.sh": strings.Join([]string{
-								"#!/usr/bin/sh",
-								"exit0",
-							}, "\n"),
+						PrologScriptRefs: []slinkyv1alpha1.ObjectReference{
+							{Name: "prolog"},
 						},
-						EpilogScripts: map[string]string{
-							"00-exit.sh": strings.Join([]string{
-								"#!/usr/bin/sh",
-								"exit0",
-							}, "\n"),
+						EpilogScriptRefs: []slinkyv1alpha1.ObjectReference{
+							{Name: "epilog"},
 						},
 					},
 				},
@@ -93,6 +111,21 @@ func TestBuilder_BuildControllerConfig(t *testing.T) {
 							},
 						},
 					}).
+					WithObjects(&corev1.ConfigMap{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: "slurm-config",
+						},
+						Data: map[string]string{
+							cgroupConfFile: `# Override cgroup.conf
+							CgroupPlugin=autodetect
+							IgnoreSystemd=yes
+							ConstrainCores=yes
+							ConstrainRAMSpace=yes
+							ConstrainDevices=yes
+							ConstrainSwapSpace=yes`,
+							"foo.conf": "Foo=bar",
+						},
+					}).
 					Build(),
 			},
 			args: args{
@@ -104,15 +137,8 @@ func TestBuilder_BuildControllerConfig(t *testing.T) {
 						AccountingRef: slinkyv1alpha1.ObjectReference{
 							Name: "slurm",
 						},
-						ConfigFiles: map[string]string{
-							cgroupConfFile: `# Override cgroup.conf
-							CgroupPlugin=autodetect
-							IgnoreSystemd=yes
-							ConstrainCores=yes
-							ConstrainRAMSpace=yes
-							ConstrainDevices=yes
-							ConstrainSwapSpace=yes`,
-							"foo.conf": "Foo=bar",
+						ConfigFileRefs: []slinkyv1alpha1.ObjectReference{
+							{Name: "slurm-config"},
 						},
 					},
 				},
@@ -133,9 +159,6 @@ func TestBuilder_BuildControllerConfig(t *testing.T) {
 
 			case got.Data[slurmConfFile] == "" && got.BinaryData[slurmConfFile] == nil:
 				t.Errorf("got.Data[%s] = %v", slurmConfFile, got.Data[slurmConfFile])
-
-			case got.Data[cgroupConfFile] == "" && got.BinaryData[cgroupConfFile] == nil:
-				t.Errorf("got.Data[%s] = %v", cgroupConfFile, got.Data[cgroupConfFile])
 			}
 		})
 	}

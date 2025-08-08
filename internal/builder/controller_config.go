@@ -7,11 +7,12 @@ import (
 	"context"
 	"fmt"
 	"regexp"
-	"slices"
+	"sort"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/builder/labels"
@@ -39,45 +40,81 @@ func (b *Builder) BuildControllerConfig(controller *slinkyv1alpha1.Controller) (
 		return nil, err
 	}
 
-	cgroupConfFileContents := buildCgroupConf(controller.Spec.ConfigFiles)
-	isCgroupEnabled := isCgroupEnabled(cgroupConfFileContents)
+	configFilesList := &corev1.ConfigMapList{
+		Items: make([]corev1.ConfigMap, 0, len(controller.Spec.ConfigFileRefs)),
+	}
+	for _, ref := range controller.Spec.ConfigFileRefs {
+		cm := &corev1.ConfigMap{}
+		key := types.NamespacedName{
+			Namespace: controller.Namespace,
+			Name:      ref.Name,
+		}
+		if err := b.client.Get(ctx, key, cm); err != nil {
+			return nil, err
+		}
+		configFilesList.Items = append(configFilesList.Items, *cm)
+	}
+	cgroupEnabled := true
+	hasCgroupConfFile := false
+	for _, configMap := range configFilesList.Items {
+		if contents, ok := configMap.Data[cgroupConfFile]; ok {
+			hasCgroupConfFile = true
+			cgroupEnabled = isCgroupEnabled(contents)
+		}
+	}
+
+	prologScripts := []string{}
+	for _, ref := range controller.Spec.PrologScriptRefs {
+		cm := &corev1.ConfigMap{}
+		key := types.NamespacedName{
+			Namespace: controller.Namespace,
+			Name:      ref.Name,
+		}
+		if err := b.client.Get(ctx, key, cm); err != nil {
+			return nil, err
+		}
+		filenames := utils.Keys(cm.Data)
+		sort.Strings(filenames)
+		prologScripts = filenames
+	}
+
+	epilogScripts := []string{}
+	for _, ref := range controller.Spec.EpilogScriptRefs {
+		cm := &corev1.ConfigMap{}
+		key := types.NamespacedName{
+			Namespace: controller.Namespace,
+			Name:      ref.Name,
+		}
+		if err := b.client.Get(ctx, key, cm); err != nil {
+			return nil, err
+		}
+		filenames := utils.Keys(cm.Data)
+		sort.Strings(filenames)
+		epilogScripts = filenames
+	}
 
 	opts := ConfigMapOpts{
 		Key:      controller.ConfigKey(),
 		Metadata: controller.Spec.Template.PodMetadata,
 		Data: map[string]string{
-			slurmConfFile:  buildSlurmConf(controller, accounting, nodesetList, isCgroupEnabled),
-			cgroupConfFile: cgroupConfFileContents,
+			slurmConfFile: buildSlurmConf(controller, accounting, nodesetList, prologScripts, epilogScripts, cgroupEnabled),
 		},
+	}
+	if !hasCgroupConfFile {
+		opts.Data[cgroupConfFile] = buildCgroupConf()
 	}
 
 	opts.Metadata.Labels = utils.MergeMaps(opts.Metadata.Labels, labels.NewBuilder().WithControllerLabels(controller).Build())
 
-	managedFiles := []string{
-		slurmConfFile,
-		cgroupConfFile,
-	}
-	for filename, text := range controller.Spec.ConfigFiles {
-		if slices.Contains(managedFiles, filename) {
-			continue
-		}
-		opts.Data[filename] = text
-	}
-
 	return b.BuildConfigMap(opts, controller)
 }
-
-// This needs to match how initconf.sh glob the scripts.
-const (
-	prologPrefix = "prolog-"
-	epilogPrefix = "epilog-"
-)
 
 // https://slurm.schedmd.com/slurm.conf.html
 func buildSlurmConf(
 	controller *slinkyv1alpha1.Controller,
 	accounting *slinkyv1alpha1.Accounting,
 	nodesetList *slinkyv1alpha1.NodeSetList,
+	prologScripts, epilogScripts []string,
 	cgroupEnabled bool,
 ) string {
 	controllerHost := fmt.Sprintf("%s(%s)", controller.PrimaryName(), controller.PrimaryFQDN())
@@ -138,19 +175,15 @@ func buildSlurmConf(
 		conf.AddPropery(config.NewProperty("JobAcctGatherType", "jobacct_gather/none"))
 	}
 
-	prologScripts := controller.Spec.PrologScripts
-	epilogScripts := controller.Spec.EpilogScripts
 	if len(prologScripts) > 0 || len(epilogScripts) > 0 {
 		conf.AddPropery(config.NewPropertyRaw("#"))
 		conf.AddPropery(config.NewPropertyRaw("### PROLOG & EPILOG ###"))
 	}
-	for filename := range prologScripts {
-		name := prologPrefix + filename
-		conf.AddPropery(config.NewProperty("Prolog", name))
+	for _, filename := range prologScripts {
+		conf.AddPropery(config.NewProperty("Prolog", filename))
 	}
-	for filename := range epilogScripts {
-		name := epilogPrefix + filename
-		conf.AddPropery(config.NewProperty("Epilog", name))
+	for _, filename := range epilogScripts {
+		conf.AddPropery(config.NewProperty("Epilog", filename))
 	}
 
 	if len(nodesetList.Items) > 0 {
@@ -190,12 +223,7 @@ func buildSlurmConf(
 	return conf.Build()
 }
 
-func buildCgroupConf(configFiles map[string]string) string {
-	text, ok := configFiles[cgroupConfFile]
-	if ok {
-		return text
-	}
-
+func buildCgroupConf() string {
 	conf := config.NewBuilder()
 
 	conf.AddPropery(config.NewProperty("CgroupPlugin", "autodetect"))

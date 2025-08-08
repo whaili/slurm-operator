@@ -67,20 +67,46 @@ spec:
                   itself and accounting.
                   Ref: https://slurm.schedmd.com/slurm.conf.html#OPT_ClusterName
                 type: string
-              configFiles:
-                additionalProperties:
-                  type: string
+              configFileRefs:
                 description: |-
-                  ConfigFiles is a map of configuration files to be mounted.
+                  ConfigFileRefs is a list of ConfigMap references containing files to be mounted in `/etc/slurm`.
                   Ref: https://slurm.schedmd.com/slurm.conf.html
-                type: object
-              epilogScripts:
-                additionalProperties:
-                  type: string
+                items:
+                  description: ObjectReference is a reference to an object.
+                  properties:
+                    name:
+                      description: |-
+                        Name of the referent.
+                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      type: string
+                    namespace:
+                      description: |-
+                        Namespace of the referent.
+                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                      type: string
+                  type: object
+                  x-kubernetes-map-type: atomic
+                type: array
+              epilogScriptRefs:
                 description: |-
-                  EpilogScripts is a map of epilog scripts to be mounted.
+                  EpilogScriptRefs is a list of epilog scripts to be mounted in `/etc/slurm`.
                   Ref: https://slurm.schedmd.com/prolog_epilog.html
-                type: object
+                items:
+                  description: ObjectReference is a reference to an object.
+                  properties:
+                    name:
+                      description: |-
+                        Name of the referent.
+                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      type: string
+                    namespace:
+                      description: |-
+                        Namespace of the referent.
+                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                      type: string
+                  type: object
+                  x-kubernetes-map-type: atomic
+                type: array
               extraConf:
                 description: |-
                   ExtraConf is appended onto the end of the `slurm.conf` file.
@@ -325,13 +351,26 @@ spec:
                 required:
                 - enabled
                 type: object
-              prologScripts:
-                additionalProperties:
-                  type: string
+              prologScriptRefs:
                 description: |-
-                  PrologScripts is a map of prolog scripts to be mounted.
+                  PrologScriptRefs is a list of prolog scripts to be mounted in `/etc/slurm`.
                   Ref: https://slurm.schedmd.com/prolog_epilog.html
-                type: object
+                items:
+                  description: ObjectReference is a reference to an object.
+                  properties:
+                    name:
+                      description: |-
+                        Name of the referent.
+                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      type: string
+                    namespace:
+                      description: |-
+                        Namespace of the referent.
+                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                      type: string
+                  type: object
+                  x-kubernetes-map-type: atomic
+                type: array
               service:
                 description: Service defines a template for a Kubernetes Service object.
                 properties:

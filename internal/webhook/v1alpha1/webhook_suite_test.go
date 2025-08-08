@@ -96,7 +96,9 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&ControllerWebhook{}).SetupWebhookWithManager(mgr)
+	err = (&ControllerWebhook{
+		Client: mgr.GetClient(),
+	}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
 	err = (&NodeSetWebhook{}).SetupWebhookWithManager(mgr)

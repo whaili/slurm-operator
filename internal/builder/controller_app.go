@@ -106,6 +106,18 @@ func (b *Builder) BuildController(controller *slinkyv1alpha1.Controller) (*appsv
 func (b *Builder) controllerPodTemplate(controller *slinkyv1alpha1.Controller) (corev1.PodTemplateSpec, error) {
 	key := controller.Key()
 
+	size := len(controller.Spec.ConfigFileRefs) + len(controller.Spec.PrologScriptRefs) + len(controller.Spec.EpilogScriptRefs)
+	extraConfigMapNames := make([]string, 0, size)
+	for _, ref := range controller.Spec.ConfigFileRefs {
+		extraConfigMapNames = append(extraConfigMapNames, ref.Name)
+	}
+	for _, ref := range controller.Spec.PrologScriptRefs {
+		extraConfigMapNames = append(extraConfigMapNames, ref.Name)
+	}
+	for _, ref := range controller.Spec.EpilogScriptRefs {
+		extraConfigMapNames = append(extraConfigMapNames, ref.Name)
+	}
+
 	objectMeta := metadata.NewBuilder(key).
 		WithMetadata(controller.Spec.Template.PodMetadata).
 		WithLabels(labels.NewBuilder().WithControllerLabels(controller).Build()).
@@ -143,7 +155,7 @@ func (b *Builder) controllerPodTemplate(controller *slinkyv1alpha1.Controller) (
 				FSGroup:      ptr.To(slurmUserGid),
 			},
 			Tolerations: template.Tolerations,
-			Volumes:     utils.MergeList(controllerVolumes(controller), template.Volumes),
+			Volumes:     utils.MergeList(controllerVolumes(controller, extraConfigMapNames), template.Volumes),
 		},
 		merge: template.ToPodSpec(),
 	}
@@ -153,7 +165,7 @@ func (b *Builder) controllerPodTemplate(controller *slinkyv1alpha1.Controller) (
 	return o, nil
 }
 
-func controllerVolumes(controller *slinkyv1alpha1.Controller) []corev1.Volume {
+func controllerVolumes(controller *slinkyv1alpha1.Controller, extra []string) []corev1.Volume {
 	out := []corev1.Volume{
 		{
 			Name: slurmEtcVolume,
@@ -166,14 +178,6 @@ func controllerVolumes(controller *slinkyv1alpha1.Controller) []corev1.Volume {
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: controller.ConfigKey().Name,
 								},
-							},
-						},
-						{
-							ConfigMap: &corev1.ConfigMapProjection{
-								LocalObjectReference: corev1.LocalObjectReference{
-									Name: controller.ScriptsKey().Name,
-								},
-								Optional: ptr.To(true),
 							},
 						},
 						{
@@ -208,6 +212,16 @@ func controllerVolumes(controller *slinkyv1alpha1.Controller) []corev1.Volume {
 				EmptyDir: &corev1.EmptyDirVolumeSource{},
 			},
 		},
+	}
+	for _, name := range extra {
+		volumeProjection := corev1.VolumeProjection{
+			ConfigMap: &corev1.ConfigMapProjection{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: name,
+				},
+			},
+		}
+		out[0].Projected.Sources = append(out[0].Projected.Sources, volumeProjection)
 	}
 	return out
 }

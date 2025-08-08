@@ -46,16 +46,16 @@ spec:
     {{- include "slurm.controller.extraConf" . | nindent 4 }}
   {{- end }}{{- /* if (include "slurm.controller.extraConf" .) */}}
   {{- with .Values.configFiles }}
-  configFiles:
-    {{- toYaml . | nindent 4 }}
+  configFileRefs:
+    - name: {{ include "slurm.controller.configName" $ }}
   {{- end }}{{- /* with .Values.configFiles */}}
   {{- with .Values.prologScripts }}
-  prologScripts:
-    {{- toYaml . | nindent 4 }}
+  prologScriptRefs:
+    - name: {{ include "slurm.controller.prologName" $ }}
   {{- end }}{{- /* with .Values.prologScripts */}}
   {{- with .Values.epilogScripts }}
-  epilogScripts:
-    {{- toYaml . | nindent 4 }}
+  epilogScriptRefs:
+    - name: {{ include "slurm.controller.epilogName" $ }}
   {{- end }}{{- /* with .Values.epilogScripts */}}
   template:
     {{- include "format-podTemplate" $podTemplate | nindent 4 }}

@@ -70,3 +70,24 @@ Determine controller extraConf
 {{- end }}{{- /* range $part := .Values.partitions */}}
 {{- join "\n" $extraConf -}}
 {{- end }}
+
+{{/*
+Cluster config files.
+*/}}
+{{- define "slurm.controller.configName" -}}
+{{- printf "%s-config-extra" (include "slurm.fullname" .) -}}
+{{- end }}
+
+{{/*
+Worker prolog scripts.
+*/}}
+{{- define "slurm.controller.prologName" -}}
+{{- printf "%s-prolog-scripts" (include "slurm.fullname" .) -}}
+{{- end }}
+
+{{/*
+Worker epilog scripts.
+*/}}
+{{- define "slurm.controller.epilogName" -}}
+{{- printf "%s-epilog-scripts" (include "slurm.fullname" .) -}}
+{{- end }}

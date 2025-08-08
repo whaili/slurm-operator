@@ -118,7 +118,9 @@ func main() {
 		setupLog.Error(err, "unable to set up ready check")
 		os.Exit(1)
 	}
-	if err := (&webhookv1alpha1.ControllerWebhook{}).SetupWebhookWithManager(mgr); err != nil {
+	if err := (&webhookv1alpha1.ControllerWebhook{
+		Client: mgr.GetClient(),
+	}).SetupWebhookWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create webhook", "webhook", "Controller")
 		os.Exit(1)
 	}

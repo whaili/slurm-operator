@@ -63,19 +63,6 @@ func (r *ControllerReconciler) Sync(ctx context.Context, req reconcile.Request) 
 			},
 		},
 		{
-			Name: "Scripts",
-			Sync: func(ctx context.Context, controller *slinkyv1alpha1.Controller) error {
-				object, err := r.builder.BuildControllerScripts(controller)
-				if err != nil {
-					return fmt.Errorf("failed to build: %w", err)
-				}
-				if err := objects.SyncObject(r.Client, ctx, object, true); err != nil {
-					return fmt.Errorf("failed to sync object (%s): %w", klog.KObj(object), err)
-				}
-				return nil
-			},
-		},
-		{
 			Name: "StatefulSet",
 			Sync: func(ctx context.Context, controller *slinkyv1alpha1.Controller) error {
 				object, err := r.builder.BuildController(controller)

@@ -99,10 +99,3 @@ func (o *Controller) ConfigKey() types.NamespacedName {
 		Namespace: o.Namespace,
 	}
 }
-
-func (o *Controller) ScriptsKey() types.NamespacedName {
-	return types.NamespacedName{
-		Name:      fmt.Sprintf("%s-scripts", o.Name),
-		Namespace: o.Namespace,
-	}
-}

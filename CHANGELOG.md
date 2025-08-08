@@ -43,6 +43,8 @@ All notable changes to this project will be documented in this file.
 - Changed logfile sidecar image to alpine.
 - Changed reconfigure sidecar image to slurmctld.
 - Changed Slurm chart to use Token CR for slurm-exporter JWT.
+- Changed ConfigFiles, PrologScripts, and EpilogScripts to list of object
+  references.
 
 ### Removed
 

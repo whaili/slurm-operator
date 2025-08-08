@@ -54,20 +54,20 @@ type ControllerSpec struct {
 	// +optional
 	ExtraConf string `json:"extraConf,omitempty"`
 
-	// ConfigFiles is a map of configuration files to be mounted.
+	// ConfigFileRefs is a list of ConfigMap references containing files to be mounted in `/etc/slurm`.
 	// Ref: https://slurm.schedmd.com/slurm.conf.html
 	// +optional
-	ConfigFiles map[string]string `json:"configFiles,omitempty"`
+	ConfigFileRefs []ObjectReference `json:"configFileRefs,omitzero"`
 
-	// PrologScripts is a map of prolog scripts to be mounted.
+	// PrologScriptRefs is a list of prolog scripts to be mounted in `/etc/slurm`.
 	// Ref: https://slurm.schedmd.com/prolog_epilog.html
 	// +optional
-	PrologScripts map[string]string `json:"prologScripts,omitempty"`
+	PrologScriptRefs []ObjectReference `json:"prologScriptRefs,omitzero"`
 
-	// EpilogScripts is a map of epilog scripts to be mounted.
+	// EpilogScriptRefs is a list of epilog scripts to be mounted in `/etc/slurm`.
 	// Ref: https://slurm.schedmd.com/prolog_epilog.html
 	// +optional
-	EpilogScripts map[string]string `json:"epilogScripts,omitempty"`
+	EpilogScriptRefs []ObjectReference `json:"epilogScriptRefs,omitzero"`
 
 	// Persistence defines a persistent volume for the slurm controller to store its save-state.
 	// Used to recover from system failures or from pod upgrades.
