@@ -50,7 +50,7 @@ It contains a [Kubernetes] operator to deploy and manage certain components of
 [custom resource definitions (CRDs)][crds] designed for the lifecycle (creation,
 upgrade, graceful shutdown) of Slurm clusters.
 
-<img src="./docs/assets/architecture-operator.svg" alt="Slurm Operator Architecture" width="100%" height="auto" />
+<img src="./docs/_static/images/architecture-operator.svg" alt="Slurm Operator Architecture" width="100%" height="auto" />
 
 For additional architectural notes, see the [architecture] docs.
 
@@ -60,7 +60,7 @@ Slurm clusters are very flexible and can be configured in various ways. Our
 Slurm helm chart provides a reference implementation that is highly customizable
 and tries to expose everything Slurm has to offer.
 
-<img src="./docs/assets/architecture-slurm.svg" alt="Slurm Architecture" width="100%" height="auto" />
+<img src="./docs/_static/images/architecture-slurm.svg" alt="Slurm Architecture" width="100%" height="auto" />
 
 For additional information about Slurm, see the [slurm][slurm-docs] docs.
 

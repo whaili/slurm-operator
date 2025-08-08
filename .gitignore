@@ -135,3 +135,4 @@ vendor/*
 *.tgz
 values-*.yaml
 .helm_ls_cache
+docs/build/html

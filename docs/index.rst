@@ -1,0 +1,239 @@
+Kubernetes Operator for Slurm Clusters
+======================================
+
+.. container::
+
+   |License| |Tag| |Go-Version| |Last-Commit|
+
+Run `Slurm <https://slurm.schedmd.com/overview.html>`__ on
+`Kubernetes <https://kubernetes.io/>`__, by
+`SchedMD <https://schedmd.com/>`__. A `Slinky <https://slinky.ai/>`__
+project.
+
+Table of Contents
+-----------------
+
+.. raw:: html
+
+   <!-- mdformat-toc start --slug=github --no-anchors --maxlevel=6 --minlevel=1 -->
+
+- `Kubernetes Operator for Slurm
+  Clusters <#kubernetes-operator-for-slurm-clusters>`__
+
+  - `Table of Contents <#table-of-contents>`__
+  - `Overview <#overview>`__
+
+    - `Slurm Cluster <#slurm-cluster>`__
+
+  - `Features <#features>`__
+
+    - `NodeSets <#nodesets>`__
+    - `LoginSets <#loginsets>`__
+    - `Hybrid Support <#hybrid-support>`__
+    - `Slurm <#slurm>`__
+
+  - `Limitations <#limitations>`__
+  - `Installation <#installation>`__
+  - `Upgrades <#upgrades>`__
+
+    - `0.X Releases <#0x-releases>`__
+
+  - `Documentation <#documentation>`__
+  - `License <#license>`__
+
+.. raw:: html
+
+   <!-- mdformat-toc end -->
+
+Overview
+--------
+
+`Slurm <https://slurm.schedmd.com/overview.html>`__ and
+`Kubernetes <https://kubernetes.io/>`__ are workload managers originally
+designed for different kinds of workloads. In broad strokes: Kubernetes
+excels at scheduling workloads that typically run for an indefinite
+amount of time, with potentially vague resource requirements, on a
+single node, with loose policy, but can scale its resource pool
+infinitely to meet demand; Slurm excels at quickly scheduling workloads
+that run for a finite amount of time, with well defined resource
+requirements and topology, on multiple nodes, with strict policy, but
+its resource pool is known.
+
+This project enables the best of both workload managers, unified on
+Kubernetes. It contains a `Kubernetes <https://kubernetes.io/>`__
+operator to deploy and manage certain components of
+`Slurm <https://slurm.schedmd.com/overview.html>`__ clusters. This
+repository implements
+`custom-controllers <https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#custom-controllers>`__
+and `custom resource definitions
+(CRDs) <https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#customresourcedefinitions>`__
+designed for the lifecycle (creation, upgrade, graceful shutdown) of
+Slurm clusters.
+
+For additional architectural notes, see the
+`architecture <./docs/architecture.md>`__ docs.
+
+Slurm Cluster
+~~~~~~~~~~~~~
+
+Slurm clusters are very flexible and can be configured in various ways.
+Our Slurm helm chart provides a reference implementation that is highly
+customizable and tries to expose everything Slurm has to offer.
+
+For additional information about Slurm, see the
+`slurm <./docs/slurm.md>`__ docs.
+
+Features
+--------
+
+NodeSets
+~~~~~~~~
+
+A set of homogeneous Slurm nodes (compute nodes, workers), which are
+delegated to execute the Slurm workload.
+
+The operator will take into consideration the running workload among
+Slurm nodes as it needs to scale-in, upgrade, or otherwise handle node
+failures. Slurm nodes will be marked as
+`drain <https://slurm.schedmd.com/scontrol.html#OPT_DRAIN>`__ before
+their eventual termination pending scale-in or upgrade.
+
+The operator supports NodeSet scale to zero, scaling the resource down
+to zero replicas. Hence, any Horizontal Pod Autoscaler (HPA) that also
+support scale to zero can be best paired with NodeSets.
+
+LoginSets
+~~~~~~~~~
+
+A set of homogeneous login nodes (submit node, jump host) for Slurm,
+which manage user identity via LDAP.
+
+The operator supports LoginSet scale to zero, scaling the resource down
+to zero replicas. Hence, any Horizontal Pod Autoscaler (HPA) that also
+support scale to zero can be best paired with LoginSets.
+
+Hybrid Support
+~~~~~~~~~~~~~~
+
+Sometimes a Slurm cluster has some, but not all, of its components in
+Kubernetes. The operator and its CRD are designed support these use
+cases.
+
+Slurm
+~~~~~
+
+Slurm is a full featured HPC workload manager. To highlight a few
+features:
+
+- `Accounting <https://slurm.schedmd.com/accounting.html>`__: collect
+  accounting information for every job and job step executed.
+- `Partitions <https://slurm.schedmd.com/quickstart.html#arch>`__: job
+  queues with sets of resources and constraints (e.g. job size limit,
+  job time limit, users permitted).
+- `Reservations <https://slurm.schedmd.com/reservations.html>`__:
+  reserve resources for jobs being executed by select users and/or
+  select accounts.
+- `Job
+  Dependencies <https://slurm.schedmd.com/sbatch.html#OPT_dependency>`__:
+  defer the start of jobs until the specified dependencies have been
+  satisfied.
+- `Job Containers <https://slurm.schedmd.com/containers.html>`__: jobs
+  which run an unprivileged OCI container bundle.
+- `MPI <https://slurm.schedmd.com/mpi_guide.html>`__: launch parallel
+  MPI jobs, supports various MPI implementations.
+- `Priority <https://slurm.schedmd.com/priority_multifactor.html>`__:
+  assigns priorities to jobs upon submission and on an ongoing basis
+  (e.g. as they age).
+- `Preemption <https://slurm.schedmd.com/preempt.html>`__: stop one or
+  more low-priority jobs to let a high-priority job run.
+- `QoS <https://slurm.schedmd.com/qos.html>`__: sets of policies
+  affecting scheduling priority, preemption, and resource limits.
+- `Fairshare <https://slurm.schedmd.com/fair_tree.html>`__: distribute
+  resources equitably among users and accounts based on historical
+  usage.
+- `Node Health
+  Check <https://slurm.schedmd.com/slurm.conf.html#OPT_HealthCheckProgram>`__:
+  periodically check node health via script.
+
+Limitations
+-----------
+
+- **Kubernetes Version**: >=
+  `v1.29 <https://kubernetes.io/blog/2023/12/13/kubernetes-v1-29-release/>`__
+- **Slurm Version**: >=
+  `25.05 <https://www.schedmd.com/slurm-version-25-05-0-is-now-available/>`__
+
+Installation
+------------
+
+Install the slurm-operator:
+
+.. code:: sh
+
+   helm install slurm-operator oci://ghcr.io/slinkyproject/charts/slurm-operator \
+     --namespace=slinky --create-namespace
+
+Install a Slurm cluster:
+
+.. code:: sh
+
+   helm install slurm oci://ghcr.io/slinkyproject/charts/slurm \
+     --namespace=slurm --create-namespace
+
+For additional instructions, see the
+`quickstart <./docs/quickstart.md>`__ guide.
+
+Upgrades
+--------
+
+0.X Releases
+~~~~~~~~~~~~
+
+Breaking changes may be introduced into newer
+`CRDs <https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#customresourcedefinitions>`__.
+To upgrade between these versions, uninstall all Slinky charts and
+delete Slinky CRDs, then install the new release like normal.
+
+.. code:: bash
+
+   helm --namespace=slurm uninstall slurm
+   helm --namespace=slinky uninstall slurm-operator
+   kubectl delete clusters.slinky.slurm.net
+   kubectl delete nodesets.slinky.slurm.net
+
+Documentation
+-------------
+
+Project documentation is located in the `docs <./docs/>`__ directory of
+this repository.
+
+Slinky documentation can be found
+`here <https://slinky.schedmd.com/docs/>`__.
+
+License
+-------
+
+Copyright (C) SchedMD LLC.
+
+Licensed under the `Apache License, Version
+2.0 <http://www.apache.org/licenses/LICENSE-2.0>`__ you may not use
+project except in compliance with the license.
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an “AS IS” BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+.. raw:: html
+
+   <!-- links -->
+
+.. |License| image:: https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=for-the-badge
+   :target: ./LICENSES/Apache-2.0.txt
+.. |Tag| image:: https://img.shields.io/github/v/tag/SlinkyProject/slurm-operator?style=for-the-badge
+   :target: https://github.com/SlinkyProject/slurm-operator/tags/
+.. |Go-Version| image:: https://img.shields.io/github/go-mod/go-version/SlinkyProject/slurm-operator?style=for-the-badge
+   :target: ./go.mod
+.. |Last-Commit| image:: https://img.shields.io/github/last-commit/SlinkyProject/slurm-operator?style=for-the-badge
+   :target: https://github.com/SlinkyProject/slurm-operator/commits/
