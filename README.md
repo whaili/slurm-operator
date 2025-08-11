@@ -29,6 +29,7 @@ Run [Slurm] on [Kubernetes], by [SchedMD]. A [Slinky] project.
   - [Upgrades](#upgrades)
     - [0.X Releases](#0x-releases)
   - [Documentation](#documentation)
+  - [Support and Development](#support-and-development)
   - [License](#license)
 
 <!-- mdformat-toc end -->
@@ -167,6 +168,17 @@ Project documentation is located in the [docs] directory of this repository.
 
 Slinky documentation can be found [here][slinky-docs].
 
+## Support and Development
+
+Feature requests, code contributions, and bug reports are welcome!
+
+Github/Gitlab submitted issues and PRs/MRs are handled on a best effort basis.
+
+The SchedMD official issue tracker is at <https://support.schedmd.com/>.
+
+To schedule a demo or simply to reach out, please
+[contact SchedMD][contact-schedmd].
+
 ## License
 
 Copyright (C) SchedMD LLC.
@@ -183,6 +195,7 @@ specific language governing permissions and limitations under the License.
 <!-- links -->
 
 [architecture]: ./docs/architecture.md
+[contact-schedmd]: https://www.schedmd.com/slurm-resources/contact-schedmd/
 [crds]: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#customresourcedefinitions
 [custom-controllers]: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#custom-controllers
 [docs]: ./docs/

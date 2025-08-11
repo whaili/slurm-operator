@@ -39,6 +39,7 @@ Table of Contents
     - `0.X Releases <#0x-releases>`__
 
   - `Documentation <#documentation>`__
+  - `Support and Development <#support-and-development>`__
   - `License <#license>`__
 
 .. raw:: html
@@ -209,6 +210,19 @@ this repository.
 
 Slinky documentation can be found
 `here <https://slinky.schedmd.com/docs/>`__.
+
+Support and Development
+-----------------------
+
+Feature requests, code contributions, and bug reports are welcome!
+
+Github/Gitlab submitted issues and PRs/MRs are handled on a best effort
+basis.
+
+The SchedMD official issue tracker is at https://support.schedmd.com/.
+
+To schedule a demo or simply to reach out, please `contact
+SchedMD <https://www.schedmd.com/slurm-resources/contact-schedmd/>`__.
 
 License
 -------
