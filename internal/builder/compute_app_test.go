@@ -41,11 +41,11 @@ func TestBuilder_BuildComputePodTemplate(t *testing.T) {
 						Name: "slurm-foo",
 					},
 					Spec: slinkyv1alpha1.NodeSetSpec{
+						ExtraConf: strings.Join([]string{
+							"features=bar",
+							"weight=5",
+						}, " "),
 						Template: slinkyv1alpha1.NodeSetPodTemplate{
-							ExtraConf: strings.Join([]string{
-								"features=bar",
-								"weight=5",
-							}, " "),
 							PodTemplate: slinkyv1alpha1.PodTemplate{
 								PodSpec: slinkyv1alpha1.PodSpec{
 									Hostname: "foo-",

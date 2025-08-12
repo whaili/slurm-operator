@@ -96,13 +96,13 @@ func TestBuilder_BuildControllerConfig(t *testing.T) {
 							ControllerRef: slinkyv1alpha1.ObjectReference{
 								Name: "slurm",
 							},
+							ExtraConf: strings.Join([]string{
+								"features=bar",
+							}, " "),
 							Partition: slinkyv1alpha1.NodeSetPartition{
 								Enabled: true,
 							},
 							Template: slinkyv1alpha1.NodeSetPodTemplate{
-								ExtraConf: strings.Join([]string{
-									"features=bar",
-								}, " "),
 								PodTemplate: slinkyv1alpha1.PodTemplate{
 									PodSpec: slinkyv1alpha1.PodSpec{
 										Hostname: "foo-",

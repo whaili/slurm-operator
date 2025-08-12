@@ -45,6 +45,7 @@ All notable changes to this project will be documented in this file.
 - Changed Slurm chart to use Token CR for slurm-exporter JWT.
 - Changed ConfigFiles, PrologScripts, and EpilogScripts to list of object
   references.
+- Changed `nodeset.spec.template.extraConf` => `nodeset.spec.extraConf`.
 
 ### Removed
 

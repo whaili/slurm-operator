@@ -183,8 +183,8 @@ func slurmdArgs(nodeset *slinkyv1alpha1.NodeSet, controller *slinkyv1alpha1.Cont
 
 func slurmdConfArgs(nodeset *slinkyv1alpha1.NodeSet) []string {
 	extraConf := []string{}
-	if nodeset.Spec.Template.ExtraConf != "" {
-		extraConf = strings.Split(nodeset.Spec.Template.ExtraConf, " ")
+	if nodeset.Spec.ExtraConf != "" {
+		extraConf = strings.Split(nodeset.Spec.ExtraConf, " ")
 	}
 
 	name := nodeset.Name

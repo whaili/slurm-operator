@@ -95,6 +95,11 @@ spec:
                     type: string
                 type: object
                 x-kubernetes-map-type: atomic
+              extraConf:
+                description: |-
+                  ExtraConf is added to the slurmd args as `--conf <extraConf>`.
+                  Ref: https://slurm.schedmd.com/slurmd.html#OPT_conf-%3Cnode-parameters%3E
+                type: string
               minReadySeconds:
                 description: |-
                   minReadySeconds is the minimum number of seconds for which a newly
@@ -4021,11 +4026,6 @@ spec:
                     x-kubernetes-list-map-keys:
                     - name
                     x-kubernetes-list-type: map
-                  extraConf:
-                    description: |-
-                      ExtraConf is added to the slurmd args as `--conf <extraConf>`.
-                      Ref: https://slurm.schedmd.com/slurmd.html#OPT_conf-%3Cnode-parameters%3E
-                    type: string
                   hostAliases:
                     description: |-
                       HostAliases is an optional list of hosts and IPs that will be injected into the pod's hosts

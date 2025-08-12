@@ -20,9 +20,6 @@ SPDX-License-Identifier: Apache-2.0
   {{- $slurmdEnv := concat list ($nodeset.slurmd.env | default list) $envLimts -}}
   {{- $_ := set $nodeset.slurmd "env" $slurmdEnv -}}
 {{- end }}{{- /* if $nodeset.useResourceLimits */}}
-{{- if (include "slurm.worker.extraConf" $nodeset) }}
-  {{- $_ := set $podTemplate "extraConf" (include "slurm.worker.extraConf" $nodeset) -}}
-{{- end -}}{{- /* if (include "slurm.worker.extraConf" $nodeset) */}}
 ---
 apiVersion: slinky.slurm.net/v1alpha1
 kind: NodeSet
@@ -36,6 +33,9 @@ spec:
   controllerRef:
     name: {{ include "slurm.fullname" $ }}
     namespace: {{ include "slurm.namespace" $ }}
+  {{- if (include "slurm.worker.extraConf" $nodeset) }}
+    extraConf: {{ include "slurm.worker.extraConf" $nodeset }}
+  {{- end -}}{{- /* if (include "slurm.worker.extraConf" $nodeset) */}}
   {{- with $nodeset.partition }}
   partition:
     enabled: {{ $nodeset.enabled | default false }}

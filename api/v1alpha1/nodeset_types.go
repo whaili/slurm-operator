@@ -43,6 +43,11 @@ type NodeSetSpec struct {
 	// +optional
 	Template NodeSetPodTemplate `json:"template,omitempty"`
 
+	// ExtraConf is added to the slurmd args as `--conf <extraConf>`.
+	// Ref: https://slurm.schedmd.com/slurmd.html#OPT_conf-%3Cnode-parameters%3E
+	// +optional
+	ExtraConf string `json:"extraConf,omitzero"`
+
 	// Partition defines the Slurm partition configuration for this NodeSet.
 	// +optional
 	Partition NodeSetPartition `json:"partition,omitzero"`
@@ -94,11 +99,6 @@ type NodeSetPodTemplate struct {
 	// The logfile sidecar configuration.
 	// +optional
 	LogFile SideCar `json:"logfile,omitzero"`
-
-	// ExtraConf is added to the slurmd args as `--conf <extraConf>`.
-	// Ref: https://slurm.schedmd.com/slurmd.html#OPT_conf-%3Cnode-parameters%3E
-	// +optional
-	ExtraConf string `json:"extraConf,omitzero"`
 }
 
 // NodeSetPartition defines the Slurm partition configuration for the NodeSet.
