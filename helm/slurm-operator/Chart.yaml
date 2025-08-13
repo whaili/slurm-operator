@@ -5,3 +5,8 @@ description: Helm Chart for Slurm HPC Workload Manager Operator
 name: slurm-operator
 type: application
 version: 0.4.0
+dependencies:
+  - name: slurm-operator-crds
+    version: "0.4.0"
+    condition: crds.enabled
+    repository: file://../slurm-operator-crds

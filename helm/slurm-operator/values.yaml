@@ -19,6 +19,11 @@ imagePullSecrets: []
 # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass
 priorityClassName: ""
 
+# -- Configure Custom Resource Definitions (CRDs).
+crds:
+  # -- Whether this helm chart should manage the CRD and its upgrades.
+  enabled: false
+
 # Operator configurations.
 operator:
   # -- Enables the operator.

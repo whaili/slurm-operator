@@ -4,6 +4,12 @@
 
 Helm Chart for Slurm HPC Workload Manager Operator
 
+## Requirements
+
+| Repository | Name | Version |
+|------------|------|---------|
+| file://../slurm-operator-crds | slurm-operator-crds | 0.4.0 |
+
 ## Values
 
 | Key | Type | Default | Description |
@@ -12,6 +18,8 @@ Helm Chart for Slurm HPC Workload Manager Operator
 | certManager.enabled | bool | `true` | Enable cert-manager for certificate management. |
 | certManager.renewBefore | string | `"8760h0m0s"` | Certificate renewal time. Should be before the expiration. |
 | certManager.secretName | string | `"slurm-operator-webhook-ca"` | The secret to be (created and) mounted. |
+| crds | object | `{"enabled":false}` | Configure Custom Resource Definitions (CRDs). |
+| crds.enabled | bool | `false` | Whether this helm chart should manage the CRD and its upgrades. |
 | fullnameOverride | string | `""` | Overrides the full name of the release. |
 | imagePullSecrets | list | `[]` | Sets the image pull secrets. Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
 | nameOverride | string | `""` | Overrides the name of the release. |

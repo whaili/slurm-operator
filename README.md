@@ -131,9 +131,10 @@ Slurm is a full featured HPC workload manager. To highlight a few features:
 
 ## Installation
 
-Install the slurm-operator:
+Install the slurm-operator and its CRDs:
 
 ```sh
+helm install slurm-operator-crds oci://ghcr.io/slinkyproject/charts/slurm-operator-crds
 helm install slurm-operator oci://ghcr.io/slinkyproject/charts/slurm-operator \
   --namespace=slinky --create-namespace
 ```

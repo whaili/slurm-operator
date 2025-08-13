@@ -40,6 +40,12 @@ helm install prometheus prometheus-community/kube-prometheus-stack \
 
 ### Slurm Operator
 
+Install the operator's CRDs from OCI package:
+
+```sh
+helm install slurm-operator-crds oci://ghcr.io/slinkyproject/charts/slurm-operator-crds
+```
+
 Download values and install the slurm-operator from OCI package.
 
 ```bash
