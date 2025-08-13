@@ -257,7 +257,9 @@ values-dev: ## Safely initialize values-dev.yaml files for Helm charts.
 
 .PHONY: manifests
 manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
+	rm -f config/crd/bases/*.yaml
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd:generateEmbeddedObjectMeta=true webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	rm -f helm/slurm-operator/crds/*.yaml
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd:generateEmbeddedObjectMeta=true webhook paths="./..." output:crd:artifacts:config=helm/slurm-operator/crds
 
 .PHONY: generate
