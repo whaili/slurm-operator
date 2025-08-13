@@ -199,6 +199,12 @@ delete Slinky CRDs, then install the new release like normal.
 
    helm --namespace=slurm uninstall slurm
    helm --namespace=slinky uninstall slurm-operator
+   helm --namespace=slinky uninstall slurm-operator-crds
+
+If the CRDs were not installed via ``slurm-operator-crds`` helm chart:
+
+.. code:: bash
+
    kubectl delete customresourcedefinitions.apiextensions.k8s.io accountings.slinky.slurm.net
    kubectl delete customresourcedefinitions.apiextensions.k8s.io clusters.slinky.slurm.net # defunct
    kubectl delete customresourcedefinitions.apiextensions.k8s.io loginsets.slinky.slurm.net

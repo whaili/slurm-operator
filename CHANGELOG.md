@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - Added disaggregated configuration for each sidecar, no longer overloading the
   authcred configuration.
 - Added liveness probe for Controller pod
+- Added slurm-operator-crds helm chart to manage CRDs.
 
 ### Fixed
 
