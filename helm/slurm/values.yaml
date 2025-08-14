@@ -194,6 +194,10 @@ controller:
     metadata: {}
       # annotations: {}
       # labels: {}
+    # -- Additional initContainers for the pod.
+    # Ref: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+    # Ref: https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/
+    initContainers: []
     # -- (map[string]string) Node label selector for pod assignment.
     # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
     nodeSelector:
@@ -250,6 +254,10 @@ restapi:
     metadata: {}
       # annotations: {}
       # labels: {}
+    # -- Additional initContainers for the pod.
+    # Ref: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+    # Ref: https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/
+    initContainers: []
     # -- (map[string]string) Node label selector for pod assignment.
     # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
     nodeSelector:
@@ -363,6 +371,10 @@ accounting:
     metadata: {}
       # annotations: {}
       # labels: {}
+    # -- Additional initContainers for the pod.
+    # Ref: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+    # Ref: https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/
+    initContainers: []
     # -- (map[string]string) Node label selector for pod assignment.
     # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
     nodeSelector:
@@ -455,6 +467,10 @@ loginsets:
       metadata: {}
         # annotations: {}
         # labels: {}
+      # -- Additional initContainers for the pod.
+      # Ref: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+      # Ref: https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/
+      initContainers: []
       # -- (map[string]string) Node label selector for pod assignment.
       # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
       nodeSelector:
@@ -560,6 +576,10 @@ nodesets:
       metadata: {}
         # annotations: {}
         # labels: {}
+      # -- Additional initContainers for the pod.
+      # Ref: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+      # Ref: https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/
+      initContainers: []
       # -- (map[string]string) Node label selector for pod assignment.
       # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
       nodeSelector:

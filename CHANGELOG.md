@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - Added liveness probe for Controller pod
 - Added slurm-operator-crds helm chart to manage CRDs.
 - Added slurm-operator helm chart options for CRDs.
+- Added `initContainers` to Slurm helm chart.
 
 ### Fixed
 
