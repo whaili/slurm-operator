@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
   metadata.
 - Added disaggregated configuration for each sidecar, no longer overloading the
   authcred configuration.
+- Added liveness probe for Controller pod
 
 ### Fixed
 

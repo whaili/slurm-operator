@@ -235,6 +235,15 @@ func slurmctldContainer(container slinkyv1alpha1.Container) corev1.Container {
 				},
 			},
 		},
+		LivenessProbe: &corev1.Probe{
+			ProbeHandler: corev1.ProbeHandler{
+				TCPSocket: &corev1.TCPSocketAction{
+					Port: intstr.FromInt(SlurmctldPort),
+				},
+			},
+			FailureThreshold: 6,
+			PeriodSeconds:    10,
+		},
 		SecurityContext: &corev1.SecurityContext{
 			RunAsNonRoot: ptr.To(true),
 			RunAsUser:    ptr.To(slurmUserUid),
