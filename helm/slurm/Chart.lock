@@ -1,6 +1,6 @@
 dependencies:
 - name: slurm-exporter
   repository: oci://ghcr.io/slinkyproject/charts
-  version: 0.3.0
-digest: sha256:0f2b727deffe39681a7a034b7bbb8a9a3e2e0df3bd774b3c31ba1b66defac1ee
-generated: "2025-06-18T10:17:50.987852968-04:00"
+  version: 0.3.1
+digest: sha256:ab900f9909fa76a2631ee3b8d0380d53b10ece72376e55adb7a6375b6a0eabcf
+generated: "2025-08-15T08:14:32.697315771-04:00"

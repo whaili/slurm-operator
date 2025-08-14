@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 - Fixed operator replicas being read form unintended values path.
 - Fixed race condition where a stale NodeSet pod status leads to the Slurm node
   being terminated instead of drained.
+- Fixed slurm-exporter chart dependency not being in lock-step with release.
 
 ### Changed
 

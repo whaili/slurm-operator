@@ -8,7 +8,7 @@ Helm Chart for Slurm HPC Workload Manager
 
 | Repository | Name | Version |
 |------------|------|---------|
-| oci://ghcr.io/slinkyproject/charts | slurm-exporter | ~0.3.0 |
+| oci://ghcr.io/slinkyproject/charts | slurm-exporter | 0.3.1 |
 
 ## Values
 
