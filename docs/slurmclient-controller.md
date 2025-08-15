@@ -1,10 +1,10 @@
-# Cluster Controller
+# Slurm Client Controller
 
 ## Table of Contents
 
 <!-- mdformat-toc start --slug=github --no-anchors --maxlevel=6 --minlevel=1 -->
 
-- [Cluster Controller](#cluster-controller)
+- [Slurm Client Controller](#slurm-client-controller)
   - [Table of Contents](#table-of-contents)
   - [Overview](#overview)
   - [Sequence Diagram](#sequence-diagram)
@@ -13,8 +13,8 @@
 
 ## Overview
 
-This controller is responsible for managing and reconciling the Cluster CRD. A
-CRD represents communication to a Slurm cluster via slurmrestd and `auth/jwt`.
+This controller is responsible for managing Slurm Clients used by other internal
+controllers.
 
 This controller uses the [Slurm client] library.
 
