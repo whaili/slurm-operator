@@ -251,3 +251,16 @@ limitations under the License.
    :target: ./go.mod
 .. |Last-Commit| image:: https://img.shields.io/github/last-commit/SlinkyProject/slurm-operator?style=for-the-badge
    :target: https://github.com/SlinkyProject/slurm-operator/commits/
+
+.. toctree::
+    :maxdepth: 2
+    :hidden:
+
+    architecture.md
+    autoscaling.md
+    develop.md
+    nodeset-controller.md
+    pyxis.md
+    quickstart.md
+    slurm.md
+    slurmclient-controller.md

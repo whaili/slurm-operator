@@ -200,10 +200,15 @@ $(HELM_DOCS): $(LOCALBIN)
 pandoc-bin: $(PANDOC) ## Download pandoc locally if necessary.
 $(PANDOC): $(LOCALBIN)
 	@if ! [ -f "$(PANDOC)" ]; then \
-		curl -sSLo $(PANDOC).tar.gz https://github.com/jgm/pandoc/releases/download/$(PANDOC_VERSION)/pandoc-$(PANDOC_VERSION)-$(shell go env GOOS)-$(shell go env GOARCH).tar.gz ;\
-		tar xvf $(PANDOC).tar.gz pandoc-$(PANDOC_VERSION)/bin/pandoc -C $(LOCALBIN) --strip-components=2 ;\
+		if [ "$(shell go env GOOS)" != "darwin" ]; then \
+			curl -sSLo $(PANDOC).tar.gz https://github.com/jgm/pandoc/releases/download/$(PANDOC_VERSION)/pandoc-$(PANDOC_VERSION)-$(shell go env GOOS)-$(shell go env GOARCH).tar.gz ;\
+			tar xv --directory=$(LOCALBIN) --file=$(PANDOC).tar.gz pandoc-$(PANDOC_VERSION)/bin/pandoc --strip-components=2 ;\
+		else \
+			curl -sSLo $(PANDOC).zip https://github.com/jgm/pandoc/releases/download/$(PANDOC_VERSION)/pandoc-$(PANDOC_VERSION)-$(shell go env GOARCH)-macOS.zip ;\
+			unzip -oqqjd $(LOCALBIN) $(PANDOC).zip ;\
+		fi ;\
 		mv $(LOCALBIN)/pandoc $(PANDOC) ;\
-		rm $(PANDOC).tar.gz ;\
+		rm -f $(PANDOC).tar.gz $(PANDOC).zip ;\
 	fi
 
 
@@ -263,6 +268,9 @@ generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and
 .PHONY: generate-docs
 generate-docs: pandoc-bin
 	$(PANDOC) --quiet README.md -o docs/index.rst
+	cat ./docs/_static/toc.rst >> docs/index.rst
+	printf '\n' >> docs/index.rst
+	find docs -type f -name "*.md" -exec basename {} \; | awk '{print "    "$$1}' | env LC_ALL=C sort >> docs/index.rst
 
 DOCS_IMAGE ?= $(REGISTRY)/sphinx
 
