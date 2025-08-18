@@ -22,6 +22,16 @@ SPDX-License-Identifier: Apache-2.0
   {{- $slurmdEnv := concat list ($nodeset.slurmd.env | default list) $envLimts -}}
   {{- $_ := set $nodeset.slurmd "env" $slurmdEnv -}}
 {{- end }}{{- /* if $nodeset.useResourceLimits */}}
+{{- if and (include "vendor.dcgm.enabled" $) (include "vendor.dcgm.nodesetHasGPU" $nodeset.slurmd) }}
+  {{- $volumeMounts := $nodeset.slurmd.volumeMounts | default list -}}
+  {{- $dcgmVolumeMount := dict "name" "dcgm-job-mapping" "mountPath" (include "vendor.dcgm.jobMappingDir" $) }}
+  {{- $volumeMounts = append $volumeMounts $dcgmVolumeMount }}
+  {{- $_ := set $nodeset.slurmd "volumeMounts" $volumeMounts -}}
+  {{- $volumes := $nodeset.podSpec.volumes | default list -}}
+  {{- $dcgmVolume := dict "name" "dcgm-job-mapping" "hostPath" (dict "path" (include "vendor.dcgm.jobMappingDir" $) "type" "DirectoryOrCreate") }}
+  {{- $volumes = append $volumes $dcgmVolume }}
+  {{- $_ := set $nodeset.podSpec "volumes" $volumes -}}
+{{- end }}
 ---
 apiVersion: slinky.slurm.net/v1alpha1
 kind: NodeSet

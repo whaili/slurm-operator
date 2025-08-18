@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 - Added `initContainers` to Slurm helm chart.
 - Added the Token CRD to define a secret containing a JWT, generated from an
   HS256 Key.
+- Added `NVIDIA/dcgm-exporter` integration to Slurm helm chart.
 
 ### Fixed
 
