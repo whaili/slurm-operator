@@ -72,7 +72,7 @@ designed for the lifecycle (creation, upgrade, graceful shutdown) of
 Slurm clusters.
 
 For additional architectural notes, see the
-`architecture <./docs/architecture.md>`__ docs.
+`architecture <architecture.html>`__ docs.
 
 Slurm Cluster
 ~~~~~~~~~~~~~
@@ -82,7 +82,7 @@ Our Slurm helm chart provides a reference implementation that is highly
 customizable and tries to expose everything Slurm has to offer.
 
 For additional information about Slurm, see the
-`slurm <./docs/slurm.md>`__ docs.
+`slurm <slurm.html>`__ docs.
 
 Features
 --------
@@ -182,7 +182,7 @@ Install a Slurm cluster:
      --namespace=slurm --create-namespace
 
 For additional instructions, see the
-`quickstart <./docs/quickstart.md>`__ guide.
+`quickstart <quickstart.html>`__ guide.
 
 Upgrades
 --------
@@ -205,8 +205,8 @@ delete Slinky CRDs, then install the new release like normal.
 Documentation
 -------------
 
-Project documentation is located in the `docs <./docs/>`__ directory of
-this repository.
+Project documentation is located in the docs directory of this
+repository.
 
 Slinky documentation can be found
 `here <https://slinky.schedmd.com/docs/>`__.

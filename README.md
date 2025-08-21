@@ -164,7 +164,7 @@ kubectl delete nodesets.slinky.slurm.net
 
 ## Documentation
 
-Project documentation is located in the [docs] directory of this repository.
+Project documentation is located in the docs directory of this repository.
 
 Slinky documentation can be found [here][slinky-docs].
 
@@ -198,7 +198,6 @@ specific language governing permissions and limitations under the License.
 [contact-schedmd]: https://www.schedmd.com/slurm-resources/contact-schedmd/
 [crds]: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#customresourcedefinitions
 [custom-controllers]: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#custom-controllers
-[docs]: ./docs/
 [kubernetes]: https://kubernetes.io/
 [quickstart]: ./docs/quickstart.md
 [schedmd]: https://schedmd.com/
