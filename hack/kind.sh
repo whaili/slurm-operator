@@ -202,7 +202,7 @@ function slurm-operator::skaffold() {
 	slurm-operator::prerequisites
 	(
 		cd "$ROOT_DIR"/helm/slurm-operator
-		skaffold run
+		skaffold run -p dev
 	)
 }
 
