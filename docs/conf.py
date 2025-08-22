@@ -13,7 +13,7 @@ author = 'SchedMD'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ["myst_parser", "sphinx_design", "sphinx_copybutton"]
+extensions = ["myst_parser", "sphinx_design", "sphinx_copybutton", "sphinxmermaid"]
 myst_enable_extensions = ["colon_fence"]
 myst_fence_as_directive = ["mermaid"]
 
@@ -26,3 +26,4 @@ exclude_patterns = []
 html_theme = "sphinx_rtd_theme"
 html_logo = "_static/images/slinky.svg"
 html_show_sourcelink = False
+html_static_path = ['_static']
