@@ -202,7 +202,7 @@ specific language governing permissions and limitations under the License.
 [quickstart]: ./docs/quickstart.md
 [schedmd]: https://schedmd.com/
 [slinky]: https://slinky.ai/
-[slinky-docs]: https://slinky.schedmd.com/docs/
+[slinky-docs]: https://slinky.schedmd.com/
 [slurm]: https://slurm.schedmd.com/overview.html
 [slurm-accounting]: https://slurm.schedmd.com/accounting.html
 [slurm-arch]: https://slurm.schedmd.com/quickstart.html#arch

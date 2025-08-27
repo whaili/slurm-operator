@@ -209,7 +209,7 @@ Project documentation is located in the docs directory of this
 repository.
 
 Slinky documentation can be found
-`here <https://slinky.schedmd.com/docs/>`__.
+`here <https://slinky.schedmd.com/>`__.
 
 Support and Development
 -----------------------
