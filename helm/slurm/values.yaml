@@ -164,7 +164,7 @@ controller:
   extraConf: null
   # -- (map[string]string \| map[string][]string) Extra Slurm configuration lines appended to `slurm.conf`.
   # If `extraConf` is not empty, it takes precedence.
-  # Ref: https://slurm.schedmd.com/slurmdbd.conf.html
+  # Ref: https://slurm.schedmd.com/slurm.conf.html
   extraConfMap: {}
     # DebugFlags: []
     # MinJobAge: 2
@@ -333,7 +333,7 @@ accounting:
       name: mariadb-password
       key: password
   # -- Extra Slurm configuration lines appended to `slurmdbd.conf`.
-  # Ref: https://slurm.schedmd.com/slurm.conf.html
+  # Ref: https://slurm.schedmd.com/slurmdbd.conf.html
   extraConf: null
   # -- (map[string]string \| map[string][]string) Extra Slurm configuration lines appended to `slurmdbd.conf`.
   # If `extraConf` is not empty, it takes precedence.
