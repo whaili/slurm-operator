@@ -105,4 +105,4 @@ Learn more about Slurm:
 
 Learn more about Slinky:
   - Overview: https://www.schedmd.com/slinky/why-slinky/
-  - Documentation: https://slinky.schedmd.com/docs/
+  - Documentation: https://slinky.schedmd.com
