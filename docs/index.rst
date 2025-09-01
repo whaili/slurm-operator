@@ -275,3 +275,4 @@ limitations under the License.
     quickstart.md
     slurm.md
     slurmclient-controller.md
+    workload-isolation.md
