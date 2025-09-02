@@ -185,6 +185,22 @@ function slurm::skaffold() {
 	)
 }
 
+function slurm-operator-crds::helm() {
+	local helm_release="slurm-operator-crds"
+	if [ "$(helm list --all-namespaces --short --filter="$helm_release" | wc -l)" -eq 0 ]; then
+		helm install "$helm_release" "$ROOT_DIR"/helm/slurm-operator-crds/
+	else
+		echo "WARNING: helm release '$helm_release' exists. Skipping."
+	fi
+}
+
+function slurm-operator-crds::skaffold() {
+	(
+		cd "$ROOT_DIR"/helm/slurm-operator-crds
+		skaffold run
+	)
+}
+
 function slurm-operator::prerequisites() {
 	helm repo add jetstack https://charts.jetstack.io
 	helm repo update
@@ -225,7 +241,8 @@ function main::help() {
 $(basename "$0") - Manage a kind cluster for local testing/development
 
 	usage: $(basename "$0") [--create|--delete] [--config=KIND_CONFIG_PATH]
-	        [--install|--uninstall] [--operator] [--slurm] [--helm]
+	        [--install|--uninstall] [--operator] [--operator-crds] [--slurm]
+	        [--helm]
 	        [-h|--help] [KIND_CLUSTER_NAME]
 
 ONESHOT OPTIONS:
@@ -238,6 +255,7 @@ OPTIONS:
 	--config=PATH       Use the specified kind config when creating.
 	--helm              Deploy with helm instead of skaffold.
 	--operator          Deploy helm/slurm-operator with skaffold.
+	--operator-crds     Deploy helm/slurm-operator-crds with skaffold.
 	--slurm             Deploy helm/slurm with skaffold.
 	--extras            Install optional dependencies.
 
@@ -270,6 +288,13 @@ function main() {
 		helm::install
 		return
 	fi
+	if $FLAG_OPERATOR_CRDS; then
+		if $FLAG_HELM; then
+			slurm-operator-crds::helm
+		else
+			slurm-operator-crds::skaffold
+		fi
+	fi
 	if $FLAG_OPERATOR; then
 		if $FLAG_HELM; then
 			slurm-operator::helm
@@ -295,10 +320,11 @@ FLAG_INSTALL=false
 FLAG_UNINSTALL=false
 FLAG_SLURM=false
 FLAG_OPERATOR=false
+FLAG_OPERATOR_CRDS=false
 FLAG_EXTRAS=false
 
 SHORT="+h"
-LONG="create,config:,delete,debug,helm,slurm,operator,install,extras,uninstall,help"
+LONG="create,config:,delete,debug,helm,slurm,operator,operator-crds,install,extras,uninstall,help"
 OPTS="$(getopt -a --options "$SHORT" --longoptions "$LONG" -- "$@")"
 eval set -- "${OPTS}"
 while :; do
@@ -337,6 +363,10 @@ while :; do
 		;;
 	--operator)
 		FLAG_OPERATOR=true
+		shift
+		;;
+	--operator-crds)
+		FLAG_OPERATOR_CRDS=true
 		shift
 		;;
 	--install)
