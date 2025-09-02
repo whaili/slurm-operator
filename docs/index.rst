@@ -199,8 +199,11 @@ delete Slinky CRDs, then install the new release like normal.
 
    helm --namespace=slurm uninstall slurm
    helm --namespace=slinky uninstall slurm-operator
-   kubectl delete clusters.slinky.slurm.net
-   kubectl delete nodesets.slinky.slurm.net
+   kubectl delete customresourcedefinitions.apiextensions.k8s.io accountings.slinky.slurm.net
+   kubectl delete customresourcedefinitions.apiextensions.k8s.io clusters.slinky.slurm.net # defunct
+   kubectl delete customresourcedefinitions.apiextensions.k8s.io loginsets.slinky.slurm.net
+   kubectl delete customresourcedefinitions.apiextensions.k8s.io nodesets.slinky.slurm.net
+   kubectl delete customresourcedefinitions.apiextensions.k8s.io restapis.slinky.slurm.net
 
 Documentation
 -------------
