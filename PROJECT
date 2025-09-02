@@ -23,7 +23,7 @@ resources:
   webhooks:
     defaulting: true
     validation: true
-    webhookVersion: v1
+    webhookVersion: v1alpha1
 - api:
     crdVersion: v1alpha1
     namespaced: true
@@ -36,7 +36,7 @@ resources:
   webhooks:
     defaulting: true
     validation: true
-    webhookVersion: v1
+    webhookVersion: v1alpha1
 - api:
     crdVersion: v1alpha1
     namespaced: true
@@ -49,7 +49,7 @@ resources:
   webhooks:
     defaulting: true
     validation: true
-    webhookVersion: v1
+    webhookVersion: v1alpha1
 - api:
     crdVersion: v1alpha1
     namespaced: true
@@ -62,7 +62,7 @@ resources:
   webhooks:
     defaulting: true
     validation: true
-    webhookVersion: v1
+    webhookVersion: v1alpha1
 - api:
     crdVersion: v1alpha1
     namespaced: true
@@ -75,7 +75,7 @@ resources:
   webhooks:
     defaulting: true
     validation: true
-    webhookVersion: v1
+    webhookVersion: v1alpha1
 - api:
     crdVersion: v1alpha1
     namespaced: true
