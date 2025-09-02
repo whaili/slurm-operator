@@ -104,6 +104,8 @@ function helm::uninstall() {
 		"metrics-server"
 		"prometheus"
 		"cert-manager"
+		"mariadb"
+		"nfs"
 	)
 	for name in "${namespace[@]}"; do
 		if [ "$(helm --namespace="$name" list --all --short | wc -l)" -gt 0 ]; then
@@ -126,38 +128,25 @@ function slurm::prerequisites() {
 	fi
 	helm repo update
 
-	local prometheus="prometheus"
-	if [ "$(helm list --all-namespaces --short --filter="$prometheus" | wc -l)" -eq 0 ]; then
-		helm install "$prometheus" prometheus-community/kube-prometheus-stack \
-			--namespace "$prometheus" --create-namespace --set installCRDs=true \
-			--set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
+	helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
+		--namespace prometheus --create-namespace \
+		--set installCRDs=true \
+		--set 'prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false'
 
-	fi
-	local metrics="metrics-server"
-	if [ "$(helm list --all-namespaces --short --filter="$metrics" | wc -l)" -eq 0 ]; then
-		helm install "$metrics" metrics-server/metrics-server \
-			--set args="{--kubelet-insecure-tls}" \
-			--namespace "$metrics" --create-namespace
-	fi
-	local mariadbOperator="mariadb-operator"
-	if [ "$(helm list --all-namespaces --short --filter="$mariadbOperator" | wc -l)" -eq 0 ]; then
-		local ns="mariadb"
-		helm install mariadb-operator-crds mariadb-operator/mariadb-operator-crds \
-			--namespace "$ns" --create-namespace
-		helm install "$mariadbOperator" mariadb-operator/mariadb-operator \
-			--namespace "$ns" --create-namespace
-	fi
+	helm upgrade --install metrics-server metrics-server/metrics-server \
+		--namespace metrics-server --create-namespace \
+		--set args="{--kubelet-insecure-tls}"
+
+	helm upgrade --install mariadb-operator mariadb-operator/mariadb-operator \
+		--namespace mariadb --create-namespace \
+		--set 'crds.enabled=true'
+
 	if $FLAG_EXTRAS; then
-		local keda="keda"
-		if [ "$(helm list --all-namespaces --short --filter="$keda" | wc -l)" -eq 0 ]; then
-			helm install "$keda" kedacore/keda \
-				--namespace "$keda" --create-namespace
-		fi
-		local nfsServer="nfs-server-provisioner"
-		if [ "$(helm list --all-namespaces --short --filter="$nfsServer" | wc -l)" -eq 0 ]; then
-			helm install "$nfsServer" nfs-server-provisioner/nfs-server-provisioner \
-				--namespace=kube-system --create-namespace
-		fi
+		helm upgrade --install keda kedacore/keda \
+			--namespace keda --create-namespace
+
+		helm upgrade --install nfs-server-provisioner nfs-server-provisioner/nfs-server-provisioner \
+			--namespace nfs --create-namespace
 	fi
 }
 
@@ -169,12 +158,8 @@ function slurm::helm() {
 		echo "ERROR: Missing values file: $slurm_values_yaml"
 		exit 1
 	fi
-	local helm_release="slurm"
-	if [ "$(helm list --all-namespaces --short --filter="$helm_release" | wc -l)" -eq 0 ]; then
-		helm install "$helm_release" "$ROOT_DIR"/helm/slurm/ -f "$slurm_values_yaml"
-	else
-		echo "WARNING: helm release '$helm_release' exists. Skipping."
-	fi
+	helm upgrade --install slurm "$ROOT_DIR"/helm/slurm/ \
+		-f "$slurm_values_yaml"
 }
 
 function slurm::skaffold() {
@@ -186,12 +171,8 @@ function slurm::skaffold() {
 }
 
 function slurm-operator-crds::helm() {
-	local helm_release="slurm-operator-crds"
-	if [ "$(helm list --all-namespaces --short --filter="$helm_release" | wc -l)" -eq 0 ]; then
-		helm install "$helm_release" "$ROOT_DIR"/helm/slurm-operator-crds/
-	else
-		echo "WARNING: helm release '$helm_release' exists. Skipping."
-	fi
+	helm upgrade --install slurm-operator-crds "$ROOT_DIR"/helm/slurm-operator-crds/ \
+		--namespace slinky --create-namespace
 }
 
 function slurm-operator-crds::skaffold() {
@@ -205,11 +186,9 @@ function slurm-operator::prerequisites() {
 	helm repo add jetstack https://charts.jetstack.io
 	helm repo update
 
-	local certManager="cert-manager"
-	if [ "$(helm list --all-namespaces --short --filter="$certManager" | wc -l)" -eq 0 ]; then
-		helm install "$certManager" jetstack/cert-manager \
-			--namespace "$certManager" --create-namespace --set crds.enabled=true
-	fi
+	helm upgrade --install cert-manager jetstack/cert-manager \
+		--namespace cert-manager --create-namespace \
+		--set 'crds.enabled=true'
 }
 
 function slurm-operator::helm() {
@@ -220,12 +199,9 @@ function slurm-operator::helm() {
 		echo "ERROR: Missing values file: $slurm_values_yaml"
 		exit 1
 	fi
-	local helm_release="slurm-operator"
-	if [ "$(helm list --all-namespaces --short --filter="$helm_release" | wc -l)" -eq 0 ]; then
-		helm install "$helm_release" "$ROOT_DIR"/helm/slurm-operator/ -f "$slurm_values_yaml"
-	else
-		echo "WARNING: helm release '$helm_release' exists. Skipping."
-	fi
+	helm upgrade --install slurm-operator "$ROOT_DIR"/helm/slurm-operator/ \
+		--namespace slinky --create-namespace \
+		-f "$slurm_values_yaml"
 }
 
 function slurm-operator::skaffold() {
