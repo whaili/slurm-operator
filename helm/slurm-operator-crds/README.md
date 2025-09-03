@@ -4,3 +4,15 @@
 
 Slurm Operator CRDs
 
+**Homepage:** <https://slinky.schedmd.com/>
+
+## Maintainers
+
+| Name | Email | Url |
+| ---- | ------ | --- |
+| SchedMD LLC. | <slinky@schedmd.com> | <https://support.schedmd.com/> |
+
+## Source Code
+
+* <https://github.com/SlinkyProject/slurm-operator>
+
