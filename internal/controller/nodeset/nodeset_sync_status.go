@@ -36,6 +36,10 @@ func (r *NodeSetReconciler) syncStatus(
 	hash string,
 	errors ...error,
 ) error {
+	if err := r.slurmControl.RefreshNodeCache(ctx, nodeset); err != nil {
+		errors = append(errors, err)
+	}
+
 	if err := r.syncSlurmStatus(ctx, nodeset, pods); err != nil {
 		errors = append(errors, err)
 	}

@@ -30,6 +30,8 @@ import (
 )
 
 type SlurmControlInterface interface {
+	// RefreshNodeCache forces the Node cache to be refreshed
+	RefreshNodeCache(ctx context.Context, nodeset *slinkyv1alpha1.NodeSet) error
 	// UpdateNodeWithPodInfo handles updating the Node with its pod info
 	UpdateNodeWithPodInfo(ctx context.Context, nodeset *slinkyv1alpha1.NodeSet, pod *corev1.Pod) error
 	// MakeNodeDrain handles adding the DRAIN state to the slurm node.
@@ -305,8 +307,7 @@ func (r *realSlurmControl) CalculateNodeStatus(ctx context.Context, nodeset *sli
 	}
 
 	nodeList := &slurmtypes.V0043NodeList{}
-	opts := &slurmclient.ListOptions{RefreshCache: true}
-	if err := slurmClient.List(ctx, nodeList, opts); err != nil {
+	if err := slurmClient.List(ctx, nodeList); err != nil {
 		if tolerateError(err) {
 			return status, nil
 		}
