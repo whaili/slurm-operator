@@ -31,6 +31,7 @@ import (
 	"github.com/SlinkyProject/slurm-operator/internal/utils/historycontrol"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/mathutils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/podcontrol"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/podutils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/structutils"
 )
 
@@ -251,7 +252,7 @@ func (r *NodeSetReconciler) syncSlurm(
 			return err
 		}
 
-		if utils.IsPodCordon(pod) {
+		if podutils.IsPodCordon(pod) {
 			reason := fmt.Sprintf("Pod (%s) is cordoned", klog.KObj(pod))
 			if err := r.slurmControl.MakeNodeDrain(ctx, nodeset, pod, reason); err != nil {
 				return err
@@ -503,7 +504,7 @@ func (r *NodeSetReconciler) processCondemned(
 		return err
 	}
 
-	if utils.IsTerminating(pod) {
+	if podutils.IsTerminating(pod) {
 		logger.V(3).Info("NodeSet Pod is terminating, skipping further processing",
 			"pod", klog.KObj(pod))
 		return nil
@@ -514,7 +515,7 @@ func (r *NodeSetReconciler) processCondemned(
 		return err
 	}
 
-	if utils.IsRunning(pod) && !isDrained {
+	if podutils.IsRunning(pod) && !isDrained {
 		logger.V(2).Info("NodeSet Pod is draining, pending termination for scale-in",
 			"pod", klog.KObj(pod))
 		// Decrement expectations and requeue reconcile because the Slurm node is not drained yet.
@@ -581,8 +582,8 @@ func (r *NodeSetReconciler) processReplica(
 	// (e.g. terminated on node reboot) is determined by the exit code of the
 	// container, not by the reason for pod termination. We should restart the
 	// pod regardless of the exit code.
-	if utils.IsFailed(pod) || utils.IsSucceeded(pod) {
-		if !utils.IsTerminating(pod) {
+	if podutils.IsFailed(pod) || podutils.IsSucceeded(pod) {
+		if !podutils.IsTerminating(pod) {
 			if err := r.podControl.DeleteNodeSetPod(ctx, nodeset, pod); err != nil {
 				return err
 			}
@@ -619,7 +620,7 @@ func (r *NodeSetReconciler) makePodCordon(
 ) error {
 	logger := log.FromContext(ctx)
 
-	if utils.IsPodCordon(pod) {
+	if podutils.IsPodCordon(pod) {
 		return nil
 	}
 
@@ -658,7 +659,7 @@ func (r *NodeSetReconciler) makePodUncordonAndUndrain(
 func (r *NodeSetReconciler) makePodUncordon(ctx context.Context, pod *corev1.Pod) error {
 	logger := log.FromContext(ctx)
 
-	if !utils.IsPodCordon(pod) {
+	if !podutils.IsPodCordon(pod) {
 		return nil
 	}
 
@@ -767,7 +768,7 @@ func (r *NodeSetReconciler) splitUpdatePods(
 // findUpdatedPods looks at non-deleted pods and returns two lists, new and old pods, given the hash.
 func findUpdatedPods(pods []*corev1.Pod, hash string) (newPods, oldPods []*corev1.Pod) {
 	for _, pod := range pods {
-		if utils.IsTerminating(pod) {
+		if podutils.IsTerminating(pod) {
 			continue
 		}
 		if historycontrol.GetRevision(pod.GetLabels()) == hash {

@@ -42,8 +42,8 @@ import (
 	"github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/podcontrol"
 	"github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/slurmcontrol"
 	nodesetutils "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/utils"
-	"github.com/SlinkyProject/slurm-operator/internal/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/historycontrol"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/podutils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/structutils"
 )
 
@@ -102,7 +102,7 @@ func newNodeSetPodSlurmNode(pod *corev1.Pod) *slurmtypes.V0043Node {
 		},
 	}
 	switch {
-	case utils.IsPending(pod):
+	case podutils.IsPending(pod):
 		node.State = nil
 	default:
 		node.State = ptr.To([]api.V0043NodeState{api.V0043NodeStateIDLE})
@@ -1037,7 +1037,7 @@ func TestNodeSetReconciler_makePodCordonAndDrain(t *testing.T) {
 					t.Errorf("client.Get() error = %v", err)
 				}
 			} else if !tt.wantErr {
-				if ok := utils.IsPodCordon(gotPod); !ok {
+				if ok := podutils.IsPodCordon(gotPod); !ok {
 					t.Errorf("IsPodCordon() = %v", ok)
 				}
 			}
@@ -1137,7 +1137,7 @@ func TestNodeSetReconciler_makePodCordon(t *testing.T) {
 					t.Errorf("client.Get() error = %v", err)
 				}
 			} else if !tt.wantErr {
-				if ok := utils.IsPodCordon(gotPod); !ok {
+				if ok := podutils.IsPodCordon(gotPod); !ok {
 					t.Errorf("IsPodCordon() = %v", ok)
 				}
 			}
@@ -1285,7 +1285,7 @@ func TestNodeSetReconciler_makePodUncordonAndUndrain(t *testing.T) {
 					t.Errorf("client.Get() error = %v", err)
 				}
 			} else if !tt.wantErr {
-				if ok := utils.IsPodCordon(gotPod); ok {
+				if ok := podutils.IsPodCordon(gotPod); ok {
 					t.Errorf("IsPodCordon() = %v", ok)
 				}
 			}
@@ -1383,7 +1383,7 @@ func TestNodeSetReconciler_makePodUncordon(t *testing.T) {
 					t.Errorf("client.Get() error = %v", err)
 				}
 			} else if !tt.wantErr {
-				if ok := utils.IsPodCordon(gotPod); ok {
+				if ok := podutils.IsPodCordon(gotPod); ok {
 					t.Errorf("IsPodCordon() = %v", ok)
 				}
 			}

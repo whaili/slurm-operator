@@ -25,8 +25,8 @@ import (
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	nodesetutils "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/utils"
-	"github.com/SlinkyProject/slurm-operator/internal/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/podcontrol"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/podutils"
 )
 
 const (
@@ -375,12 +375,12 @@ func isClaimOwnerUpToDate(logger klog.Logger, claim *corev1.PersistentVolumeClai
 		if hasOwnerRef(claim, nodeset) {
 			return false
 		}
-		podScaledDown := utils.IsPodCordon(pod)
+		podScaledDown := podutils.IsPodCordon(pod)
 		if podScaledDown != hasOwnerRef(claim, pod) {
 			return false
 		}
 	case policy.WhenDeleted == delete && policy.WhenScaled == delete:
-		podScaledDown := utils.IsPodCordon(pod)
+		podScaledDown := podutils.IsPodCordon(pod)
 		// If a pod is scaled down, there should be no nodeset ref and a pod ref;
 		// if the pod is not scaled down it's the other way around.
 		if podScaledDown == hasOwnerRef(claim, nodeset) {
@@ -483,12 +483,12 @@ func updateClaimOwnerRefForSetAndPod(logger klog.Logger, claim *corev1.Persisten
 	case policy.WhenScaled == retain && policy.WhenDeleted == delete:
 		refs = addControllerRef(refs, nodeset, slinkyv1alpha1.NodeSetGVK)
 	case policy.WhenScaled == delete && policy.WhenDeleted == retain:
-		podScaledDown := utils.IsPodCordon(pod)
+		podScaledDown := podutils.IsPodCordon(pod)
 		if podScaledDown {
 			refs = addControllerRef(refs, pod, podGVK)
 		}
 	case policy.WhenScaled == delete && policy.WhenDeleted == delete:
-		podScaledDown := utils.IsPodCordon(pod)
+		podScaledDown := podutils.IsPodCordon(pod)
 		if podScaledDown {
 			refs = addControllerRef(refs, pod, podGVK)
 		}

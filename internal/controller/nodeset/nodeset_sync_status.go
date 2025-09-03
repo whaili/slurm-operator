@@ -29,6 +29,7 @@ import (
 	"github.com/SlinkyProject/slurm-operator/internal/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/historycontrol"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/mathutils"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/podutils"
 	slurmconditions "github.com/SlinkyProject/slurm-operator/pkg/utils/conditions"
 )
 
@@ -69,7 +70,7 @@ func (r *NodeSetReconciler) syncSlurmStatus(
 ) error {
 	syncSlurmStatusFn := func(i int) error {
 		pod := pods[i]
-		if !utils.IsHealthy(pod) {
+		if !podutils.IsHealthy(pod) {
 			return nil
 		}
 		return r.slurmControl.UpdateNodeWithPodInfo(ctx, nodeset, pod)
@@ -160,18 +161,18 @@ func (r *NodeSetReconciler) calculateReplicaStatus(
 	now := metav1.Now()
 	for _, pod := range pods {
 		// Count the Replicas
-		if utils.IsCreated(pod) {
+		if podutils.IsCreated(pod) {
 			status.Replicas++
 		}
 		// Count the Ready and Available replicas
-		if utils.IsRunningAndReady(pod) {
+		if podutils.IsRunningAndReady(pod) {
 			status.Ready++
 			if podutil.IsPodAvailable(pod, nodeset.Spec.MinReadySeconds, now) {
 				status.Available++
 			}
 		}
 		// Count the Current and Updated replicas
-		if utils.IsCreated(pod) && !utils.IsTerminating(pod) {
+		if podutils.IsCreated(pod) && !podutils.IsTerminating(pod) {
 			podHash := historycontrol.GetRevision(pod.GetLabels())
 			curRevHash := historycontrol.GetRevision(currentRevision.GetLabels())
 			newRevHash := historycontrol.GetRevision(updateRevision.GetLabels())

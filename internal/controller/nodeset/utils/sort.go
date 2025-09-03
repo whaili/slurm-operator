@@ -13,8 +13,8 @@ import (
 	podutil "k8s.io/kubernetes/pkg/api/v1/pod"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
-	"github.com/SlinkyProject/slurm-operator/internal/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/mathutils"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/podutils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/structutils"
 )
 
@@ -155,7 +155,7 @@ func (o PodsByCreationTimestamp) Less(i, j int) bool {
 func SplitUnhealthyPods(pods []*corev1.Pod) (unhealthyPods, healthyPods []*corev1.Pod) {
 	var numUnhealthy int
 	for _, pod := range pods {
-		if !utils.IsHealthy(pod) {
+		if !podutils.IsHealthy(pod) {
 			numUnhealthy++
 		}
 	}
