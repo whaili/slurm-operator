@@ -42,7 +42,7 @@ jwtHs256KeyRef: {}
 # Ref: https://slurm.schedmd.com/slurm.conf.html#OPT_ClusterName
 clusterName: null
 
-# -- (map[string]string) Extra Slurm config files to be mounted.
+# -- (map[string]string) Extra Slurm config files to be mounted to `/etc/slurm`.
 # Ref: https://slurm.schedmd.com/man_index.html#configuration_files
 configFiles: {}
   # Ref: https://slurm.schedmd.com/cgroup.conf.html
