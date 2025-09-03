@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
   HS256 Key.
 - Added `NVIDIA/dcgm-exporter` integration to Slurm helm chart.
 - Added conditions to slurmd pods to reflect Slurm node state
+- Added helm chart `kubeVersion` requirements.
 
 ### Fixed
 

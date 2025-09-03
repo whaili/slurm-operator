@@ -6,6 +6,8 @@ Helm Chart for Slurm HPC Workload Manager Operator
 
 ## Requirements
 
+Kubernetes: `>= 1.29`
+
 | Repository | Name | Version |
 |------------|------|---------|
 | file://../slurm-operator-crds | slurm-operator-crds | 0.4.0 |

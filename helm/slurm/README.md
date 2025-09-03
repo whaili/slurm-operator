@@ -6,6 +6,8 @@ Helm Chart for Slurm HPC Workload Manager
 
 ## Requirements
 
+Kubernetes: `>= 1.29`
+
 | Repository | Name | Version |
 |------------|------|---------|
 | oci://ghcr.io/slinkyproject/charts | slurm-exporter | 0.3.1 |
