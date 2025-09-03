@@ -28,6 +28,7 @@ import (
 	nodesetutils "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/historycontrol"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/mathutils"
 	slurmconditions "github.com/SlinkyProject/slurm-operator/pkg/utils/conditions"
 )
 
@@ -183,7 +184,7 @@ func (r *NodeSetReconciler) calculateReplicaStatus(
 		}
 	}
 	// Infer the Unavailable replicas
-	status.Unavailable = utils.Clamp(status.Replicas-status.Available, 0, status.Replicas)
+	status.Unavailable = mathutils.Clamp(status.Replicas-status.Available, 0, status.Replicas)
 
 	return status
 }

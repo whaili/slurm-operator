@@ -14,6 +14,7 @@ import (
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/utils"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/mathutils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/structutils"
 )
 
@@ -120,7 +121,7 @@ func afterOrZero(t1, t2 time.Time) bool {
 
 // SplitActivePods returns two list of pods partitioned by a number.
 func SplitActivePods(pods []*corev1.Pod, partition int) (pods1, pods2 []*corev1.Pod) {
-	pivot := utils.Clamp(partition, 0, len(pods))
+	pivot := mathutils.Clamp(partition, 0, len(pods))
 
 	pods1 = make([]*corev1.Pod, pivot)
 	pods2 = make([]*corev1.Pod, len(pods)-pivot)

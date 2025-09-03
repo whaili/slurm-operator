@@ -8,7 +8,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/SlinkyProject/slurm-operator/internal/utils"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/mathutils"
 	jwt "github.com/golang-jwt/jwt/v5"
 	"k8s.io/apimachinery/pkg/util/uuid"
 )
@@ -36,7 +36,7 @@ func NewToken(signingKey []byte) *Token {
 }
 
 func (t *Token) WithLifetime(lifetime time.Duration) *Token {
-	t.lifetime = utils.Clamp(lifetime, 0, infinite*time.Second)
+	t.lifetime = mathutils.Clamp(lifetime, 0, infinite*time.Second)
 	return t
 }
 

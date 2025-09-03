@@ -29,6 +29,7 @@ import (
 	nodesetutils "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/historycontrol"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/mathutils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/podcontrol"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/structutils"
 )
@@ -323,7 +324,7 @@ func (r *NodeSetReconciler) doPodScaleOut(
 		return err
 	}
 
-	numCreate = utils.Clamp(numCreate, 0, burstReplicas)
+	numCreate = mathutils.Clamp(numCreate, 0, burstReplicas)
 
 	usedOrdinals := set.New[int]()
 	for _, pod := range pods {
@@ -440,7 +441,7 @@ func (r *NodeSetReconciler) doPodScaleIn(
 		return err
 	}
 
-	numDelete := utils.Clamp(len(podsToDelete), 0, burstReplicas)
+	numDelete := mathutils.Clamp(len(podsToDelete), 0, burstReplicas)
 
 	// Snapshot the UIDs (namespace/name) of the pods we're expecting to see
 	// deleted, so we know to record their expectations exactly once either
@@ -745,8 +746,8 @@ func (r *NodeSetReconciler) splitUpdatePods(
 		}
 
 		total := int(ptr.Deref(nodeset.Spec.Replicas, 0))
-		maxUnavailable := utils.GetScaledValueFromIntOrPercent(nodeset.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable, total, true, 1)
-		remainingUnavailable := utils.Clamp((maxUnavailable - numUnavailable), 0, maxUnavailable)
+		maxUnavailable := mathutils.GetScaledValueFromIntOrPercent(nodeset.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable, total, true, 1)
+		remainingUnavailable := mathutils.Clamp((maxUnavailable - numUnavailable), 0, maxUnavailable)
 		podsToDelete, remainingOldPods := nodesetutils.SplitActivePods(oldPods, remainingUnavailable)
 
 		remainingPods := make([]*corev1.Pod, len(newPods))
