@@ -6,6 +6,7 @@ package builder
 import (
 	_ "embed"
 	"fmt"
+	"path"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -140,7 +141,7 @@ func (b *Builder) controllerPodTemplate(controller *slinkyv1alpha1.Controller) (
 			AutomountServiceAccountToken: ptr.To(false),
 			Affinity:                     template.Affinity,
 			Containers: []corev1.Container{
-				b.slurmctldContainer(spec.Slurmctld.Container),
+				b.slurmctldContainer(spec.Slurmctld.Container, controller.ClusterName()),
 				b.reconfigureContainer(spec.Reconfigure),
 			},
 			Hostname: template.Hostname,
@@ -228,7 +229,11 @@ func controllerVolumes(controller *slinkyv1alpha1.Controller, extra []string) []
 	return out
 }
 
-func (b *Builder) slurmctldContainer(merge corev1.Container) corev1.Container {
+func clusterSpoolDir(clustername string) string {
+	return path.Join(slurmctldSpoolDir, clustername)
+}
+
+func (b *Builder) slurmctldContainer(merge corev1.Container, clusterName string) corev1.Container {
 	opts := ContainerOpts{
 		base: corev1.Container{
 			Name: labels.ControllerApp,
@@ -272,7 +277,7 @@ func (b *Builder) slurmctldContainer(merge corev1.Container) corev1.Container {
 			VolumeMounts: []corev1.VolumeMount{
 				{Name: slurmEtcVolume, MountPath: slurmEtcDir, ReadOnly: true},
 				{Name: slurmPidFileVolume, MountPath: slurmPidFileDir},
-				{Name: slurmctldStateSaveVolume, MountPath: slurmctldSpoolDir},
+				{Name: slurmctldStateSaveVolume, MountPath: clusterSpoolDir(clusterName)},
 				{Name: slurmAuthSocketVolume, MountPath: slurmctldAuthSocketDir},
 				{Name: slurmLogFileVolume, MountPath: slurmLogFileDir},
 			},

@@ -127,7 +127,7 @@ func buildSlurmConf(
 	conf.AddPropery(config.NewProperty("SlurmUser", slurmUser))
 	conf.AddPropery(config.NewProperty("SlurmctldHost", controllerHost))
 	conf.AddPropery(config.NewProperty("SlurmctldPort", SlurmctldPort))
-	conf.AddPropery(config.NewProperty("StateSaveLocation", slurmctldSpoolDir))
+	conf.AddPropery(config.NewProperty("StateSaveLocation", clusterSpoolDir(controller.ClusterName())))
 	conf.AddPropery(config.NewProperty("SlurmdUser", slurmdUser))
 	conf.AddPropery(config.NewProperty("SlurmdPort", SlurmdPort))
 	conf.AddPropery(config.NewProperty("SlurmdSpoolDir", slurmdSpoolDir))
