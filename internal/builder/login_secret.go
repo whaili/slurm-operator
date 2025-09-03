@@ -10,8 +10,8 @@ import (
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/builder/labels"
-	"github.com/SlinkyProject/slurm-operator/internal/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/crypto"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/structutils"
 )
 
 func (b *Builder) BuildLoginSshHostKeys(loginset *slinkyv1alpha1.LoginSet) (*corev1.Secret, error) {
@@ -42,7 +42,7 @@ func (b *Builder) BuildLoginSshHostKeys(loginset *slinkyv1alpha1.LoginSet) (*cor
 		Immutable: true,
 	}
 
-	opts.Metadata.Labels = utils.MergeMaps(opts.Metadata.Labels, labels.NewBuilder().WithLoginLabels(loginset).Build())
+	opts.Metadata.Labels = structutils.MergeMaps(opts.Metadata.Labels, labels.NewBuilder().WithLoginLabels(loginset).Build())
 
 	return b.BuildSecret(opts, loginset)
 }

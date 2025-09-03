@@ -16,7 +16,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
-	"github.com/SlinkyProject/slurm-operator/internal/utils"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/structutils"
 )
 
 func SyncObject(c client.Client, ctx context.Context, newObj client.Object, shouldUpdate bool) error {
@@ -78,8 +78,8 @@ func SyncObject(c client.Client, ctx context.Context, newObj client.Object, shou
 			return nil
 		}
 		patch = client.MergeFrom(obj.DeepCopy())
-		obj.Annotations = utils.MergeMaps(obj.Annotations, o.Annotations)
-		obj.Labels = utils.MergeMaps(obj.Labels, o.Labels)
+		obj.Annotations = structutils.MergeMaps(obj.Annotations, o.Annotations)
+		obj.Labels = structutils.MergeMaps(obj.Labels, o.Labels)
 		obj.Data = o.Data
 		obj.BinaryData = o.BinaryData
 	case *corev1.Secret:
@@ -89,21 +89,21 @@ func SyncObject(c client.Client, ctx context.Context, newObj client.Object, shou
 			return nil
 		}
 		patch = client.MergeFrom(obj.DeepCopy())
-		obj.Annotations = utils.MergeMaps(obj.Annotations, o.Annotations)
-		obj.Labels = utils.MergeMaps(obj.Labels, o.Labels)
+		obj.Annotations = structutils.MergeMaps(obj.Annotations, o.Annotations)
+		obj.Labels = structutils.MergeMaps(obj.Labels, o.Labels)
 		obj.Data = o.Data
 		obj.StringData = o.StringData
 	case *corev1.Service:
 		obj := oldObj.(*corev1.Service)
 		patch = client.MergeFrom(obj.DeepCopy())
-		obj.Annotations = utils.MergeMaps(obj.Annotations, o.Annotations)
-		obj.Labels = utils.MergeMaps(obj.Labels, o.Labels)
+		obj.Annotations = structutils.MergeMaps(obj.Annotations, o.Annotations)
+		obj.Labels = structutils.MergeMaps(obj.Labels, o.Labels)
 		obj.Spec = o.Spec
 	case *appsv1.Deployment:
 		obj := oldObj.(*appsv1.Deployment)
 		patch = client.MergeFrom(obj.DeepCopy())
-		obj.Annotations = utils.MergeMaps(obj.Annotations, o.Annotations)
-		obj.Labels = utils.MergeMaps(obj.Labels, o.Labels)
+		obj.Annotations = structutils.MergeMaps(obj.Annotations, o.Annotations)
+		obj.Labels = structutils.MergeMaps(obj.Labels, o.Labels)
 		obj.Spec.MinReadySeconds = o.Spec.MinReadySeconds
 		obj.Spec.Replicas = o.Spec.Replicas
 		obj.Spec.Strategy = o.Spec.Strategy
@@ -111,8 +111,8 @@ func SyncObject(c client.Client, ctx context.Context, newObj client.Object, shou
 	case *appsv1.StatefulSet:
 		obj := oldObj.(*appsv1.StatefulSet)
 		patch = client.MergeFrom(obj.DeepCopy())
-		obj.Annotations = utils.MergeMaps(obj.Annotations, o.Annotations)
-		obj.Labels = utils.MergeMaps(obj.Labels, o.Labels)
+		obj.Annotations = structutils.MergeMaps(obj.Annotations, o.Annotations)
+		obj.Labels = structutils.MergeMaps(obj.Labels, o.Labels)
 		obj.Spec.MinReadySeconds = o.Spec.MinReadySeconds
 		obj.Spec.Ordinals = o.Spec.Ordinals
 		obj.Spec.PersistentVolumeClaimRetentionPolicy = o.Spec.PersistentVolumeClaimRetentionPolicy
@@ -122,26 +122,26 @@ func SyncObject(c client.Client, ctx context.Context, newObj client.Object, shou
 	case *slinkyv1alpha1.Controller:
 		obj := oldObj.(*slinkyv1alpha1.Controller)
 		patch = client.MergeFrom(obj.DeepCopy())
-		obj.Annotations = utils.MergeMaps(obj.Annotations, o.Annotations)
-		obj.Labels = utils.MergeMaps(obj.Labels, o.Labels)
+		obj.Annotations = structutils.MergeMaps(obj.Annotations, o.Annotations)
+		obj.Labels = structutils.MergeMaps(obj.Labels, o.Labels)
 		obj.Spec = o.Spec
 	case *slinkyv1alpha1.RestApi:
 		obj := oldObj.(*slinkyv1alpha1.RestApi)
 		patch = client.MergeFrom(obj.DeepCopy())
-		obj.Annotations = utils.MergeMaps(obj.Annotations, o.Annotations)
-		obj.Labels = utils.MergeMaps(obj.Labels, o.Labels)
+		obj.Annotations = structutils.MergeMaps(obj.Annotations, o.Annotations)
+		obj.Labels = structutils.MergeMaps(obj.Labels, o.Labels)
 		obj.Spec = o.Spec
 	case *slinkyv1alpha1.Accounting:
 		obj := oldObj.(*slinkyv1alpha1.Accounting)
 		patch = client.MergeFrom(obj.DeepCopy())
-		obj.Annotations = utils.MergeMaps(obj.Annotations, o.Annotations)
-		obj.Labels = utils.MergeMaps(obj.Labels, o.Labels)
+		obj.Annotations = structutils.MergeMaps(obj.Annotations, o.Annotations)
+		obj.Labels = structutils.MergeMaps(obj.Labels, o.Labels)
 		obj.Spec = o.Spec
 	case *slinkyv1alpha1.NodeSet:
 		obj := oldObj.(*slinkyv1alpha1.NodeSet)
 		patch = client.MergeFrom(obj.DeepCopy())
-		obj.Annotations = utils.MergeMaps(obj.Annotations, o.Annotations)
-		obj.Labels = utils.MergeMaps(obj.Labels, o.Labels)
+		obj.Annotations = structutils.MergeMaps(obj.Annotations, o.Annotations)
+		obj.Labels = structutils.MergeMaps(obj.Labels, o.Labels)
 		obj.Spec.MinReadySeconds = o.Spec.MinReadySeconds
 		obj.Spec.PersistentVolumeClaimRetentionPolicy = o.Spec.PersistentVolumeClaimRetentionPolicy
 		obj.Spec.Replicas = o.Spec.Replicas
@@ -150,8 +150,8 @@ func SyncObject(c client.Client, ctx context.Context, newObj client.Object, shou
 	case *slinkyv1alpha1.LoginSet:
 		obj := oldObj.(*slinkyv1alpha1.LoginSet)
 		patch = client.MergeFrom(obj.DeepCopy())
-		obj.Annotations = utils.MergeMaps(obj.Annotations, o.Annotations)
-		obj.Labels = utils.MergeMaps(obj.Labels, o.Labels)
+		obj.Annotations = structutils.MergeMaps(obj.Annotations, o.Annotations)
+		obj.Labels = structutils.MergeMaps(obj.Labels, o.Labels)
 		obj.Spec.Replicas = o.Spec.Replicas
 		obj.Spec.Template = o.Spec.Template
 	default:

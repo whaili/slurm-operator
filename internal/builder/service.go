@@ -13,7 +13,7 @@ import (
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/builder/metadata"
-	"github.com/SlinkyProject/slurm-operator/internal/utils"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/structutils"
 )
 
 type ServiceOpts struct {
@@ -40,7 +40,7 @@ func (b *Builder) BuildService(opts ServiceOpts, owner metav1.Object) (*corev1.S
 		Spec:       opts.ServiceSpec,
 	}
 
-	o.Spec.Selector = utils.MergeMaps(o.Spec.Selector, opts.Selector)
+	o.Spec.Selector = structutils.MergeMaps(o.Spec.Selector, opts.Selector)
 
 	if opts.Headless {
 		o.Spec.ClusterIP = "None"

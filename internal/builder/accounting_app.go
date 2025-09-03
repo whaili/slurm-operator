@@ -19,8 +19,8 @@ import (
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/builder/labels"
 	"github.com/SlinkyProject/slurm-operator/internal/builder/metadata"
-	"github.com/SlinkyProject/slurm-operator/internal/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/crypto"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/structutils"
 )
 
 const (
@@ -213,7 +213,7 @@ func (b *Builder) getAccountingHashes(ctx context.Context, accounting *slinkyv1a
 	}
 	slurmdbdConfHash := crypto.CheckSumFromMap(dbdConfig.Data)
 
-	hashMap = utils.MergeMaps(hashMap, map[string]string{
+	hashMap = structutils.MergeMaps(hashMap, map[string]string{
 		annotationSlurmdbdConfHash: slurmdbdConfHash,
 	})
 

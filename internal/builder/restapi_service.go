@@ -9,7 +9,7 @@ import (
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/builder/labels"
-	"github.com/SlinkyProject/slurm-operator/internal/utils"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/structutils"
 )
 
 func (b *Builder) BuildRestapiService(restapi *slinkyv1alpha1.RestApi) (*corev1.Service, error) {
@@ -23,7 +23,7 @@ func (b *Builder) BuildRestapiService(restapi *slinkyv1alpha1.RestApi) (*corev1.
 			Build(),
 	}
 
-	opts.Metadata.Labels = utils.MergeMaps(opts.Metadata.Labels, labels.NewBuilder().WithRestapiLabels(restapi).Build())
+	opts.Metadata.Labels = structutils.MergeMaps(opts.Metadata.Labels, labels.NewBuilder().WithRestapiLabels(restapi).Build())
 
 	port := corev1.ServicePort{
 		Name:       labels.RestapiApp,

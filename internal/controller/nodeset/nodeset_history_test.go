@@ -19,7 +19,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
-	"github.com/SlinkyProject/slurm-operator/internal/utils"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/structutils"
 )
 
 func TestNodeSetReconciler_truncateHistory(t *testing.T) {
@@ -62,7 +62,7 @@ func TestNodeSetReconciler_truncateHistory(t *testing.T) {
 				args: args{
 					ctx:       context.TODO(),
 					nodeset:   nodeset.DeepCopy(),
-					revisions: utils.ReferenceList(revisionList.Items),
+					revisions: structutils.ReferenceList(revisionList.Items),
 					current:   revisionList.Items[0].DeepCopy(),
 					update:    revisionList.Items[1].DeepCopy(),
 				},
@@ -127,7 +127,7 @@ func TestNodeSetReconciler_truncateHistory(t *testing.T) {
 				args: args{
 					ctx:       context.TODO(),
 					nodeset:   nodeset.DeepCopy(),
-					revisions: utils.ReferenceList(revisionList.Items),
+					revisions: structutils.ReferenceList(revisionList.Items),
 					current:   revisionList.Items[0].DeepCopy(),
 					update:    revisionList.Items[1].DeepCopy(),
 				},
@@ -199,7 +199,7 @@ func TestNodeSetReconciler_getNodeSetRevisions(t *testing.T) {
 				},
 				args: args{
 					nodeset:   nodeset.DeepCopy(),
-					revisions: utils.ReferenceList(revisionList.Items),
+					revisions: structutils.ReferenceList(revisionList.Items),
 				},
 				want:    revisionList.Items[2].DeepCopy(),
 				want1:   revisionList.Items[2].DeepCopy(),
@@ -243,7 +243,7 @@ func TestNodeSetReconciler_getNodeSetRevisions(t *testing.T) {
 				},
 				args: args{
 					nodeset:   nodeset.DeepCopy(),
-					revisions: utils.ReferenceList(revisionList.Items),
+					revisions: structutils.ReferenceList(revisionList.Items),
 				},
 				want:    revisionList.Items[1].DeepCopy(),
 				want1:   revisionList.Items[2].DeepCopy(),

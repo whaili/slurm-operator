@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
 // SPDX-License-Identifier: Apache-2.0
 
-package utils
+package structutils
 
 // Convert a list to a referenced list.
 func ReferenceList[T any](items []T) []*T {

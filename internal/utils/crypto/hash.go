@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/SlinkyProject/slurm-operator/internal/utils"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/structutils"
 )
 
 func CheckSum(b []byte) string {
@@ -17,7 +17,7 @@ func CheckSum(b []byte) string {
 }
 
 func CheckSumFromMap[T string | []byte](items map[string]T) string {
-	keys := utils.Keys(items)
+	keys := structutils.Keys(items)
 	sort.Strings(keys)
 
 	b := []byte{}

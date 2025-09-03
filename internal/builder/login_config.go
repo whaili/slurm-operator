@@ -8,8 +8,8 @@ import (
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/builder/labels"
-	"github.com/SlinkyProject/slurm-operator/internal/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/config"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/structutils"
 )
 
 func (b *Builder) BuildLoginSshConfig(loginset *slinkyv1alpha1.LoginSet) (*corev1.ConfigMap, error) {
@@ -23,7 +23,7 @@ func (b *Builder) BuildLoginSshConfig(loginset *slinkyv1alpha1.LoginSet) (*corev
 		},
 	}
 
-	opts.Metadata.Labels = utils.MergeMaps(opts.Metadata.Labels, labels.NewBuilder().WithLoginLabels(loginset).Build())
+	opts.Metadata.Labels = structutils.MergeMaps(opts.Metadata.Labels, labels.NewBuilder().WithLoginLabels(loginset).Build())
 
 	return b.BuildConfigMap(opts, loginset)
 }

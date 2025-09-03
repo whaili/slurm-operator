@@ -23,7 +23,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
-	"github.com/SlinkyProject/slurm-operator/internal/utils"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/structutils"
 )
 
 // TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -161,7 +161,7 @@ func (r *ControllerWebhook) validateController(ctx context.Context, obj *slinkyv
 			errs = append(errs, err)
 			continue
 		}
-		configFiles := utils.Keys(configMap.Data)
+		configFiles := structutils.Keys(configMap.Data)
 		controllerlog.V(1).Info("configMap files", "files", configFiles)
 		for _, file := range configFiles {
 			if slices.Contains(denyConfigFiles, file) {

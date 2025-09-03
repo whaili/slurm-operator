@@ -16,8 +16,8 @@ import (
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/builder/labels"
-	"github.com/SlinkyProject/slurm-operator/internal/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/config"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/structutils"
 )
 
 const (
@@ -73,7 +73,7 @@ func (b *Builder) BuildControllerConfig(controller *slinkyv1alpha1.Controller) (
 		if err := b.client.Get(ctx, key, cm); err != nil {
 			return nil, err
 		}
-		filenames := utils.Keys(cm.Data)
+		filenames := structutils.Keys(cm.Data)
 		sort.Strings(filenames)
 		prologScripts = filenames
 	}
@@ -88,7 +88,7 @@ func (b *Builder) BuildControllerConfig(controller *slinkyv1alpha1.Controller) (
 		if err := b.client.Get(ctx, key, cm); err != nil {
 			return nil, err
 		}
-		filenames := utils.Keys(cm.Data)
+		filenames := structutils.Keys(cm.Data)
 		sort.Strings(filenames)
 		epilogScripts = filenames
 	}
@@ -104,7 +104,7 @@ func (b *Builder) BuildControllerConfig(controller *slinkyv1alpha1.Controller) (
 		opts.Data[cgroupConfFile] = buildCgroupConf()
 	}
 
-	opts.Metadata.Labels = utils.MergeMaps(opts.Metadata.Labels, labels.NewBuilder().WithControllerLabels(controller).Build())
+	opts.Metadata.Labels = structutils.MergeMaps(opts.Metadata.Labels, labels.NewBuilder().WithControllerLabels(controller).Build())
 
 	return b.BuildConfigMap(opts, controller)
 }

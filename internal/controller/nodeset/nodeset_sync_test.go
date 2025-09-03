@@ -44,6 +44,7 @@ import (
 	nodesetutils "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/historycontrol"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/structutils"
 )
 
 func newNodeSetController(client client.Client, clientMap *clientmap.ClientMap) *NodeSetReconciler {
@@ -574,7 +575,7 @@ func TestNodeSetReconciler_processCondemned(t *testing.T) {
 				},
 			}
 			podList := &corev1.PodList{
-				Items: utils.DereferenceList(pods),
+				Items: structutils.DereferenceList(pods),
 			}
 			client := fake.NewFakeClient(nodeset, podList)
 			slurmNodeList := &slurmtypes.V0043NodeList{
@@ -627,7 +628,7 @@ func TestNodeSetReconciler_processCondemned(t *testing.T) {
 				},
 			}
 			podList := &corev1.PodList{
-				Items: utils.DereferenceList(pods),
+				Items: structutils.DereferenceList(pods),
 			}
 			client := fake.NewFakeClient(nodeset, podList)
 			slurmClient := newFakeClientList(sinterceptor.Funcs{})
@@ -670,7 +671,7 @@ func TestNodeSetReconciler_processCondemned(t *testing.T) {
 				},
 			}
 			podList := &corev1.PodList{
-				Items: utils.DereferenceList(pods),
+				Items: structutils.DereferenceList(pods),
 			}
 			client := fake.NewFakeClient(nodeset, podList)
 			slurmNodeList := &slurmtypes.V0043NodeList{
@@ -726,7 +727,7 @@ func TestNodeSetReconciler_processCondemned(t *testing.T) {
 				},
 			}
 			podList := &corev1.PodList{
-				Items: utils.DereferenceList(pods),
+				Items: structutils.DereferenceList(pods),
 			}
 			client := fake.NewClientBuilder().
 				WithInterceptorFuncs(interceptor.Funcs{
@@ -789,7 +790,7 @@ func TestNodeSetReconciler_processCondemned(t *testing.T) {
 				},
 			}
 			podList := &corev1.PodList{
-				Items: utils.DereferenceList(pods),
+				Items: structutils.DereferenceList(pods),
 			}
 			client := fake.NewFakeClient(nodeset, podList)
 			slurmNodeList := &slurmtypes.V0043NodeList{

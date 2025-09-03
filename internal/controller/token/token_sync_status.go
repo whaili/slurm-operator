@@ -18,6 +18,7 @@ import (
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/controller/token/slurmjwt"
 	"github.com/SlinkyProject/slurm-operator/internal/utils"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/structutils"
 )
 
 // syncStatus handles determining and updating the status.
@@ -52,7 +53,7 @@ func (r *TokenReconciler) syncStatus(
 
 	newStatus := &slinkyv1alpha1.TokenStatus{
 		IssuedAt:   issuedAt,
-		Conditions: utils.MergeList(token.Status.Conditions),
+		Conditions: structutils.MergeList(token.Status.Conditions),
 	}
 
 	if apiequality.Semantic.DeepEqual(token.Status, newStatus) {

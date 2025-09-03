@@ -25,7 +25,7 @@ import (
 	"github.com/SlinkyProject/slurm-operator/internal/clientmap"
 	"github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/slurmcontrol"
 	nodesetutils "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/utils"
-	"github.com/SlinkyProject/slurm-operator/internal/utils"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/structutils"
 	slurmconditions "github.com/SlinkyProject/slurm-operator/pkg/utils/conditions"
 )
 
@@ -66,7 +66,7 @@ func TestNodeSetReconciler_syncStatus(t *testing.T) {
 				pods = append(pods, pod)
 			}
 			podList := &corev1.PodList{
-				Items: utils.DereferenceList(pods),
+				Items: structutils.DereferenceList(pods),
 			}
 			revision := &appsv1.ControllerRevision{
 				ObjectMeta: metav1.ObjectMeta{
@@ -116,7 +116,7 @@ func TestNodeSetReconciler_syncStatus(t *testing.T) {
 				pods = append(pods, pod)
 			}
 			podList := &corev1.PodList{
-				Items: utils.DereferenceList(pods),
+				Items: structutils.DereferenceList(pods),
 			}
 			revision := &appsv1.ControllerRevision{
 				ObjectMeta: metav1.ObjectMeta{
@@ -199,7 +199,7 @@ func TestNodeSetReconciler_syncSlurmStatus(t *testing.T) {
 				pods = append(pods, pod)
 			}
 			podList := &corev1.PodList{
-				Items: utils.DereferenceList(pods),
+				Items: structutils.DereferenceList(pods),
 			}
 			c := fake.NewClientBuilder().WithRuntimeObjects(nodeset, podList).WithStatusSubresource(nodeset).Build()
 			slurmNodeList := &slurmtypes.V0043NodeList{
@@ -277,7 +277,7 @@ func TestNodeSetReconciler_syncNodeSetStatus(t *testing.T) {
 				pods = append(pods, pod)
 			}
 			podList := &corev1.PodList{
-				Items: utils.DereferenceList(pods),
+				Items: structutils.DereferenceList(pods),
 			}
 			revision := &appsv1.ControllerRevision{
 				ObjectMeta: metav1.ObjectMeta{
@@ -337,7 +337,7 @@ func TestNodeSetReconciler_syncNodeSetStatus(t *testing.T) {
 				pods = append(pods, pod)
 			}
 			podList := &corev1.PodList{
-				Items: utils.DereferenceList(pods),
+				Items: structutils.DereferenceList(pods),
 			}
 			revision := &appsv1.ControllerRevision{
 				ObjectMeta: metav1.ObjectMeta{
@@ -548,7 +548,7 @@ func TestNodeSetReconciler_updateNodeSetPodConditions(t *testing.T) {
 				pods = append(pods, pod)
 			}
 			podList := &corev1.PodList{
-				Items: utils.DereferenceList(pods),
+				Items: structutils.DereferenceList(pods),
 			}
 			c := fake.NewClientBuilder().WithRuntimeObjects(nodeset, podList).WithStatusSubresource(nodeset).Build()
 
@@ -583,7 +583,7 @@ func TestNodeSetReconciler_updateNodeSetPodConditions(t *testing.T) {
 				pods = append(pods, pod)
 			}
 			podList := &corev1.PodList{
-				Items: utils.DereferenceList(pods),
+				Items: structutils.DereferenceList(pods),
 			}
 			c := fake.NewClientBuilder().WithRuntimeObjects(nodeset, podList).WithStatusSubresource(nodeset).Build()
 

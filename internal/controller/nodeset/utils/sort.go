@@ -14,6 +14,7 @@ import (
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/utils"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/structutils"
 )
 
 // ActivePods type allows custom sorting of pods so a controller can pick the best ones to delete.
@@ -51,22 +52,22 @@ func (o ActivePods) Less(i, j int) bool {
 	}
 
 	// Step: lower pod-deletion-cost < higher pod-deletion-cost
-	podDeletionCost1, _ := utils.GetNumberFromAnnotations(pod1.Annotations, slinkyv1alpha1.AnnotationPodDeletionCost)
-	podDeletionCost2, _ := utils.GetNumberFromAnnotations(pod2.Annotations, slinkyv1alpha1.AnnotationPodDeletionCost)
+	podDeletionCost1, _ := structutils.GetNumberFromAnnotations(pod1.Annotations, slinkyv1alpha1.AnnotationPodDeletionCost)
+	podDeletionCost2, _ := structutils.GetNumberFromAnnotations(pod2.Annotations, slinkyv1alpha1.AnnotationPodDeletionCost)
 	if podDeletionCost1 != podDeletionCost2 {
 		return podDeletionCost1 < podDeletionCost2
 	}
 
 	// Step: earlier deadline timestamp < later deadline timestamp
-	podDeadline1, _ := utils.GetTimeFromAnnotations(pod1.Annotations, slinkyv1alpha1.AnnotationPodDeadline)
-	podDeadline2, _ := utils.GetTimeFromAnnotations(pod2.Annotations, slinkyv1alpha1.AnnotationPodDeadline)
+	podDeadline1, _ := structutils.GetTimeFromAnnotations(pod1.Annotations, slinkyv1alpha1.AnnotationPodDeadline)
+	podDeadline2, _ := structutils.GetTimeFromAnnotations(pod2.Annotations, slinkyv1alpha1.AnnotationPodDeadline)
 	if !podDeadline1.Equal(podDeadline2) {
 		return podDeadline1.Before(podDeadline2)
 	}
 
 	// Step: cordon < not cordon
-	podCordon1, _ := utils.GetBoolFromAnnotations(pod1.Annotations, slinkyv1alpha1.AnnotationPodCordon)
-	podCordon2, _ := utils.GetBoolFromAnnotations(pod2.Annotations, slinkyv1alpha1.AnnotationPodCordon)
+	podCordon1, _ := structutils.GetBoolFromAnnotations(pod1.Annotations, slinkyv1alpha1.AnnotationPodCordon)
+	podCordon2, _ := structutils.GetBoolFromAnnotations(pod2.Annotations, slinkyv1alpha1.AnnotationPodCordon)
 	if podCordon1 || podCordon2 {
 		return podCordon1
 	}

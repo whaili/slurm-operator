@@ -9,7 +9,7 @@ import (
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/builder/metadata"
-	"github.com/SlinkyProject/slurm-operator/internal/utils"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/structutils"
 )
 
 type PodTemplateOpts struct {
@@ -29,17 +29,17 @@ func (b *Builder) buildPodTemplate(opts PodTemplateOpts) corev1.PodTemplateSpec 
 		Spec:       opts.base,
 	}
 
-	o.Spec.Volumes = utils.MergeList(o.Spec.Volumes, opts.merge.Volumes)
-	o.Spec.InitContainers = utils.MergeList(o.Spec.InitContainers, opts.merge.InitContainers)
-	o.Spec.Containers = utils.MergeList(o.Spec.Containers, opts.merge.Containers)
-	o.Spec.EphemeralContainers = utils.MergeList(o.Spec.EphemeralContainers, opts.merge.EphemeralContainers)
-	o.Spec.NodeSelector = utils.MergeMaps(o.Spec.NodeSelector, opts.merge.NodeSelector)
-	o.Spec.ImagePullSecrets = utils.MergeList(o.Spec.ImagePullSecrets, opts.merge.ImagePullSecrets)
-	o.Spec.Tolerations = utils.MergeList(o.Spec.Tolerations, opts.merge.Tolerations)
-	o.Spec.ReadinessGates = utils.MergeList(o.Spec.ReadinessGates, opts.merge.ReadinessGates)
-	o.Spec.TopologySpreadConstraints = utils.MergeList(o.Spec.TopologySpreadConstraints, opts.merge.TopologySpreadConstraints)
-	o.Spec.SchedulingGates = utils.MergeList(o.Spec.SchedulingGates, opts.merge.SchedulingGates)
-	o.Spec.ResourceClaims = utils.MergeList(o.Spec.ResourceClaims, opts.merge.ResourceClaims)
+	o.Spec.Volumes = structutils.MergeList(o.Spec.Volumes, opts.merge.Volumes)
+	o.Spec.InitContainers = structutils.MergeList(o.Spec.InitContainers, opts.merge.InitContainers)
+	o.Spec.Containers = structutils.MergeList(o.Spec.Containers, opts.merge.Containers)
+	o.Spec.EphemeralContainers = structutils.MergeList(o.Spec.EphemeralContainers, opts.merge.EphemeralContainers)
+	o.Spec.NodeSelector = structutils.MergeMaps(o.Spec.NodeSelector, opts.merge.NodeSelector)
+	o.Spec.ImagePullSecrets = structutils.MergeList(o.Spec.ImagePullSecrets, opts.merge.ImagePullSecrets)
+	o.Spec.Tolerations = structutils.MergeList(o.Spec.Tolerations, opts.merge.Tolerations)
+	o.Spec.ReadinessGates = structutils.MergeList(o.Spec.ReadinessGates, opts.merge.ReadinessGates)
+	o.Spec.TopologySpreadConstraints = structutils.MergeList(o.Spec.TopologySpreadConstraints, opts.merge.TopologySpreadConstraints)
+	o.Spec.SchedulingGates = structutils.MergeList(o.Spec.SchedulingGates, opts.merge.SchedulingGates)
+	o.Spec.ResourceClaims = structutils.MergeList(o.Spec.ResourceClaims, opts.merge.ResourceClaims)
 
 	if opts.merge.RestartPolicy != "" {
 		o.Spec.RestartPolicy = opts.merge.RestartPolicy

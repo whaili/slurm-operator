@@ -30,6 +30,7 @@ import (
 	"github.com/SlinkyProject/slurm-operator/internal/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/historycontrol"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/podcontrol"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/structutils"
 )
 
 const (
@@ -171,7 +172,7 @@ func (r *NodeSetReconciler) getNodeSetPods(
 	if err := r.List(ctx, podList, opts); err != nil {
 		return nil, err
 	}
-	pods := utils.ReferenceList(podList.Items)
+	pods := structutils.ReferenceList(podList.Items)
 
 	filter := func(pod *corev1.Pod) bool {
 		// Only claim if it matches our NodeSet name schema. Otherwise release/ignore.

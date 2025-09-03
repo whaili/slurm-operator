@@ -10,8 +10,8 @@ import (
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/builder/labels"
-	"github.com/SlinkyProject/slurm-operator/internal/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/config"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/structutils"
 )
 
 func (b *Builder) BuildAccountingConfig(accounting *slinkyv1alpha1.Accounting) (*corev1.Secret, error) {
@@ -28,7 +28,7 @@ func (b *Builder) BuildAccountingConfig(accounting *slinkyv1alpha1.Accounting) (
 		},
 	}
 
-	opts.Metadata.Labels = utils.MergeMaps(opts.Metadata.Labels, labels.NewBuilder().WithAccountingLabels(accounting).Build())
+	opts.Metadata.Labels = structutils.MergeMaps(opts.Metadata.Labels, labels.NewBuilder().WithAccountingLabels(accounting).Build())
 
 	return b.BuildSecret(opts, accounting)
 }
