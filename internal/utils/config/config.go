@@ -19,7 +19,7 @@ type configBuilder struct {
 	props   []configProperty
 }
 
-func (b *configBuilder) AddPropery(prop configProperty) *configBuilder {
+func (b *configBuilder) AddProperty(prop configProperty) *configBuilder {
 	b.props = append(b.props, prop)
 	return b
 }

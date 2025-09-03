@@ -27,8 +27,8 @@ func Test_configBuilder_Build(t *testing.T) {
 				builder: NewBuilder().
 					WithSeperator("=").
 					WithFinalNewline(false).
-					AddPropery(NewProperty("foo", "bar")).
-					AddPropery(NewPropertyRaw("fizz ~ buzz")),
+					AddProperty(NewProperty("foo", "bar")).
+					AddProperty(NewPropertyRaw("fizz ~ buzz")),
 			},
 			want: "foo=bar\nfizz ~ buzz",
 		},

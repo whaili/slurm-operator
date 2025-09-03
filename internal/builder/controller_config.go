@@ -121,74 +121,74 @@ func buildSlurmConf(
 
 	conf := config.NewBuilder()
 
-	conf.AddPropery(config.NewPropertyRaw("#"))
-	conf.AddPropery(config.NewPropertyRaw("### GENERAL ###"))
-	conf.AddPropery(config.NewProperty("ClusterName", controller.ClusterName()))
-	conf.AddPropery(config.NewProperty("SlurmUser", slurmUser))
-	conf.AddPropery(config.NewProperty("SlurmctldHost", controllerHost))
-	conf.AddPropery(config.NewProperty("SlurmctldPort", SlurmctldPort))
-	conf.AddPropery(config.NewProperty("StateSaveLocation", clusterSpoolDir(controller.ClusterName())))
-	conf.AddPropery(config.NewProperty("SlurmdUser", slurmdUser))
-	conf.AddPropery(config.NewProperty("SlurmdPort", SlurmdPort))
-	conf.AddPropery(config.NewProperty("SlurmdSpoolDir", slurmdSpoolDir))
-	conf.AddPropery(config.NewProperty("ReturnToService", 2))
-	conf.AddPropery(config.NewProperty("MaxNodeCount", 1024))
-	conf.AddPropery(config.NewProperty("GresTypes", "gpu"))
+	conf.AddProperty(config.NewPropertyRaw("#"))
+	conf.AddProperty(config.NewPropertyRaw("### GENERAL ###"))
+	conf.AddProperty(config.NewProperty("ClusterName", controller.ClusterName()))
+	conf.AddProperty(config.NewProperty("SlurmUser", slurmUser))
+	conf.AddProperty(config.NewProperty("SlurmctldHost", controllerHost))
+	conf.AddProperty(config.NewProperty("SlurmctldPort", SlurmctldPort))
+	conf.AddProperty(config.NewProperty("StateSaveLocation", clusterSpoolDir(controller.ClusterName())))
+	conf.AddProperty(config.NewProperty("SlurmdUser", slurmdUser))
+	conf.AddProperty(config.NewProperty("SlurmdPort", SlurmdPort))
+	conf.AddProperty(config.NewProperty("SlurmdSpoolDir", slurmdSpoolDir))
+	conf.AddProperty(config.NewProperty("ReturnToService", 2))
+	conf.AddProperty(config.NewProperty("MaxNodeCount", 1024))
+	conf.AddProperty(config.NewProperty("GresTypes", "gpu"))
 
-	conf.AddPropery(config.NewPropertyRaw("#"))
-	conf.AddPropery(config.NewPropertyRaw("### LOGGING ###"))
-	conf.AddPropery(config.NewProperty("SlurmctldLogFile", slurmctldLogFilePath))
-	conf.AddPropery(config.NewProperty("SlurmSchedLogFile", slurmctldLogFilePath))
-	conf.AddPropery(config.NewProperty("SlurmdLogFile", slurmdLogFilePath))
-	conf.AddPropery(config.NewProperty("LogTimeFormat", logTimeFormat))
+	conf.AddProperty(config.NewPropertyRaw("#"))
+	conf.AddProperty(config.NewPropertyRaw("### LOGGING ###"))
+	conf.AddProperty(config.NewProperty("SlurmctldLogFile", slurmctldLogFilePath))
+	conf.AddProperty(config.NewProperty("SlurmSchedLogFile", slurmctldLogFilePath))
+	conf.AddProperty(config.NewProperty("SlurmdLogFile", slurmdLogFilePath))
+	conf.AddProperty(config.NewProperty("LogTimeFormat", logTimeFormat))
 
-	conf.AddPropery(config.NewPropertyRaw("#"))
-	conf.AddPropery(config.NewPropertyRaw("### PLUGINS & PARAMETERS ###"))
-	conf.AddPropery(config.NewProperty("AuthType", authType))
-	conf.AddPropery(config.NewProperty("CredType", credType))
-	conf.AddPropery(config.NewProperty("AuthAltTypes", authAltTypes))
-	conf.AddPropery(config.NewProperty("AuthAltParameters", authAltParameters))
-	conf.AddPropery(config.NewProperty("AuthInfo", authInfo))
-	conf.AddPropery(config.NewProperty("CommunicationParameters", "block_null_hash"))
-	conf.AddPropery(config.NewProperty("SelectTypeParameters", "CR_Core_Memory"))
-	conf.AddPropery(config.NewProperty("SlurmctldParameters", "enable_configless,enable_stepmgr"))
+	conf.AddProperty(config.NewPropertyRaw("#"))
+	conf.AddProperty(config.NewPropertyRaw("### PLUGINS & PARAMETERS ###"))
+	conf.AddProperty(config.NewProperty("AuthType", authType))
+	conf.AddProperty(config.NewProperty("CredType", credType))
+	conf.AddProperty(config.NewProperty("AuthAltTypes", authAltTypes))
+	conf.AddProperty(config.NewProperty("AuthAltParameters", authAltParameters))
+	conf.AddProperty(config.NewProperty("AuthInfo", authInfo))
+	conf.AddProperty(config.NewProperty("CommunicationParameters", "block_null_hash"))
+	conf.AddProperty(config.NewProperty("SelectTypeParameters", "CR_Core_Memory"))
+	conf.AddProperty(config.NewProperty("SlurmctldParameters", "enable_configless,enable_stepmgr"))
 	if cgroupEnabled {
-		conf.AddPropery(config.NewProperty("ProctrackType", "proctrack/cgroup"))
-		conf.AddPropery(config.NewProperty("PrologFlags", "Contain"))
-		conf.AddPropery(config.NewProperty("TaskPlugin", "task/cgroup,task/affinity"))
+		conf.AddProperty(config.NewProperty("ProctrackType", "proctrack/cgroup"))
+		conf.AddProperty(config.NewProperty("PrologFlags", "Contain"))
+		conf.AddProperty(config.NewProperty("TaskPlugin", "task/cgroup,task/affinity"))
 	} else {
-		conf.AddPropery(config.NewProperty("TaskPlugin", "task/affinity"))
+		conf.AddProperty(config.NewProperty("TaskPlugin", "task/affinity"))
 	}
 
-	conf.AddPropery(config.NewPropertyRaw("#"))
-	conf.AddPropery(config.NewPropertyRaw("### ACCOUNTING ###"))
+	conf.AddProperty(config.NewPropertyRaw("#"))
+	conf.AddProperty(config.NewPropertyRaw("### ACCOUNTING ###"))
 	if accounting != nil {
-		conf.AddPropery(config.NewProperty("AccountingStorageType", "accounting_storage/slurmdbd"))
-		conf.AddPropery(config.NewProperty("AccountingStorageHost", accounting.ServiceKey().Name))
-		conf.AddPropery(config.NewProperty("AccountingStoragePort", SlurmdbdPort))
-		conf.AddPropery(config.NewProperty("AccountingStorageTRES", "gres/gpu"))
+		conf.AddProperty(config.NewProperty("AccountingStorageType", "accounting_storage/slurmdbd"))
+		conf.AddProperty(config.NewProperty("AccountingStorageHost", accounting.ServiceKey().Name))
+		conf.AddProperty(config.NewProperty("AccountingStoragePort", SlurmdbdPort))
+		conf.AddProperty(config.NewProperty("AccountingStorageTRES", "gres/gpu"))
 		if cgroupEnabled {
-			conf.AddPropery(config.NewProperty("JobAcctGatherType", "jobacct_gather/cgroup"))
+			conf.AddProperty(config.NewProperty("JobAcctGatherType", "jobacct_gather/cgroup"))
 		}
 	} else {
-		conf.AddPropery(config.NewProperty("AccountingStorageType", "accounting_storage/none"))
-		conf.AddPropery(config.NewProperty("JobAcctGatherType", "jobacct_gather/none"))
+		conf.AddProperty(config.NewProperty("AccountingStorageType", "accounting_storage/none"))
+		conf.AddProperty(config.NewProperty("JobAcctGatherType", "jobacct_gather/none"))
 	}
 
 	if len(prologScripts) > 0 || len(epilogScripts) > 0 {
-		conf.AddPropery(config.NewPropertyRaw("#"))
-		conf.AddPropery(config.NewPropertyRaw("### PROLOG & EPILOG ###"))
+		conf.AddProperty(config.NewPropertyRaw("#"))
+		conf.AddProperty(config.NewPropertyRaw("### PROLOG & EPILOG ###"))
 	}
 	for _, filename := range prologScripts {
-		conf.AddPropery(config.NewProperty("Prolog", filename))
+		conf.AddProperty(config.NewProperty("Prolog", filename))
 	}
 	for _, filename := range epilogScripts {
-		conf.AddPropery(config.NewProperty("Epilog", filename))
+		conf.AddProperty(config.NewProperty("Epilog", filename))
 	}
 
 	if len(nodesetList.Items) > 0 {
-		conf.AddPropery(config.NewPropertyRaw("#"))
-		conf.AddPropery(config.NewPropertyRaw("### COMPUTE & PARTITION ###"))
+		conf.AddProperty(config.NewPropertyRaw("#"))
+		conf.AddProperty(config.NewPropertyRaw("### COMPUTE & PARTITION ###"))
 	}
 	for _, nodeset := range nodesetList.Items {
 		partition := nodeset.Spec.Partition
@@ -205,20 +205,20 @@ func buildSlurmConf(
 			fmt.Sprintf("Feature=%v", name),
 		}
 		nodesetLineRendered := strings.Join(nodesetLine, " ")
-		conf.AddPropery(config.NewPropertyRaw(nodesetLineRendered))
+		conf.AddProperty(config.NewPropertyRaw(nodesetLineRendered))
 		partitionLine := []string{
 			fmt.Sprintf("PartitionName=%v", name),
 			fmt.Sprintf("Nodes=%v", name),
 			partition.Config,
 		}
 		partitionLineRendered := strings.Join(partitionLine, " ")
-		conf.AddPropery(config.NewPropertyRaw(partitionLineRendered))
+		conf.AddProperty(config.NewPropertyRaw(partitionLineRendered))
 	}
 
 	extraConf := controller.Spec.ExtraConf
-	conf.AddPropery(config.NewPropertyRaw("#"))
-	conf.AddPropery(config.NewPropertyRaw("### EXTRA CONFIG ###"))
-	conf.AddPropery(config.NewPropertyRaw(extraConf))
+	conf.AddProperty(config.NewPropertyRaw("#"))
+	conf.AddProperty(config.NewPropertyRaw("### EXTRA CONFIG ###"))
+	conf.AddProperty(config.NewPropertyRaw(extraConf))
 
 	return conf.Build()
 }
@@ -226,8 +226,8 @@ func buildSlurmConf(
 func buildCgroupConf() string {
 	conf := config.NewBuilder()
 
-	conf.AddPropery(config.NewProperty("CgroupPlugin", "autodetect"))
-	conf.AddPropery(config.NewProperty("IgnoreSystemd", "yes"))
+	conf.AddProperty(config.NewProperty("CgroupPlugin", "autodetect"))
+	conf.AddProperty(config.NewProperty("IgnoreSystemd", "yes"))
 
 	return conf.Build()
 }

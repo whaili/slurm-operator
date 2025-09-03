@@ -31,9 +31,9 @@ func (b *Builder) BuildLoginSshConfig(loginset *slinkyv1alpha1.LoginSet) (*corev
 func buildAuthorizedKeys(authorizedKeys string) string {
 	conf := config.NewBuilder()
 
-	conf.AddPropery(config.NewPropertyRaw("#"))
-	conf.AddPropery(config.NewPropertyRaw("### SLINKY ###"))
-	conf.AddPropery(config.NewPropertyRaw(authorizedKeys))
+	conf.AddProperty(config.NewPropertyRaw("#"))
+	conf.AddProperty(config.NewPropertyRaw("### SLINKY ###"))
+	conf.AddProperty(config.NewPropertyRaw(authorizedKeys))
 
 	return conf.Build()
 }
@@ -41,16 +41,16 @@ func buildAuthorizedKeys(authorizedKeys string) string {
 func buildSshdConfig(extraConf string) string {
 	conf := config.NewBuilder().WithSeperator(" ")
 
-	conf.AddPropery(config.NewPropertyRaw("#"))
-	conf.AddPropery(config.NewPropertyRaw("### GENERAL ###"))
-	conf.AddPropery(config.NewProperty("Include", "/etc/ssh/sshd_config.d/*.conf"))
-	conf.AddPropery(config.NewProperty("UsePAM", "yes"))
-	conf.AddPropery(config.NewProperty("X11Forwarding", "yes"))
-	conf.AddPropery(config.NewProperty("Subsystem", "sftp internal-sftp"))
+	conf.AddProperty(config.NewPropertyRaw("#"))
+	conf.AddProperty(config.NewPropertyRaw("### GENERAL ###"))
+	conf.AddProperty(config.NewProperty("Include", "/etc/ssh/sshd_config.d/*.conf"))
+	conf.AddProperty(config.NewProperty("UsePAM", "yes"))
+	conf.AddProperty(config.NewProperty("X11Forwarding", "yes"))
+	conf.AddProperty(config.NewProperty("Subsystem", "sftp internal-sftp"))
 
-	conf.AddPropery(config.NewPropertyRaw("#"))
-	conf.AddPropery(config.NewPropertyRaw("### EXTRA CONFIG ###"))
-	conf.AddPropery(config.NewPropertyRaw(extraConf))
+	conf.AddProperty(config.NewPropertyRaw("#"))
+	conf.AddProperty(config.NewPropertyRaw("### EXTRA CONFIG ###"))
+	conf.AddProperty(config.NewPropertyRaw(extraConf))
 
 	return conf.Build()
 }
