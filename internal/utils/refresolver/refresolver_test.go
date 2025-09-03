@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
-	"github.com/SlinkyProject/slurm-operator/internal/utils"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/objectutils"
 	corev1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -95,8 +95,8 @@ func TestRefResolver_GetController(t *testing.T) {
 				t.Errorf("RefResolver.GetController() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got != nil && utils.KeyFunc(got) != utils.KeyFunc(tt.want) {
-				t.Errorf("RefResolver.GetController() = %v, want %v", utils.KeyFunc(got), utils.KeyFunc(tt.want))
+			if got != nil && objectutils.KeyFunc(got) != objectutils.KeyFunc(tt.want) {
+				t.Errorf("RefResolver.GetController() = %v, want %v", objectutils.KeyFunc(got), objectutils.KeyFunc(tt.want))
 			}
 		})
 	}
@@ -171,8 +171,8 @@ func TestRefResolver_GetAccounting(t *testing.T) {
 				t.Errorf("RefResolver.GetAccounting() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got != nil && utils.KeyFunc(got) != utils.KeyFunc(tt.want) {
-				t.Errorf("RefResolver.GetAccounting() = %v, want %v", utils.KeyFunc(got), utils.KeyFunc(tt.want))
+			if got != nil && objectutils.KeyFunc(got) != objectutils.KeyFunc(tt.want) {
+				t.Errorf("RefResolver.GetAccounting() = %v, want %v", objectutils.KeyFunc(got), objectutils.KeyFunc(tt.want))
 			}
 		})
 	}

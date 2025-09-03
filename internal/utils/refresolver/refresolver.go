@@ -12,7 +12,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
-	"github.com/SlinkyProject/slurm-operator/internal/utils"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/objectutils"
 )
 
 type RefResolver struct {
@@ -51,7 +51,7 @@ func (r *RefResolver) GetNodeSetsForController(ctx context.Context, controller *
 
 	out := &slinkyv1alpha1.NodeSetList{}
 	for _, item := range list.Items {
-		if item.Spec.ControllerRef.IsMatch(utils.NamespacedName(controller)) {
+		if item.Spec.ControllerRef.IsMatch(objectutils.NamespacedName(controller)) {
 			out.Items = append(out.Items, item)
 		}
 	}
@@ -67,7 +67,7 @@ func (r *RefResolver) GetLoginSetsForController(ctx context.Context, controller 
 
 	out := &slinkyv1alpha1.LoginSetList{}
 	for _, item := range list.Items {
-		if item.Spec.ControllerRef.IsMatch(utils.NamespacedName(controller)) {
+		if item.Spec.ControllerRef.IsMatch(objectutils.NamespacedName(controller)) {
 			out.Items = append(out.Items, item)
 		}
 	}
@@ -83,7 +83,7 @@ func (r *RefResolver) GetRestapisForController(ctx context.Context, controller *
 
 	out := &slinkyv1alpha1.RestApiList{}
 	for _, item := range list.Items {
-		if item.Spec.ControllerRef.IsMatch(utils.NamespacedName(controller)) {
+		if item.Spec.ControllerRef.IsMatch(objectutils.NamespacedName(controller)) {
 			out.Items = append(out.Items, item)
 		}
 	}
@@ -99,7 +99,7 @@ func (r *RefResolver) GetControllersForAccounting(ctx context.Context, accountin
 
 	out := &slinkyv1alpha1.ControllerList{}
 	for _, item := range list.Items {
-		if item.Spec.AccountingRef.IsMatch(utils.NamespacedName(accounting)) {
+		if item.Spec.AccountingRef.IsMatch(objectutils.NamespacedName(accounting)) {
 			out.Items = append(out.Items, item)
 		}
 	}

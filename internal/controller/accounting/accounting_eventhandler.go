@@ -15,7 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
-	"github.com/SlinkyProject/slurm-operator/internal/utils/objects"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/objectutils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/refresolver"
 )
 
@@ -77,7 +77,7 @@ func (e *accountingEventHandler) enqueueRequest(
 	}
 
 	for _, item := range list.Items {
-		objects.EnqueueRequest(q, &item)
+		objectutils.EnqueueRequest(q, &item)
 	}
 }
 
@@ -145,6 +145,6 @@ func (e *secretEventHandler) enqueueRequest(
 			continue
 		}
 
-		objects.EnqueueRequest(q, &accounting)
+		objectutils.EnqueueRequest(q, &accounting)
 	}
 }

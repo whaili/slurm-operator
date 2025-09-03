@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
-	"github.com/SlinkyProject/slurm-operator/internal/utils"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/objectutils"
 	appsv1 "k8s.io/api/apps/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -76,8 +76,8 @@ func TestBuilder_BuildConfigMap(t *testing.T) {
 			case err != nil:
 				return
 
-			case utils.KeyFunc(got) != tt.args.opts.Key.String():
-				t.Errorf("NamespacedName = %v , want = %v", utils.KeyFunc(got), tt.args.opts.Key.String())
+			case objectutils.KeyFunc(got) != tt.args.opts.Key.String():
+				t.Errorf("NamespacedName = %v , want = %v", objectutils.KeyFunc(got), tt.args.opts.Key.String())
 
 			case !apiequality.Semantic.DeepEqual(got.Annotations, tt.args.opts.Metadata.Annotations):
 				t.Errorf("Annotations = %v , want = %v", got.Annotations, tt.args.opts.Metadata.Annotations)

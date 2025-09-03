@@ -17,7 +17,7 @@ import (
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/controller/token/slurmjwt"
-	"github.com/SlinkyProject/slurm-operator/internal/utils"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/objectutils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/structutils"
 )
 
@@ -76,7 +76,7 @@ func (r *TokenReconciler) updateStatus(
 	newStatus *slinkyv1alpha1.TokenStatus,
 ) error {
 	logger := log.FromContext(ctx)
-	tokenKey := utils.NamespacedName(token)
+	tokenKey := objectutils.NamespacedName(token)
 
 	logger.V(1).Info("Pending Token Status update",
 		"token", klog.KObj(token), "newStatus", newStatus)

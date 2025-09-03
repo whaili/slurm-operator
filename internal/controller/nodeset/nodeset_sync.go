@@ -30,6 +30,7 @@ import (
 	"github.com/SlinkyProject/slurm-operator/internal/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/historycontrol"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/mathutils"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/objectutils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/podcontrol"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/podutils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/structutils"
@@ -55,7 +56,7 @@ func (r *NodeSetReconciler) Sync(ctx context.Context, req reconcile.Request) err
 
 	// Make a copy now to avoid client cache mutation.
 	nodeset = nodeset.DeepCopy()
-	key := utils.KeyFunc(nodeset)
+	key := objectutils.KeyFunc(nodeset)
 
 	if err := r.adoptOrphanRevisions(ctx, nodeset); err != nil {
 		return err
@@ -315,7 +316,7 @@ func (r *NodeSetReconciler) doPodScaleOut(
 	hash string,
 ) error {
 	logger := log.FromContext(ctx)
-	key := utils.KeyFunc(nodeset)
+	key := objectutils.KeyFunc(nodeset)
 
 	uncordonFn := func(i int) error {
 		pod := pods[i]
@@ -417,7 +418,7 @@ func (r *NodeSetReconciler) doPodScaleIn(
 	podsToDelete, podsToKeep []*corev1.Pod,
 ) error {
 	logger := log.FromContext(ctx)
-	key := utils.KeyFunc(nodeset)
+	key := objectutils.KeyFunc(nodeset)
 
 	uncordonFn := func(i int) error {
 		pod := podsToKeep[i]
@@ -497,7 +498,7 @@ func (r *NodeSetReconciler) processCondemned(
 ) error {
 	logger := klog.FromContext(ctx)
 	pod := condemned[i]
-	key := utils.KeyFunc(pod)
+	key := objectutils.KeyFunc(pod)
 
 	podKey := client.ObjectKeyFromObject(pod)
 	if err := r.Get(ctx, podKey, pod); err != nil {
@@ -542,7 +543,7 @@ func (r *NodeSetReconciler) doPodProcessing(
 	hash string,
 ) error {
 	logger := log.FromContext(ctx)
-	key := utils.KeyFunc(nodeset)
+	key := objectutils.KeyFunc(nodeset)
 
 	// NOTE: we must respect the uncordon and undrain nodes in accordance with updateStrategy
 	// to not fight it given the statefulness of how we cordon and terminate nodeset pods.

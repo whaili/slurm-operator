@@ -14,7 +14,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
-	"github.com/SlinkyProject/slurm-operator/internal/utils/objects"
+	"github.com/SlinkyProject/slurm-operator/internal/utils/objectutils"
 )
 
 type SyncStep struct {
@@ -43,7 +43,7 @@ func (r *ControllerReconciler) Sync(ctx context.Context, req reconcile.Request) 
 				if err != nil {
 					return fmt.Errorf("failed to build: %w", err)
 				}
-				if err := objects.SyncObject(r.Client, ctx, object, false); err != nil {
+				if err := objectutils.SyncObject(r.Client, ctx, object, false); err != nil {
 					return fmt.Errorf("failed to sync object (%s): %w", klog.KObj(object), err)
 				}
 				return nil
@@ -56,7 +56,7 @@ func (r *ControllerReconciler) Sync(ctx context.Context, req reconcile.Request) 
 				if err != nil {
 					return fmt.Errorf("failed to build: %w", err)
 				}
-				if err := objects.SyncObject(r.Client, ctx, object, true); err != nil {
+				if err := objectutils.SyncObject(r.Client, ctx, object, true); err != nil {
 					return fmt.Errorf("failed to sync object (%s): %w", klog.KObj(object), err)
 				}
 				return nil
@@ -69,7 +69,7 @@ func (r *ControllerReconciler) Sync(ctx context.Context, req reconcile.Request) 
 				if err != nil {
 					return fmt.Errorf("failed to build: %w", err)
 				}
-				if err := objects.SyncObject(r.Client, ctx, object, true); err != nil {
+				if err := objectutils.SyncObject(r.Client, ctx, object, true); err != nil {
 					return fmt.Errorf("failed to sync object (%s): %w", klog.KObj(object), err)
 				}
 				return nil
