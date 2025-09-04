@@ -271,6 +271,7 @@ limitations under the License.
     autoscaling.md
     develop.md
     nodeset-controller.md
+    override-config-file.md
     pyxis.md
     quickstart.md
     slurm.md
