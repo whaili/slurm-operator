@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"reflect"
 	"testing"
 	"time"
 
@@ -30,6 +31,7 @@ import (
 	"github.com/SlinkyProject/slurm-operator/internal/clientmap"
 	nodesetutils "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/podinfo"
+	slurmconditions "github.com/SlinkyProject/slurm-operator/pkg/utils/conditions"
 )
 
 func newNodeSet(name, controllerName string, replicas int32) *slinkyv1alpha1.NodeSet {
@@ -628,6 +630,18 @@ func Test_realSlurmControl_CalculateNodeStatus(t *testing.T) {
 				Total: 1,
 
 				Idle: 1,
+
+				NodeStates: func() map[string][]corev1.PodCondition {
+					nodeStates := make(map[string][]corev1.PodCondition)
+					nodeStates[nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 0, ""))] = []corev1.PodCondition{
+						{
+							Type:    slurmconditions.PodConditionIdle,
+							Status:  corev1.ConditionTrue,
+							Message: "",
+						},
+					}
+					return nodeStates
+				}(),
 			},
 			wantErr: false,
 		},
@@ -662,6 +676,18 @@ func Test_realSlurmControl_CalculateNodeStatus(t *testing.T) {
 				Total: 1,
 
 				Idle: 1,
+
+				NodeStates: func() map[string][]corev1.PodCondition {
+					nodeStates := make(map[string][]corev1.PodCondition)
+					nodeStates[nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 0, ""))] = []corev1.PodCondition{
+						{
+							Type:    slurmconditions.PodConditionIdle,
+							Status:  corev1.ConditionTrue,
+							Message: "",
+						},
+					}
+					return nodeStates
+				}(),
 			},
 			wantErr: false,
 		},
@@ -672,7 +698,8 @@ func Test_realSlurmControl_CalculateNodeStatus(t *testing.T) {
 					Items: []types.V0043Node{
 						{
 							V0043Node: api.V0043Node{
-								Name: ptr.To(nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 0, ""))),
+								Name:   ptr.To(nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 0, ""))),
+								Reason: ptr.To("Node drain"),
 								State: ptr.To([]api.V0043NodeState{
 									api.V0043NodeStateIDLE,
 									api.V0043NodeStateDRAIN,
@@ -698,6 +725,23 @@ func Test_realSlurmControl_CalculateNodeStatus(t *testing.T) {
 
 				Idle:  1,
 				Drain: 1,
+
+				NodeStates: func() map[string][]corev1.PodCondition {
+					nodeStates := make(map[string][]corev1.PodCondition)
+					nodeStates[nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 0, ""))] = []corev1.PodCondition{
+						{
+							Type:    slurmconditions.PodConditionIdle,
+							Status:  corev1.ConditionTrue,
+							Message: "Node drain",
+						},
+						{
+							Type:    slurmconditions.PodConditionDrain,
+							Status:  corev1.ConditionTrue,
+							Message: "Node drain",
+						},
+					}
+					return nodeStates
+				}(),
 			},
 			wantErr: false,
 		},
@@ -720,6 +764,7 @@ func Test_realSlurmControl_CalculateNodeStatus(t *testing.T) {
 								State: ptr.To([]api.V0043NodeState{
 									api.V0043NodeStateDOWN,
 								}),
+								Reason: ptr.To("Node is down"),
 							},
 						},
 						{
@@ -792,6 +837,60 @@ func Test_realSlurmControl_CalculateNodeStatus(t *testing.T) {
 				Idle:      1,
 				Mixed:     1,
 				Unknown:   1,
+
+				NodeStates: func() map[string][]corev1.PodCondition {
+					nodeStates := make(map[string][]corev1.PodCondition)
+					nodeStates[nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 0, ""))] = []corev1.PodCondition{
+						{
+							Type:    slurmconditions.PodConditionAllocated,
+							Status:  corev1.ConditionTrue,
+							Message: "",
+						},
+					}
+					nodeStates[nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 1, ""))] = []corev1.PodCondition{
+						{
+							Type:    slurmconditions.PodConditionDown,
+							Status:  corev1.ConditionTrue,
+							Message: "Node is down",
+						},
+					}
+					nodeStates[nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 2, ""))] = []corev1.PodCondition{
+						{
+							Type:    slurmconditions.PodConditionError,
+							Status:  corev1.ConditionTrue,
+							Message: "",
+						},
+					}
+					nodeStates[nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 3, ""))] = []corev1.PodCondition{
+						{
+							Type:    slurmconditions.PodConditionFuture,
+							Status:  corev1.ConditionTrue,
+							Message: "",
+						},
+					}
+					nodeStates[nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 4, ""))] = []corev1.PodCondition{
+						{
+							Type:    slurmconditions.PodConditionIdle,
+							Status:  corev1.ConditionTrue,
+							Message: "",
+						},
+					}
+					nodeStates[nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 5, ""))] = []corev1.PodCondition{
+						{
+							Type:    slurmconditions.PodConditionMixed,
+							Status:  corev1.ConditionTrue,
+							Message: "",
+						},
+					}
+					nodeStates[nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 6, ""))] = []corev1.PodCondition{
+						{
+							Type:    slurmconditions.PodConditionUnknown,
+							Status:  corev1.ConditionTrue,
+							Message: "",
+						},
+					}
+					return nodeStates
+				}(),
 			},
 			wantErr: false,
 		},
@@ -814,6 +913,7 @@ func Test_realSlurmControl_CalculateNodeStatus(t *testing.T) {
 								State: ptr.To([]api.V0043NodeState{
 									api.V0043NodeStateDRAIN,
 								}),
+								Reason: ptr.To("Node set to drain"),
 							},
 						},
 						{
@@ -822,6 +922,7 @@ func Test_realSlurmControl_CalculateNodeStatus(t *testing.T) {
 								State: ptr.To([]api.V0043NodeState{
 									api.V0043NodeStateFAIL,
 								}),
+								Reason: ptr.To("Node set to fail"),
 							},
 						},
 						{
@@ -896,6 +997,67 @@ func Test_realSlurmControl_CalculateNodeStatus(t *testing.T) {
 				Maintenance:   1,
 				NotResponding: 1,
 				Undrain:       1,
+
+				NodeStates: func() map[string][]corev1.PodCondition {
+					nodeStates := make(map[string][]corev1.PodCondition)
+					nodeStates[nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 0, ""))] = []corev1.PodCondition{
+						{
+							Type:    slurmconditions.PodConditionCompleting,
+							Status:  corev1.ConditionTrue,
+							Message: "",
+						},
+					}
+					nodeStates[nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 1, ""))] = []corev1.PodCondition{
+						{
+							Type:    slurmconditions.PodConditionDrain,
+							Status:  corev1.ConditionTrue,
+							Message: "Node set to drain",
+						},
+					}
+					nodeStates[nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 2, ""))] = []corev1.PodCondition{
+						{
+							Type:    slurmconditions.PodConditionFail,
+							Status:  corev1.ConditionTrue,
+							Message: "Node set to fail",
+						},
+					}
+					nodeStates[nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 3, ""))] = []corev1.PodCondition{
+						{
+							Type:    slurmconditions.PodConditionInvalid,
+							Status:  corev1.ConditionTrue,
+							Message: "",
+						},
+					}
+					nodeStates[nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 4, ""))] = []corev1.PodCondition{
+						{
+							Type:    slurmconditions.PodConditionInvalidReg,
+							Status:  corev1.ConditionTrue,
+							Message: "",
+						},
+					}
+					nodeStates[nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 5, ""))] = []corev1.PodCondition{
+						{
+							Type:    slurmconditions.PodConditionMaintenance,
+							Status:  corev1.ConditionTrue,
+							Message: "",
+						},
+					}
+					nodeStates[nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 6, ""))] = []corev1.PodCondition{
+						{
+							Type:    slurmconditions.PodConditionNotResponding,
+							Status:  corev1.ConditionTrue,
+							Message: "",
+						},
+					}
+					nodeStates[nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 7, ""))] = []corev1.PodCondition{
+						{
+							Type:    slurmconditions.PodConditionUndrain,
+							Status:  corev1.ConditionTrue,
+							Message: "",
+						},
+					}
+					return nodeStates
+				}(),
 			},
 			wantErr: false,
 		},
@@ -920,6 +1082,7 @@ func Test_realSlurmControl_CalculateNodeStatus(t *testing.T) {
 									api.V0043NodeStateDOWN,
 									api.V0043NodeStateDRAIN,
 								}),
+								Reason: ptr.To("Node set to down and drain"),
 							},
 						},
 						{
@@ -929,6 +1092,7 @@ func Test_realSlurmControl_CalculateNodeStatus(t *testing.T) {
 									api.V0043NodeStateERROR,
 									api.V0043NodeStateFAIL,
 								}),
+								Reason: ptr.To("Node set to error and fail"),
 							},
 						},
 						{
@@ -1016,6 +1180,107 @@ func Test_realSlurmControl_CalculateNodeStatus(t *testing.T) {
 				Maintenance:   1,
 				NotResponding: 1,
 				Undrain:       1,
+
+				NodeStates: func() map[string][]corev1.PodCondition {
+					nodeStates := make(map[string][]corev1.PodCondition)
+					nodeStates[nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 0, ""))] = []corev1.PodCondition{
+						{
+							Type:    slurmconditions.PodConditionAllocated,
+							Status:  corev1.ConditionTrue,
+							Message: "",
+						},
+						{
+							Type:    slurmconditions.PodConditionCompleting,
+							Status:  corev1.ConditionTrue,
+							Message: "",
+						},
+					}
+					nodeStates[nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 1, ""))] = []corev1.PodCondition{
+						{
+							Type:    slurmconditions.PodConditionDown,
+							Status:  corev1.ConditionTrue,
+							Message: "Node set to down and drain",
+						},
+						{
+							Type:    slurmconditions.PodConditionDrain,
+							Status:  corev1.ConditionTrue,
+							Message: "Node set to down and drain",
+						},
+					}
+					nodeStates[nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 2, ""))] = []corev1.PodCondition{
+						{
+							Type:    slurmconditions.PodConditionError,
+							Status:  corev1.ConditionTrue,
+							Message: "Node set to error and fail",
+						},
+						{
+							Type:    slurmconditions.PodConditionFail,
+							Status:  corev1.ConditionTrue,
+							Message: "Node set to error and fail",
+						},
+					}
+					nodeStates[nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 3, ""))] = []corev1.PodCondition{
+						{
+							Type:    slurmconditions.PodConditionFuture,
+							Status:  corev1.ConditionTrue,
+							Message: "",
+						},
+						{
+							Type:    slurmconditions.PodConditionInvalid,
+							Status:  corev1.ConditionTrue,
+							Message: "",
+						},
+					}
+					nodeStates[nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 4, ""))] = []corev1.PodCondition{
+						{
+							Type:    slurmconditions.PodConditionFuture,
+							Status:  corev1.ConditionTrue,
+							Message: "",
+						},
+						{
+							Type:    slurmconditions.PodConditionInvalidReg,
+							Status:  corev1.ConditionTrue,
+							Message: "",
+						},
+					}
+					nodeStates[nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 5, ""))] = []corev1.PodCondition{
+						{
+							Type:    slurmconditions.PodConditionIdle,
+							Status:  corev1.ConditionTrue,
+							Message: "",
+						},
+						{
+							Type:    slurmconditions.PodConditionMaintenance,
+							Status:  corev1.ConditionTrue,
+							Message: "",
+						},
+					}
+					nodeStates[nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 6, ""))] = []corev1.PodCondition{
+						{
+							Type:    slurmconditions.PodConditionMixed,
+							Status:  corev1.ConditionTrue,
+							Message: "",
+						},
+						{
+							Type:    slurmconditions.PodConditionNotResponding,
+							Status:  corev1.ConditionTrue,
+							Message: "",
+						},
+					}
+					nodeStates[nodesetutils.GetNodeName(nodesetutils.NewNodeSetPod(nodeset, controller, 7, ""))] = []corev1.PodCondition{
+						{
+							Type:    slurmconditions.PodConditionUnknown,
+							Status:  corev1.ConditionTrue,
+							Message: "",
+						},
+						{
+							Type:    slurmconditions.PodConditionUndrain,
+							Status:  corev1.ConditionTrue,
+							Message: "",
+						},
+					}
+					return nodeStates
+				}(),
 			},
 			wantErr: false,
 		},
@@ -1085,6 +1350,90 @@ func Test_tolerateError(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tolerateError(tt.args.err); got != tt.want {
 				t.Errorf("tolerateError() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_nodeState(t *testing.T) {
+	type args struct {
+		node  types.V0043Node
+		state corev1.PodConditionType
+	}
+	tests := []struct {
+		name string
+		args args
+		want corev1.PodCondition
+	}{
+		{
+			name: "Idle state",
+			args: args{
+				node: types.V0043Node{
+					V0043Node: api.V0043Node{
+						Reason: ptr.To(""),
+					},
+				},
+				state: slurmconditions.PodConditionIdle,
+			},
+			want: corev1.PodCondition{
+				Type:    slurmconditions.PodConditionIdle,
+				Status:  corev1.ConditionTrue,
+				Message: "",
+			},
+		},
+		{
+			name: "Drain state",
+			args: args{
+				node: types.V0043Node{
+					V0043Node: api.V0043Node{
+						Reason: ptr.To("Drain by admin"),
+					},
+				},
+				state: slurmconditions.PodConditionDrain,
+			},
+			want: corev1.PodCondition{
+				Type:    slurmconditions.PodConditionDrain,
+				Status:  corev1.ConditionTrue,
+				Message: "Drain by admin",
+			},
+		},
+		{
+			name: "InvalidReg state",
+			args: args{
+				node: types.V0043Node{
+					V0043Node: api.V0043Node{
+						Reason: ptr.To(""),
+					},
+				},
+				state: slurmconditions.PodConditionInvalidReg,
+			},
+			want: corev1.PodCondition{
+				Type:    slurmconditions.PodConditionInvalidReg,
+				Status:  corev1.ConditionTrue,
+				Message: "",
+			},
+		},
+		{
+			name: "Maintenance state",
+			args: args{
+				node: types.V0043Node{
+					V0043Node: api.V0043Node{
+						Reason: ptr.To("Admin set to Maintenance"),
+					},
+				},
+				state: slurmconditions.PodConditionMaintenance,
+			},
+			want: corev1.PodCondition{
+				Type:    slurmconditions.PodConditionMaintenance,
+				Status:  corev1.ConditionTrue,
+				Message: "Admin set to Maintenance",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := nodeState(tt.args.node, tt.args.state); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("nodeState() = %v, want %v", got, tt.want)
 			}
 		})
 	}

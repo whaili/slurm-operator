@@ -5,6 +5,7 @@ package nodeset
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -18,12 +19,16 @@ import (
 	"k8s.io/client-go/util/retry"
 	"k8s.io/klog/v2"
 	podutil "k8s.io/kubernetes/pkg/api/v1/pod"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/builder/labels"
+	"github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/slurmcontrol"
+	nodesetutils "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/historycontrol"
+	slurmconditions "github.com/SlinkyProject/slurm-operator/pkg/utils/conditions"
 )
 
 // syncStatus handles synchronizing Slurm Nodes and NodeSet Status.
@@ -46,6 +51,10 @@ func (r *NodeSetReconciler) syncStatus(
 
 	if err := r.syncNodeSetStatus(ctx, nodeset, pods, currentRevision, updateRevision, collisionCount, hash); err != nil {
 		errors = append(errors, err)
+	}
+
+	if err := r.syncNodeSetPodStatus(ctx, nodeset, pods); err != nil {
+		return err
 	}
 
 	return utilerrors.NewAggregate(errors)
@@ -177,6 +186,71 @@ func (r *NodeSetReconciler) calculateReplicaStatus(
 	status.Unavailable = utils.Clamp(status.Replicas-status.Available, 0, status.Replicas)
 
 	return status
+}
+
+// Sync NodeSet Pod Conditions to reflect Slurm base and flag states
+func (r *NodeSetReconciler) syncNodeSetPodStatus(
+	ctx context.Context,
+	nodeset *slinkyv1alpha1.NodeSet,
+	pods []*corev1.Pod,
+) error {
+	slurmNodeStatus, err := r.slurmControl.CalculateNodeStatus(ctx, nodeset, pods)
+	if err != nil {
+		return err
+	}
+
+	if err := r.updateNodeSetPodConditions(ctx, pods, &slurmNodeStatus); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// updateNodeSetPodConditions will iterate over the base states and flag states and
+// set pod conditions on the appropriate NodeSet pod to reflect the Slurm states.
+func (r *NodeSetReconciler) updateNodeSetPodConditions(
+	ctx context.Context,
+	pods []*corev1.Pod,
+	nodeStatus *slurmcontrol.SlurmNodeStatus,
+) error {
+	logger := log.FromContext(ctx)
+	for _, pod := range pods {
+		toUpdate := pod.DeepCopy()
+
+		podConditions := nodeStatus.NodeStates[nodesetutils.GetNodeName(toUpdate)]
+
+		// Filter previous SlurmNodeStates that are no longer present
+		var filteredConditions []corev1.PodCondition
+		for _, condition := range toUpdate.Status.Conditions {
+			// Keep any conditions that is not a SlurmNodeState
+			if !strings.HasPrefix(string(condition.Type), slurmconditions.StatePrefix) {
+				filteredConditions = append(filteredConditions, condition)
+			} else {
+				// Keep SlurmNodeStates that are still present
+				for _, cond := range podConditions {
+					_, c := podutil.GetPodCondition(&pod.Status, cond.Type)
+					if c != nil {
+						filteredConditions = append(filteredConditions, *c)
+					}
+				}
+			}
+		}
+		toUpdate.Status.Conditions = filteredConditions
+
+		// Add current Slurm node base and flag states
+		var condChanged bool
+		for _, cond := range podConditions {
+			if podutil.UpdatePodCondition(&toUpdate.Status, &cond) && !condChanged {
+				condChanged = true
+			}
+		}
+		err := r.Status().Patch(ctx, toUpdate, client.StrategicMergeFrom(pod))
+		if err != nil {
+			logger.Error(err, "Error patching pod condition", toUpdate)
+			return err
+		}
+	}
+	return nil
 }
 
 // updateNodeSetStatus handles updating the NodeSet status on the Kubernetes API.

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/puttsk/hostlist"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
 	"k8s.io/utils/ptr"
@@ -21,12 +22,12 @@ import (
 	slurmclient "github.com/SlinkyProject/slurm-client/pkg/client"
 	slurmobject "github.com/SlinkyProject/slurm-client/pkg/object"
 	slurmtypes "github.com/SlinkyProject/slurm-client/pkg/types"
-
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/clientmap"
 	nodesetutils "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/podinfo"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/timestore"
+	slurmconditions "github.com/SlinkyProject/slurm-operator/pkg/utils/conditions"
 )
 
 type SlurmControlInterface interface {
@@ -51,6 +52,25 @@ type SlurmControlInterface interface {
 // realSlurmControl is the default implementation of SlurmControlInterface.
 type realSlurmControl struct {
 	clientMap *clientmap.ClientMap
+}
+
+// RefreshNodeCache implements SlurmControlInterface.
+func (r *realSlurmControl) RefreshNodeCache(ctx context.Context, nodeset *slinkyv1alpha1.NodeSet) error {
+	logger := log.FromContext(ctx)
+
+	slurmClient := r.lookupClient(nodeset)
+	if slurmClient == nil {
+		logger.V(2).Info("no client for nodeset, cannot do RefreshNodeCache()")
+		return nil
+	}
+
+	nodeList := &slurmtypes.V0043NodeList{}
+	opts := &slurmclient.ListOptions{RefreshCache: true}
+	if err := slurmClient.List(ctx, nodeList, opts); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // GetNodeNames implements SlurmControlInterface.
@@ -293,12 +313,17 @@ type SlurmNodeStatus struct {
 	Maintenance   int32
 	NotResponding int32
 	Undrain       int32
+
+	// Per-node State as Conditions
+	NodeStates map[string][]corev1.PodCondition
 }
 
 // CalculateNodeStatus implements SlurmControlInterface.
 func (r *realSlurmControl) CalculateNodeStatus(ctx context.Context, nodeset *slinkyv1alpha1.NodeSet, pods []*corev1.Pod) (SlurmNodeStatus, error) {
 	logger := log.FromContext(ctx)
-	status := SlurmNodeStatus{}
+	status := SlurmNodeStatus{
+		NodeStates: make(map[string][]corev1.PodCondition),
+	}
 
 	slurmClient := r.lookupClient(nodeset)
 	if slurmClient == nil {
@@ -329,43 +354,73 @@ func (r *realSlurmControl) CalculateNodeStatus(ctx context.Context, nodeset *sli
 		// Slurm Node Base States
 		switch {
 		case node.GetStateAsSet().Has(api.V0043NodeStateALLOCATED):
+			status.NodeStates[nodeName] = append(status.NodeStates[nodeName],
+				nodeState(node, slurmconditions.PodConditionAllocated))
 			status.Allocated++
 		case node.GetStateAsSet().Has(api.V0043NodeStateDOWN):
+			status.NodeStates[nodeName] = append(status.NodeStates[nodeName],
+				nodeState(node, slurmconditions.PodConditionDown))
 			status.Down++
 		case node.GetStateAsSet().Has(api.V0043NodeStateERROR):
+			status.NodeStates[nodeName] = append(status.NodeStates[nodeName],
+				nodeState(node, slurmconditions.PodConditionError))
 			status.Error++
 		case node.GetStateAsSet().Has(api.V0043NodeStateFUTURE):
+			status.NodeStates[nodeName] = append(status.NodeStates[nodeName],
+				nodeState(node, slurmconditions.PodConditionFuture))
 			status.Future++
 		case node.GetStateAsSet().Has(api.V0043NodeStateIDLE):
+			status.NodeStates[nodeName] = append(status.NodeStates[nodeName],
+				nodeState(node, slurmconditions.PodConditionIdle))
 			status.Idle++
 		case node.GetStateAsSet().Has(api.V0043NodeStateMIXED):
+			status.NodeStates[nodeName] = append(status.NodeStates[nodeName],
+				nodeState(node, slurmconditions.PodConditionMixed))
 			status.Mixed++
 		case node.GetStateAsSet().Has(api.V0043NodeStateUNKNOWN):
+			status.NodeStates[nodeName] = append(status.NodeStates[nodeName],
+				nodeState(node, slurmconditions.PodConditionUnknown))
 			status.Unknown++
 		}
 		// Slurm Node Flag State
 		if node.GetStateAsSet().Has(api.V0043NodeStateCOMPLETING) {
+			status.NodeStates[nodeName] = append(status.NodeStates[nodeName],
+				nodeState(node, slurmconditions.PodConditionCompleting))
 			status.Completing++
 		}
 		if node.GetStateAsSet().Has(api.V0043NodeStateDRAIN) {
+			status.NodeStates[nodeName] = append(status.NodeStates[nodeName],
+				nodeState(node, slurmconditions.PodConditionDrain))
 			status.Drain++
 		}
 		if node.GetStateAsSet().Has(api.V0043NodeStateFAIL) {
+			status.NodeStates[nodeName] = append(status.NodeStates[nodeName],
+				nodeState(node, slurmconditions.PodConditionFail))
 			status.Fail++
 		}
 		if node.GetStateAsSet().Has(api.V0043NodeStateINVALID) {
+			status.NodeStates[nodeName] = append(status.NodeStates[nodeName],
+				nodeState(node, slurmconditions.PodConditionInvalid))
 			status.Invalid++
 		}
 		if node.GetStateAsSet().Has(api.V0043NodeStateINVALIDREG) {
+			status.NodeStates[nodeName] = append(status.NodeStates[nodeName],
+				nodeState(node, slurmconditions.PodConditionInvalidReg))
 			status.InvalidReg++
 		}
 		if node.GetStateAsSet().Has(api.V0043NodeStateMAINTENANCE) {
+			status.NodeStates[nodeName] = append(status.NodeStates[nodeName],
+				nodeState(node, slurmconditions.PodConditionMaintenance))
 			status.Maintenance++
 		}
 		if node.GetStateAsSet().Has(api.V0043NodeStateNOTRESPONDING) {
+			status.NodeStates[nodeName] = append(status.NodeStates[nodeName],
+				nodeState(node, slurmconditions.PodConditionNotResponding))
 			status.NotResponding++
 		}
 		if node.GetStateAsSet().Has(api.V0043NodeStateUNDRAIN) {
+			status.NodeStates[nodeName] = append(status.NodeStates[nodeName],
+				nodeState(node, slurmconditions.PodConditionUndrain))
 			status.Undrain++
 		}
 	}
@@ -452,4 +507,14 @@ func tolerateError(err error) bool {
 		return true
 	}
 	return false
+}
+
+// Translate a Slurm node state to a plaintext state with a reason
+// and a flag to indicate if it is a base state or a flag state.
+func nodeState(node slurmtypes.V0043Node, condType corev1.PodConditionType) corev1.PodCondition {
+	return corev1.PodCondition{
+		Type:    condType,
+		Status:  corev1.ConditionTrue,
+		Message: ptr.Deref(node.Reason, ""),
+	}
 }

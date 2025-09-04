@@ -6,6 +6,7 @@ package nodeset
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -20,11 +21,12 @@ import (
 
 	slurminterceptor "github.com/SlinkyProject/slurm-client/pkg/client/interceptor"
 	slurmtypes "github.com/SlinkyProject/slurm-client/pkg/types"
-
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/clientmap"
+	"github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/slurmcontrol"
 	nodesetutils "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils"
+	slurmconditions "github.com/SlinkyProject/slurm-operator/pkg/utils/conditions"
 )
 
 func TestNodeSetReconciler_syncStatus(t *testing.T) {
@@ -493,6 +495,153 @@ func TestNodeSetReconciler_calculateReplicaStatus(t *testing.T) {
 			got := r.calculateReplicaStatus(tt.args.nodeset, tt.args.pods, tt.args.currentRevision, tt.args.updateRevision)
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("unexpected status (-want,+got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestNodeSetReconciler_updateNodeSetPodConditions(t *testing.T) {
+	idleCondition := corev1.PodCondition{
+		Type:    slurmconditions.PodConditionIdle,
+		Status:  corev1.ConditionTrue,
+		Message: "",
+	}
+	drainCondition := corev1.PodCondition{
+		Type:    slurmconditions.PodConditionDrain,
+		Status:  corev1.ConditionTrue,
+		Message: "Node set to drain",
+	}
+	allocatedCondition := corev1.PodCondition{
+		Type:    slurmconditions.PodConditionAllocated,
+		Status:  corev1.ConditionTrue,
+		Message: "",
+	}
+
+	controller := &slinkyv1alpha1.Controller{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "slurm",
+		},
+	}
+	const hash = "12345"
+	type fields struct {
+		Client client.Client
+	}
+	type args struct {
+		ctx        context.Context
+		pods       []*corev1.Pod
+		nodeStatus *slurmcontrol.SlurmNodeStatus
+	}
+	type testCaseFields struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr error
+	}
+	tests := []testCaseFields{
+		func() testCaseFields {
+			nodeset := newNodeSet("foo", controller.Name, 2)
+			pods := make([]*corev1.Pod, 0)
+			for i := range 2 {
+				pod := nodesetutils.NewNodeSetPod(nodeset, controller, i, hash)
+				pod = makePodHealthy(pod)
+				pod.Status.Conditions = append(pod.Status.Conditions, idleCondition)
+				pods = append(pods, pod)
+			}
+			podList := &corev1.PodList{
+				Items: utils.DereferenceList(pods),
+			}
+			c := fake.NewClientBuilder().WithRuntimeObjects(nodeset, podList).WithStatusSubresource(nodeset).Build()
+
+			return testCaseFields{
+				name: "Slurm States remains Idle",
+				fields: fields{
+					Client: c,
+				},
+				args: args{
+					ctx:  context.TODO(),
+					pods: pods,
+					nodeStatus: &slurmcontrol.SlurmNodeStatus{
+						NodeStates: func(pods []*corev1.Pod) map[string][]corev1.PodCondition {
+							ns := make(map[string][]corev1.PodCondition)
+							for _, pod := range pods {
+								ns[pod.Name] = append(ns[pod.Name], idleCondition)
+							}
+							return ns
+						}(pods),
+					},
+				},
+				wantErr: nil,
+			}
+		}(),
+		func() testCaseFields {
+			nodeset := newNodeSet("foo", controller.Name, 2)
+			pods := make([]*corev1.Pod, 0)
+			for i := range 2 {
+				pod := nodesetutils.NewNodeSetPod(nodeset, controller, i, hash)
+				pod = makePodHealthy(pod)
+				pod.Status.Conditions = append(pod.Status.Conditions, allocatedCondition)
+				pods = append(pods, pod)
+			}
+			podList := &corev1.PodList{
+				Items: utils.DereferenceList(pods),
+			}
+			c := fake.NewClientBuilder().WithRuntimeObjects(nodeset, podList).WithStatusSubresource(nodeset).Build()
+
+			return testCaseFields{
+				name: "Slurm States transition from Allocated to Idle+Drain",
+				fields: fields{
+					Client: c,
+				},
+				args: args{
+					ctx:  context.TODO(),
+					pods: pods,
+					nodeStatus: &slurmcontrol.SlurmNodeStatus{
+						NodeStates: func(pods []*corev1.Pod) map[string][]corev1.PodCondition {
+							ns := make(map[string][]corev1.PodCondition)
+							for _, pod := range pods {
+								ns[pod.Name] = append(ns[pod.Name], idleCondition)
+								ns[pod.Name] = append(ns[pod.Name], drainCondition)
+							}
+							return ns
+						}(pods),
+					},
+				},
+				wantErr: nil,
+			}
+		}(),
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &NodeSetReconciler{
+				Client: tt.fields.Client,
+			}
+			err := r.updateNodeSetPodConditions(tt.args.ctx, tt.args.pods, tt.args.nodeStatus)
+			if !errors.Is(err, tt.wantErr) {
+				t.Errorf("NodeSetReconciler.updateNodeSetPodConditions() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			for key, ns := range tt.args.nodeStatus.NodeStates {
+				// Verify the correct conditions are present in the correct pod
+				pod := &corev1.Pod{}
+				err = r.Get(tt.args.ctx, client.ObjectKey{Name: key, Namespace: "default"}, pod)
+				if err != nil {
+					t.Errorf("NodeSetReconciler.updateNodeSetPodConditions() error = %v", err)
+					return
+				}
+				for _, condition := range pod.Status.Conditions {
+					if strings.HasPrefix(string(condition.Type), slurmconditions.StatePrefix) {
+						var found bool
+						for _, nodeCondition := range ns {
+							if condition.Type == nodeCondition.Type &&
+								condition.Message == nodeCondition.Message {
+								found = true
+							}
+						}
+						if !found {
+							t.Errorf(`NodeSetReconciler.updateNodeSetPodConditions() could not find a pod (%v) condition
+							as a Slurm node state (%v)`, condition, ns)
+						}
+					}
+				}
 			}
 		})
 	}
