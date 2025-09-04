@@ -93,6 +93,19 @@ function helm::install() {
 	slurm::prerequisites
 }
 
+function helm::install-extras() {
+	helm repo add kedacore https://kedacore.github.io/charts
+	helm repo add nfs-server-provisioner https://kubernetes-sigs.github.io/nfs-ganesha-server-and-external-provisioner/
+	helm repo add helm-openldap https://jp-gouin.github.io/helm-openldap/
+	helm repo update
+
+	helm upgrade --install keda kedacore/keda \
+		--namespace keda --create-namespace
+
+	helm upgrade --install nfs-server-provisioner nfs-server-provisioner/nfs-server-provisioner \
+		--namespace nfs --create-namespace
+}
+
 function helm::uninstall() {
 	local namespace=(
 		"slurm"
@@ -115,11 +128,6 @@ function slurm::prerequisites() {
 	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 	helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
 	helm repo add mariadb-operator https://helm.mariadb.com/mariadb-operator
-	if $FLAG_EXTRAS; then
-		helm repo add nfs-server-provisioner https://kubernetes-sigs.github.io/nfs-ganesha-server-and-external-provisioner/
-		helm repo add helm-openldap https://jp-gouin.github.io/helm-openldap/
-		helm repo add kedacore https://kedacore.github.io/charts
-	fi
 	helm repo update
 
 	helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
@@ -134,14 +142,6 @@ function slurm::prerequisites() {
 	helm upgrade --install mariadb-operator mariadb-operator/mariadb-operator \
 		--namespace mariadb --create-namespace \
 		--set 'crds.enabled=true'
-
-	if $FLAG_EXTRAS; then
-		helm upgrade --install keda kedacore/keda \
-			--namespace keda --create-namespace
-
-		helm upgrade --install nfs-server-provisioner nfs-server-provisioner/nfs-server-provisioner \
-			--namespace nfs --create-namespace
-	fi
 }
 
 function slurm::helm() {
@@ -218,16 +218,16 @@ $(basename "$0") - Manage a kind cluster for local testing/development
 ONESHOT OPTIONS:
 	--create            Create kind cluster and nothing else.
 	--delete            Delete kind cluster and nothing else.
-	--install           Install dependent helm releases and nothing else.
+	--config=PATH       Use the specified kind config when creating.
 	--uninstall         Uninstall all helm releases and nothing else.
 
 OPTIONS:
-	--config=PATH       Use the specified kind config when creating.
+	--install           Install dependent helm releases.
+	--install-extras    Install optional helm releases.
 	--helm              Deploy with helm instead of skaffold.
 	--operator          Deploy helm/slurm-operator with skaffold.
 	--operator-crds     Deploy helm/slurm-operator-crds with skaffold.
 	--slurm             Deploy helm/slurm with skaffold.
-	--extras            Install optional dependencies.
 
 HELP OPTIONS:
 	--debug             Show script debug information.
@@ -256,7 +256,9 @@ function main() {
 
 	if $FLAG_INSTALL; then
 		helm::install
-		return
+	fi
+	if $FLAG_INSTALL_EXTRAS; then
+		helm::install-extras
 	fi
 	if $FLAG_OPERATOR_CRDS; then
 		if $FLAG_HELM; then
@@ -287,14 +289,14 @@ FLAG_CONFIG="$ROOT_DIR/hack/kind-config.yaml"
 FLAG_DELETE=false
 FLAG_HELM=false
 FLAG_INSTALL=false
+FLAG_INSTALL_EXTRAS=false
 FLAG_UNINSTALL=false
 FLAG_SLURM=false
 FLAG_OPERATOR=false
 FLAG_OPERATOR_CRDS=false
-FLAG_EXTRAS=false
 
 SHORT="+h"
-LONG="create,config:,delete,debug,helm,slurm,operator,operator-crds,install,extras,uninstall,help"
+LONG="create,config:,delete,debug,helm,slurm,operator,operator-crds,install,install-extras,uninstall,help"
 OPTS="$(getopt -a --options "$SHORT" --longoptions "$LONG" -- "$@")"
 eval set -- "${OPTS}"
 while :; do
@@ -347,8 +349,12 @@ while :; do
 			exit 1
 		fi
 		;;
-	--extras)
-		FLAG_EXTRAS=true
+	--install-extras)
+		FLAG_INSTALL_EXTRAS=true
+		if $FLAG_INSTALL_EXTRAS && $FLAG_UNINSTALL; then
+			echo "Flags --install-extras and --uninstall are mutually exclusive!"
+			exit 1
+		fi
 		shift
 		;;
 	--uninstall)
