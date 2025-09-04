@@ -33,7 +33,6 @@ profiles:
               webhook.image.tag: '{{.IMAGE_TAG_slinky_slurm_net_slurm_operator_webhook}}'
             namespace: slinky
             createNamespace: true
-            skipBuildDependencies: true
 deploy:
   helm:
     releases:
@@ -43,4 +42,3 @@ deploy:
           - ./values-dev.yaml
         namespace: slinky
         createNamespace: true
-        skipBuildDependencies: true
