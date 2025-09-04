@@ -44,22 +44,22 @@ function sys::check() {
 		if [ "$(sysctl -n kernel.keys.maxkeys)" -lt 2000 ]; then
 			echo "Recommended to increase 'kernel.keys.maxkeys':"
 			echo "  $ sudo sysctl -w kernel.keys.maxkeys=2000"
-			echo "  $ echo 'kernel.keys.maxkeys=2000' | sudo tee --append /etc/sysctl.d/kernel"
+			echo "  $ echo 'kernel.keys.maxkeys=2000' | sudo tee --append /etc/sysctl.d/kernel.conf"
 		fi
 		if [ "$(sysctl -n fs.file-max)" -lt 10000000 ]; then
 			echo "Recommended to increase 'fs.file-max':"
 			echo "  $ sudo sysctl -w fs.file-max=10000000"
-			echo "  $ echo 'fs.file-max=10000000' | sudo tee --append /etc/sysctl.d/fs"
+			echo "  $ echo 'fs.file-max=10000000' | sudo tee --append /etc/sysctl.d/fs.conf"
 		fi
 		if [ "$(sysctl -n fs.inotify.max_user_instances)" -lt 65535 ]; then
 			echo "Recommended to increase 'fs.inotify.max_user_instances':"
 			echo "  $ sudo sysctl -w fs.inotify.max_user_instances=65535"
-			echo "  $ echo 'fs.inotify.max_user_instances=65535' | sudo tee --append /etc/sysctl.d/fs"
+			echo "  $ echo 'fs.inotify.max_user_instances=65535' | sudo tee --append /etc/sysctl.d/fs.conf"
 		fi
 		if [ "$(sysctl -n fs.inotify.max_user_watches)" -lt 1048576 ]; then
 			echo "Recommended to increase 'fs.inotify.max_user_watches':"
 			echo "  $ sudo sysctl -w fs.inotify.max_user_watches=1048576"
-			echo "  $ echo 'fs.inotify.max_user_watches=1048576' | sudo tee --append /etc/sysctl.d/fs"
+			echo "  $ echo 'fs.inotify.max_user_watches=1048576' | sudo tee --append /etc/sysctl.d/fs.conf"
 		fi
 	fi
 
