@@ -91,9 +91,6 @@ function kind::delete() {
 function helm::install() {
 	slurm-operator::prerequisites
 	slurm::prerequisites
-
-	cd "$ROOT_DIR"
-	make install
 }
 
 function helm::uninstall() {
@@ -112,9 +109,6 @@ function helm::uninstall() {
 			helm uninstall --namespace="$name" "$(helm --namespace="$name" ls --all --short)"
 		fi
 	done
-
-	cd "$ROOT_DIR"
-	make uninstall
 }
 
 function slurm::prerequisites() {
