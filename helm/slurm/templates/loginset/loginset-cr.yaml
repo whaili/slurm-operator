@@ -6,15 +6,16 @@ SPDX-License-Identifier: Apache-2.0
 {{- range $key, $loginset := $.Values.loginsets -}}
 {{- if $loginset.enabled }}
 {{- $name := printf "%s-%s" (include "slurm.login.name" $) $key }}
-{{- $podTemplate := $loginset.podTemplate -}}
+{{- $podMetadata := $loginset.metadata | default dict -}}
 {{- $labels := fromYaml (include "slurm.labels" $) -}}
 {{- $labels = merge $labels (dict "loginset.slinky.slurm.net/name" $name) -}}
-{{- $metadata := merge (dict "labels" $labels) ($podTemplate.metadata | default dict) -}}
-{{- $_ := set $podTemplate "metadata" $metadata -}}
-{{- $imagePullSecrets := concat list ($podTemplate.imagePullSecrets | default list) ($.Values.imagePullSecrets | default list) -}}
-{{- $_ := set $podTemplate "imagePullSecrets" $imagePullSecrets -}}
-{{- $priorityClassName := $podTemplate.priorityClassName | default $.Values.priorityClassName -}}
-{{- $_ := set $podTemplate "priorityClassName" $priorityClassName -}}
+{{- $podMetadata = merge (dict "labels" $labels) ($podMetadata | default dict) -}}
+{{- $podSpec := $loginset.podSpec | default dict -}}
+{{- $imagePullSecrets := concat list ($podSpec.imagePullSecrets | default list) ($.Values.imagePullSecrets | default list) -}}
+{{- $_ := set $podSpec "imagePullSecrets" $imagePullSecrets -}}
+{{- $priorityClassName := $podSpec.priorityClassName | default $.Values.priorityClassName -}}
+{{- $_ := set $podSpec "priorityClassName" $priorityClassName -}}
+{{- $podTemplate := dict "metadata" $podMetadata "spec" $podSpec -}}
 ---
 apiVersion: slinky.slurm.net/v1alpha1
 kind: LoginSet
@@ -40,10 +41,9 @@ spec:
     {{- . | nindent 4 }}
   {{- end }}{{- /* with $loginset.rootSshAuthorizedKeys */}}
   replicas: {{ $loginset.replicas }}
-  template:
-    {{- include "format-podTemplate" $podTemplate | nindent 4 }}
-    login:
-      {{- include "format-container" $loginset.login | nindent 6 }}
+  login:
+    {{- include "format-container" $loginset.login | nindent 4 }}
+  {{- include "format-podTemplate" $podTemplate | nindent 2 }}
   {{- with $loginset.service }}
   service:
     {{- toYaml . | nindent 4 }}

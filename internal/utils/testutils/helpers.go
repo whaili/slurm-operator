@@ -41,16 +41,16 @@ func NewController(name string, slurmKeyRef, jwtHs256KeyRef slinkyv1alpha1.Secre
 			SlurmKeyRef:    slurmKeyRef,
 			JwtHs256KeyRef: jwtHs256KeyRef,
 			AccountingRef:  accountingRef,
-			Template: slinkyv1alpha1.ControllerPodTemplate{
-				Slurmctld: slinkyv1alpha1.Container{
+			Slurmctld: slinkyv1alpha1.ContainerWrapper{
+				Container: corev1.Container{
 					Image: "slurmctld",
 				},
-				Reconfigure: slinkyv1alpha1.SideCar{
-					Image: "slurmctld",
-				},
-				LogFile: slinkyv1alpha1.SideCar{
-					Image: "alpine",
-				},
+			},
+			Reconfigure: slinkyv1alpha1.SideCar{
+				Image: "slurmctld",
+			},
+			LogFile: slinkyv1alpha1.SideCar{
+				Image: "alpine",
 			},
 		},
 	}
@@ -119,13 +119,13 @@ func NewAccounting(name string, slurmKeyRef, jwtHs256KeyRef slinkyv1alpha1.Secre
 				Host:           "mariadb",
 				PasswordKeyRef: passwordRef,
 			},
-			Template: slinkyv1alpha1.AccountingPodTemplate{
-				Slurmdbd: slinkyv1alpha1.Container{
+			Slurmdbd: slinkyv1alpha1.ContainerWrapper{
+				Container: corev1.Container{
 					Image: "slurmdbd",
 				},
-				InitConf: slinkyv1alpha1.SideCar{
-					Image: "sackd",
-				},
+			},
+			InitConf: slinkyv1alpha1.SideCar{
+				Image: "sackd",
 			},
 		},
 	}
@@ -169,13 +169,13 @@ func NewNodeset(name string, controller *slinkyv1alpha1.Controller, replicas int
 		Spec: slinkyv1alpha1.NodeSetSpec{
 			ControllerRef: controllerRef,
 			Replicas:      ptr.To(replicas),
-			Template: slinkyv1alpha1.NodeSetPodTemplate{
-				Slurmd: slinkyv1alpha1.Container{
+			Slurmd: slinkyv1alpha1.ContainerWrapper{
+				Container: corev1.Container{
 					Image: "slurmd",
 				},
-				LogFile: slinkyv1alpha1.SideCar{
-					Image: "alpine",
-				},
+			},
+			LogFile: slinkyv1alpha1.SideCar{
+				Image: "alpine",
 			},
 		},
 	}
@@ -197,8 +197,8 @@ func NewLoginset(name string, controller *slinkyv1alpha1.Controller, sssdConfRef
 		},
 		Spec: slinkyv1alpha1.LoginSetSpec{
 			ControllerRef: controllerRef,
-			Template: slinkyv1alpha1.LoginSetPodTemplate{
-				Login: slinkyv1alpha1.Container{
+			Login: slinkyv1alpha1.ContainerWrapper{
+				Container: corev1.Container{
 					Image: "login",
 				},
 			},
@@ -244,8 +244,8 @@ func NewRestapi(name string, controller *slinkyv1alpha1.Controller) *slinkyv1alp
 		},
 		Spec: slinkyv1alpha1.RestApiSpec{
 			ControllerRef: controllerRef,
-			Template: slinkyv1alpha1.RestApiPodTemplate{
-				Slurmrestd: slinkyv1alpha1.Container{
+			Slurmrestd: slinkyv1alpha1.ContainerWrapper{
+				Container: corev1.Container{
 					Image: "slurmrestd",
 				},
 			},

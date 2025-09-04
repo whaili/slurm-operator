@@ -34,22 +34,21 @@ type RestApiSpec struct {
 	// +default:=1
 	Replicas *int32 `json:"replicas,omitempty"`
 
+	// The slurmrestd container configuration.
+	// See corev1.Container spec.
+	// Ref: https://github.com/kubernetes/api/blob/master/core/v1/types.go#L2885
+	// +optional
+	Slurmrestd ContainerWrapper `json:"slurmrestd,omitempty"`
+
 	// Template is the object that describes the pod that will be created if
 	// insufficient replicas are detected.
 	// More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller#pod-template
-	Template RestApiPodTemplate `json:"template"`
+	// +optional
+	Template PodTemplate `json:"template,omitempty"`
 
 	// Service defines a template for a Kubernetes Service object.
 	// +optional
 	Service ServiceSpec `json:"service,omitzero"`
-}
-
-type RestApiPodTemplate struct {
-	PodTemplate `json:",inline"`
-
-	// The slurmrestd container configuration.
-	// +optional
-	Slurmrestd Container `json:"slurmrestd,omitempty"`
 }
 
 // RestApiStatus defines the observed state of Restapi

@@ -172,14 +172,14 @@ controller:
     # SlurmctldDebug: debug2
     # SlurmSchedLogLevel: 1
     # SlurmdDebug: debug2
+  # -- Labels and annotations.
+  # Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+  metadata: {}
+    # annotations: {}
+    # labels: {}
   # -- (corev1.PodSpec) Extend the pod template, and/or override certain configurations.
   # Ref: https://kubernetes.io/docs/concepts/workloads/pods/#pod-templates
-  podTemplate:
-    # -- Labels and annotations.
-    # Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
-    metadata: {}
-      # annotations: {}
-      # labels: {}
+  podSpec:
     # -- Additional initContainers for the pod.
     # Ref: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
     # Ref: https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/
@@ -232,14 +232,14 @@ restapi:
       # limits:
       #   cpu: 1
       #   memory: 1Gi
+  # -- Labels and annotations.
+  # Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+  metadata: {}
+    # annotations: {}
+    # labels: {}
   # -- (corev1.PodSpec) Extend the pod template, and/or override certain configurations.
   # Ref: https://kubernetes.io/docs/concepts/workloads/pods/#pod-templates
-  podTemplate:
-    # -- Labels and annotations.
-    # Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
-    metadata: {}
-      # annotations: {}
-      # labels: {}
+  podSpec:
     # -- Additional initContainers for the pod.
     # Ref: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
     # Ref: https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/
@@ -349,14 +349,14 @@ accounting:
     # PurgeSuspendAfter=1month
     # PurgeTXNAfter=12month
     # PurgeUsageAfter=24month
+  # -- Labels and annotations.
+  # Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+  metadata: {}
+    # annotations: {}
+    # labels: {}
   # -- (corev1.PodSpec) Extend the pod template, and/or override certain configurations.
   # Ref: https://kubernetes.io/docs/concepts/workloads/pods/#pod-templates
-  podTemplate:
-    # -- Labels and annotations.
-    # Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
-    metadata: {}
-      # annotations: {}
-      # labels: {}
+  podSpec:
     # -- Additional initContainers for the pod.
     # Ref: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
     # Ref: https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/
@@ -445,14 +445,14 @@ loginsets:
       ldap_search_base = dc=example,dc=com
       ldap_user_search_base = ou=Users,dc=example,dc=com
       ldap_group_search_base = ou=Groups,dc=example,dc=com
+    # -- Labels and annotations.
+    # Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+    metadata: {}
+      # annotations: {}
+      # labels: {}
     # -- (corev1.PodSpec) Extend the pod template, and/or override certain configurations.
     # Ref: https://kubernetes.io/docs/concepts/workloads/pods/#pod-templates
-    podTemplate:
-      # -- Labels and annotations.
-      # Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
-      metadata: {}
-        # annotations: {}
-        # labels: {}
+    podSpec:
       # -- Additional initContainers for the pod.
       # Ref: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
       # Ref: https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/
@@ -554,14 +554,14 @@ nodesets:
         # MaxTime: UNLIMITED
     # -- Enable propagation of container `resources.limits` into slurmd.
     useResourceLimits: true
+    # -- Labels and annotations.
+    # Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+    metadata: {}
+      # annotations: {}
+      # labels: {}
     # -- (corev1.PodSpec) Extend the pod template, and/or override certain configurations.
     # Ref: https://kubernetes.io/docs/concepts/workloads/pods/#pod-templates
-    podTemplate:
-      # -- Labels and annotations.
-      # Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
-      metadata: {}
-        # annotations: {}
-        # labels: {}
+    podSpec:
       # -- Additional initContainers for the pod.
       # Ref: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
       # Ref: https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/

@@ -42,7 +42,8 @@ func (b *Builder) BuildComputePodTemplate(nodeset *slinkyv1alpha1.NodeSet, contr
 		}).
 		Build()
 
-	template := nodeset.Spec.Template
+	spec := nodeset.Spec
+	template := spec.Template.PodSpecWrapper
 
 	opts := PodTemplateOpts{
 		Key: key,
@@ -60,14 +61,14 @@ func (b *Builder) BuildComputePodTemplate(nodeset *slinkyv1alpha1.NodeSet, contr
 			Hostname:         template.Hostname,
 			ImagePullSecrets: template.ImagePullSecrets,
 			InitContainers: []corev1.Container{
-				logfileContainer(template.LogFile, slurmdLogFilePath),
+				logfileContainer(spec.LogFile, slurmdLogFilePath),
 			},
 			NodeSelector:      template.NodeSelector,
 			PriorityClassName: template.PriorityClassName,
 			Tolerations:       template.Tolerations,
 			Volumes:           utils.MergeList(nodesetVolumes(controller), template.Volumes),
 		},
-		merge: template.ToPodSpec(),
+		merge: template.PodSpec,
 	}
 
 	o := b.buildPodTemplate(opts)
@@ -103,14 +104,14 @@ func nodesetVolumes(controller *slinkyv1alpha1.Controller) []corev1.Volume {
 }
 
 func slurmdContainer(nodeset *slinkyv1alpha1.NodeSet, controller *slinkyv1alpha1.Controller) corev1.Container {
-	template := nodeset.Spec.Template
+	spec := nodeset.Spec
 
 	out := corev1.Container{
 		Name:            labels.ComputeApp,
-		Env:             template.Slurmd.Env,
+		Env:             spec.Slurmd.Env,
 		Args:            slurmdArgs(nodeset, controller),
-		Image:           template.Slurmd.Image,
-		ImagePullPolicy: template.Slurmd.ImagePullPolicy,
+		Image:           spec.Slurmd.Image,
+		ImagePullPolicy: spec.Slurmd.ImagePullPolicy,
 		Ports: []corev1.ContainerPort{
 			{
 				Name:          labels.ComputeApp,
@@ -118,7 +119,7 @@ func slurmdContainer(nodeset *slinkyv1alpha1.NodeSet, controller *slinkyv1alpha1
 				Protocol:      corev1.ProtocolTCP,
 			},
 		},
-		Resources: template.Slurmd.Resources,
+		Resources: spec.Slurmd.Resources,
 		StartupProbe: &corev1.Probe{
 			ProbeHandler: corev1.ProbeHandler{
 				Exec: &corev1.ExecAction{
@@ -165,7 +166,7 @@ func slurmdContainer(nodeset *slinkyv1alpha1.NodeSet, controller *slinkyv1alpha1
 				},
 			},
 		},
-		VolumeDevices: template.Slurmd.VolumeDevices,
+		VolumeDevices: spec.Slurmd.VolumeDevices,
 		VolumeMounts: []corev1.VolumeMount{
 			{Name: slurmEtcVolume, MountPath: slurmEtcDir, ReadOnly: true},
 			{Name: slurmLogFileVolume, MountPath: slurmLogFileDir},
@@ -178,7 +179,7 @@ func slurmdArgs(nodeset *slinkyv1alpha1.NodeSet, controller *slinkyv1alpha1.Cont
 	args := []string{"-Z"}
 	args = append(args, configlessArgs(controller)...)
 	args = append(args, slurmdConfArgs(nodeset)...)
-	return utils.MergeList(args, nodeset.Spec.Template.Slurmd.Args)
+	return utils.MergeList(args, nodeset.Spec.Slurmd.Args)
 }
 
 func slurmdConfArgs(nodeset *slinkyv1alpha1.NodeSet) []string {
@@ -188,8 +189,9 @@ func slurmdConfArgs(nodeset *slinkyv1alpha1.NodeSet) []string {
 	}
 
 	name := nodeset.Name
-	if nodeset.Spec.Template.Hostname != "" {
-		name = strings.Trim(nodeset.Spec.Template.Hostname, "-")
+	template := nodeset.Spec.Template.PodSpecWrapper
+	if template.Hostname != "" {
+		name = strings.Trim(template.Hostname, "-")
 	}
 
 	confMap := map[string]string{

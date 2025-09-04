@@ -36,10 +36,17 @@ type LoginSetSpec struct {
 	// +optional
 	Replicas *int32 `json:"replicas,omitempty"`
 
+	// The login container configuration.
+	// See corev1.Container spec.
+	// Ref: https://github.com/kubernetes/api/blob/master/core/v1/types.go#L2885
+	// +optional
+	Login ContainerWrapper `json:"login,omitempty"`
+
 	// Template is the object that describes the pod that will be created if
 	// insufficient replicas are detected.
 	// More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller#pod-template
-	Template LoginSetPodTemplate `json:"template"`
+	// +optional
+	Template PodTemplate `json:"template,omitempty"`
 
 	// RootSshAuthorizedKeys is `root/.ssh/authorized_keys`.
 	// +optional
@@ -57,15 +64,6 @@ type LoginSetSpec struct {
 	// Service defines a template for a Kubernetes Service object.
 	// +optional
 	Service ServiceSpec `json:"service,omitzero"`
-}
-
-// PodTemplateSpec describes the data a pod should have when created from a template
-type LoginSetPodTemplate struct {
-	PodTemplate `json:",inline"`
-
-	// The login container configuration.
-	// +optional
-	Login Container `json:"login,omitempty"`
 }
 
 // LoginSetStatus defines the observed state of LoginSet

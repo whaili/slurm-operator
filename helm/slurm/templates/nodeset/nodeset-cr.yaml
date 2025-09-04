@@ -6,15 +6,17 @@ SPDX-License-Identifier: Apache-2.0
 {{- range $key, $nodeset := $.Values.nodesets -}}
 {{- if $nodeset.enabled }}
 {{- $name := printf "%s-%s" (include "slurm.worker.name" $) $key }}
-{{- $podTemplate := $nodeset.podTemplate -}}
+{{- $podMetadata := $nodeset.metadata | default dict -}}
 {{- $labels := fromYaml (include "slurm.labels" $) -}}
 {{- $labels = merge $labels (dict "nodeset.slinky.slurm.net/name" $name) -}}
-{{- $metadata := merge (dict "labels" $labels) ($podTemplate.metadata | default dict) -}}
-{{- $_ := set $podTemplate "metadata" $metadata -}}
-{{- $imagePullSecrets := concat list ($podTemplate.imagePullSecrets | default list) ($.Values.imagePullSecrets | default list) -}}
-{{- $_ := set $podTemplate "imagePullSecrets" $imagePullSecrets -}}
-{{- $priorityClassName := $podTemplate.priorityClassName | default $.Values.priorityClassName -}}
-{{- $_ := set $podTemplate "priorityClassName" $priorityClassName -}}
+{{- $podMetadata = merge (dict "labels" $labels) ($podMetadata | default dict) -}}
+{{- $podSpec := $nodeset.podSpec | default dict -}}
+{{- $imagePullSecrets := concat list ($podSpec.imagePullSecrets | default list) ($.Values.imagePullSecrets | default list) -}}
+{{- $_ := set $podSpec "imagePullSecrets" $imagePullSecrets -}}
+{{- $priorityClassName := $podSpec.priorityClassName | default $.Values.priorityClassName -}}
+{{- $_ := set $podSpec "priorityClassName" $priorityClassName -}}
+{{- $_ := set $podSpec "hostname" (printf "%s-" $key) -}}
+{{- $podTemplate := dict "metadata" $podMetadata "spec" $podSpec -}}
 {{- if $nodeset.useResourceLimits }}
   {{- $envLimts := list (dict "name" "POD_CPUS" "value" (include "slurm.worker.podCpus" $nodeset.slurmd | toString)) (dict "name" "POD_MEMORY" "value" (include "slurm.worker.podMemory" $nodeset.slurmd | toString)) -}}
   {{- $slurmdEnv := concat list ($nodeset.slurmd.env | default list) $envLimts -}}
@@ -44,13 +46,11 @@ spec:
     {{- end }}{{- /* if (include "slurm.worker.partitionConfig" $nodeset.partition) */}}
   {{- end }}{{- /* with $nodeset.partition */}}
   replicas: {{ $nodeset.replicas }}
-  template:
-    {{- include "format-podTemplate" $podTemplate | nindent 4 }}
-    hostname: "{{ $key }}-"
-    slurmd:
-      {{- include "format-container" $nodeset.slurmd | nindent 6 }}
-    logfile:
-      {{- include "format-container" $nodeset.logfile | nindent 6 }}
+  slurmd:
+    {{- include "format-container" $nodeset.slurmd | nindent 4 }}
+  logfile:
+    {{- include "format-container" $nodeset.logfile | nindent 4 }}
+  {{- include "format-podTemplate" $podTemplate | nindent 2 }}
   updateStrategy:
     type: RollingUpdate
     rollingUpdate:

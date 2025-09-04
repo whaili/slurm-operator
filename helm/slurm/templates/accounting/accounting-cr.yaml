@@ -4,14 +4,15 @@ SPDX-License-Identifier: Apache-2.0
 */}}
 
 {{- if .Values.accounting.enabled }}
-{{- $podTemplate := .Values.accounting.podTemplate -}}
+{{- $podMetadata := .Values.accounting.metadata | default dict -}}
 {{- $labels := fromYaml (include "slurm.labels" $) -}}
-{{- $metadata := merge (dict "labels" $labels) ($podTemplate.metadata | default dict) -}}
-{{- $_ := set $podTemplate "metadata" $metadata -}}
-{{- $imagePullSecrets := concat list ($podTemplate.imagePullSecrets | default list) (.Values.imagePullSecrets | default list) -}}
-{{- $_ := set $podTemplate "imagePullSecrets" $imagePullSecrets -}}
-{{- $priorityClassName := $podTemplate.priorityClassName | default .Values.priorityClassName -}}
-{{- $_ := set $podTemplate "priorityClassName" $priorityClassName -}}
+{{- $podMetadata = merge (dict "labels" $labels) ($podMetadata | default dict) -}}
+{{- $podSpec := .Values.accounting.podSpec | default dict -}}
+{{- $imagePullSecrets := concat list ($podSpec.imagePullSecrets | default list) (.Values.imagePullSecrets | default list) -}}
+{{- $_ := set $podSpec "imagePullSecrets" $imagePullSecrets -}}
+{{- $priorityClassName := $podSpec.priorityClassName | default .Values.priorityClassName -}}
+{{- $_ := set $podSpec "priorityClassName" $priorityClassName -}}
+{{- $podTemplate := dict "metadata" $podMetadata "spec" $podSpec -}}
 apiVersion: slinky.slurm.net/v1alpha1
 kind: Accounting
 metadata:
@@ -38,14 +39,17 @@ spec:
   extraConf: |
     {{- include "slurm.accounting.extraConf" . | nindent 4 }}
   {{- end }}{{- /* if (include "slurm.accounting.extraConf" .) */}}
-  template:
-    {{- include "format-podTemplate" $podTemplate | nindent 4 }}
-    slurmdbd:
-      {{- include "format-container" .Values.accounting.slurmdbd | nindent 6 }}
-    initconf:
-      {{- include "format-container" .Values.accounting.initconf | nindent 6 }}
+  slurmdbd:
+    {{- include "format-container" .Values.accounting.slurmdbd | nindent 4 }}
+  initconf:
+    {{- include "format-container" .Values.accounting.initconf | nindent 4 }}
+  {{- include "format-podTemplate" $podTemplate | nindent 2 }}
   {{- with .Values.accounting.storageConfig }}
   storageConfig:
     {{- toYaml . | nindent 4 }}
   {{- end }}{{- /* with .Values.accounting.storageConfig */}}
+  {{- with .Values.accounting.service }}
+  service:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}{{- /* with .Values.accounting.service */}}
 {{- end }}{{- /* if .Values.accounting.enabled */}}

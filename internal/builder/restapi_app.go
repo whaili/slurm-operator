@@ -85,7 +85,8 @@ func (b *Builder) restapiPodTemplate(restapi *slinkyv1alpha1.RestApi) (corev1.Po
 		}).
 		Build()
 
-	template := restapi.Spec.Template
+	spec := restapi.Spec
+	template := spec.Template.PodSpecWrapper
 
 	opts := PodTemplateOpts{
 		Key: key,
@@ -97,7 +98,7 @@ func (b *Builder) restapiPodTemplate(restapi *slinkyv1alpha1.RestApi) (corev1.Po
 			AutomountServiceAccountToken: ptr.To(false),
 			Affinity:                     template.Affinity,
 			Containers: []corev1.Container{
-				slurmrestdContainer(template.Slurmrestd, hasAccounting),
+				slurmrestdContainer(spec.Slurmrestd, hasAccounting),
 			},
 			Hostname:          template.Hostname,
 			ImagePullSecrets:  template.ImagePullSecrets,
@@ -112,7 +113,7 @@ func (b *Builder) restapiPodTemplate(restapi *slinkyv1alpha1.RestApi) (corev1.Po
 			Tolerations: template.Tolerations,
 			Volumes:     utils.MergeList(restapiVolumes(controller), template.Volumes),
 		},
-		merge: template.ToPodSpec(),
+		merge: template.PodSpec,
 	}
 
 	o := b.buildPodTemplate(opts)
@@ -156,11 +157,12 @@ func restapiVolumes(controller *slinkyv1alpha1.Controller) []corev1.Volume {
 	return out
 }
 
-func slurmrestdContainer(container slinkyv1alpha1.Container, hasAccounting bool) corev1.Container {
+func slurmrestdContainer(containerWrapper slinkyv1alpha1.ContainerWrapper, hasAccounting bool) corev1.Container {
+	container := containerWrapper.Container
 	out := corev1.Container{
 		Name:            labels.RestapiApp,
-		Env:             slurmrestEnv(container),
-		Args:            slurmrestArgs(container, hasAccounting),
+		Env:             slurmrestEnv(containerWrapper),
+		Args:            slurmrestArgs(containerWrapper, hasAccounting),
 		Image:           container.Image,
 		ImagePullPolicy: container.ImagePullPolicy,
 		Ports: []corev1.ContainerPort{
@@ -201,7 +203,8 @@ func slurmrestdContainer(container slinkyv1alpha1.Container, hasAccounting bool)
 	return out
 }
 
-func slurmrestArgs(container slinkyv1alpha1.Container, hasAccounting bool) []string {
+func slurmrestArgs(containerWrapper slinkyv1alpha1.ContainerWrapper, hasAccounting bool) []string {
+	container := containerWrapper.Container
 	args := container.Args
 	if !hasAccounting {
 		args = append(args, "-s")
@@ -211,7 +214,8 @@ func slurmrestArgs(container slinkyv1alpha1.Container, hasAccounting bool) []str
 	return args
 }
 
-func slurmrestEnv(container slinkyv1alpha1.Container) []corev1.EnvVar {
+func slurmrestEnv(containerWrapper slinkyv1alpha1.ContainerWrapper) []corev1.EnvVar {
+	container := containerWrapper.Container
 	options := []string{
 		"disable_unshare_files",
 		"disable_unshare_sysv",

@@ -128,7 +128,8 @@ func (b *Builder) loginPodTemplate(loginset *slinkyv1alpha1.LoginSet) (corev1.Po
 		}).
 		Build()
 
-	template := loginset.Spec.Template
+	spec := loginset.Spec
+	template := spec.Template.PodSpecWrapper
 
 	opts := PodTemplateOpts{
 		Key: key,
@@ -141,7 +142,7 @@ func (b *Builder) loginPodTemplate(loginset *slinkyv1alpha1.LoginSet) (corev1.Po
 			EnableServiceLinks:           ptr.To(false),
 			Affinity:                     template.Affinity,
 			Containers: []corev1.Container{
-				loginContainer(template.Login, controller),
+				loginContainer(spec.Login, controller),
 			},
 			Hostname:          template.Hostname,
 			ImagePullSecrets:  template.ImagePullSecrets,
@@ -150,7 +151,7 @@ func (b *Builder) loginPodTemplate(loginset *slinkyv1alpha1.LoginSet) (corev1.Po
 			Tolerations:       template.Tolerations,
 			Volumes:           utils.MergeList(loginVolumes(loginset, controller), template.Volumes),
 		},
-		merge: template.ToPodSpec(),
+		merge: template.PodSpec,
 	}
 
 	o := b.buildPodTemplate(opts)
@@ -258,10 +259,11 @@ func loginVolumes(loginset *slinkyv1alpha1.LoginSet, controller *slinkyv1alpha1.
 	return out
 }
 
-func loginContainer(container slinkyv1alpha1.Container, controller *slinkyv1alpha1.Controller) corev1.Container {
+func loginContainer(containerWrapper slinkyv1alpha1.ContainerWrapper, controller *slinkyv1alpha1.Controller) corev1.Container {
+	container := containerWrapper.Container
 	out := corev1.Container{
 		Name:            labels.LoginApp,
-		Env:             loginEnv(container, controller),
+		Env:             loginEnv(containerWrapper, controller),
 		Args:            container.Args,
 		Image:           container.Image,
 		ImagePullPolicy: container.ImagePullPolicy,
@@ -303,7 +305,8 @@ func loginContainer(container slinkyv1alpha1.Container, controller *slinkyv1alph
 	return out
 }
 
-func loginEnv(container slinkyv1alpha1.Container, controller *slinkyv1alpha1.Controller) []corev1.EnvVar {
+func loginEnv(containerWrapper slinkyv1alpha1.ContainerWrapper, controller *slinkyv1alpha1.Controller) []corev1.EnvVar {
+	container := containerWrapper.Container
 	env := []corev1.EnvVar{
 		{
 			Name:  "SACKD_OPTIONS",

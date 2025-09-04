@@ -84,7 +84,8 @@ func (b *Builder) accountingPodTemplate(accounting *slinkyv1alpha1.Accounting) (
 		}).
 		Build()
 
-	template := accounting.Spec.Template
+	spec := accounting.Spec
+	template := spec.Template.PodSpecWrapper
 
 	opts := PodTemplateOpts{
 		Key: key,
@@ -96,14 +97,14 @@ func (b *Builder) accountingPodTemplate(accounting *slinkyv1alpha1.Accounting) (
 			AutomountServiceAccountToken: ptr.To(false),
 			Affinity:                     template.Affinity,
 			Containers: []corev1.Container{
-				slurmdbdContainer(template.Slurmdbd),
+				slurmdbdContainer(spec.Slurmdbd),
 			},
 			InitContainers: []corev1.Container{
-				initconfContainer(accounting.Spec.Template.InitConf),
+				initconfContainer(spec.InitConf),
 			},
 			Volumes: utils.MergeList(accountingVolumes(accounting), template.Volumes),
 		},
-		merge: template.ToPodSpec(),
+		merge: template.PodSpec,
 	}
 
 	o := b.buildPodTemplate(opts)
@@ -159,7 +160,8 @@ func accountingVolumes(accounting *slinkyv1alpha1.Accounting) []corev1.Volume {
 	return out
 }
 
-func slurmdbdContainer(container slinkyv1alpha1.Container) corev1.Container {
+func slurmdbdContainer(containerWrapper slinkyv1alpha1.ContainerWrapper) corev1.Container {
+	container := containerWrapper.Container
 	out := corev1.Container{
 		Name:            labels.AccountingApp,
 		Args:            container.Args,

@@ -33,11 +33,21 @@ type AccountingSpec struct {
 	// +required
 	JwtHs256KeyRef SecretKeySelector `json:"jwtHs256KeyRef,omitzero"`
 
+	// The slurmdbd container configuration.
+	// See corev1.Container spec.
+	// Ref: https://github.com/kubernetes/api/blob/master/core/v1/types.go#L2885
+	// +optional
+	Slurmdbd ContainerWrapper `json:"slurmdbd,omitempty"`
+
+	// The initconf sidecar configuration.
+	// +optional
+	InitConf SideCar `json:"initconf,omitzero"`
+
 	// Template is the object that describes the pod that will be created if
 	// insufficient replicas are detected.
 	// More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller#pod-template
 	// +optional
-	Template AccountingPodTemplate `json:"template"`
+	Template PodTemplate `json:"template,omitempty"`
 
 	// StorageConfig is the configuration for mysql/mariadb access.
 	// +optional
@@ -51,18 +61,6 @@ type AccountingSpec struct {
 	// Service defines a template for a Kubernetes Service object.
 	// +optional
 	Service ServiceSpec `json:"service,omitzero"`
-}
-
-type AccountingPodTemplate struct {
-	PodTemplate `json:",inline"`
-
-	// The slurmdbd container configuration.
-	// +optional
-	Slurmdbd Container `json:"slurmdbd,omitempty"`
-
-	// The initconf sidecar configuration.
-	// +optional
-	InitConf SideCar `json:"initconf,omitzero"`
 }
 
 // StorageConfig defines access to mysql/mariadb.

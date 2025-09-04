@@ -10,6 +10,7 @@ import (
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/builder/labels"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8slabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/utils/set"
@@ -45,9 +46,9 @@ func TestBuilder_BuildComputePodTemplate(t *testing.T) {
 							"features=bar",
 							"weight=5",
 						}, " "),
-						Template: slinkyv1alpha1.NodeSetPodTemplate{
-							PodTemplate: slinkyv1alpha1.PodTemplate{
-								PodSpec: slinkyv1alpha1.PodSpec{
+						Template: slinkyv1alpha1.PodTemplate{
+							PodSpecWrapper: slinkyv1alpha1.PodSpecWrapper{
+								PodSpec: corev1.PodSpec{
 									Hostname: "foo-",
 								},
 							},

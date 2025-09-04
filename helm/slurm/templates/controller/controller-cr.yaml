@@ -3,14 +3,15 @@ SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
 SPDX-License-Identifier: Apache-2.0
 */}}
 
-{{- $podTemplate := .Values.controller.podTemplate -}}
+{{- $podMetadata := .Values.controller.metadata | default dict -}}
 {{- $labels := fromYaml (include "slurm.labels" $) -}}
-{{- $metadata := merge (dict "labels" $labels) ($podTemplate.metadata | default dict) -}}
-{{- $_ := set $podTemplate "metadata" $metadata -}}
-{{- $imagePullSecrets := concat list ($podTemplate.imagePullSecrets | default list) (.Values.imagePullSecrets | default list) -}}
-{{- $_ := set $podTemplate "imagePullSecrets" $imagePullSecrets -}}
-{{- $priorityClassName := $podTemplate.priorityClassName | default .Values.priorityClassName -}}
-{{- $_ := set $podTemplate "priorityClassName" $priorityClassName -}}
+{{- $podMetadata = merge (dict "labels" $labels) ($podMetadata | default dict) -}}
+{{- $podSpec := .Values.controller.podSpec | default dict -}}
+{{- $imagePullSecrets := concat list ($podSpec.imagePullSecrets | default list) (.Values.imagePullSecrets | default list) -}}
+{{- $_ := set $podSpec "imagePullSecrets" $imagePullSecrets -}}
+{{- $priorityClassName := $podSpec.priorityClassName | default .Values.priorityClassName -}}
+{{- $_ := set $podSpec "priorityClassName" $priorityClassName -}}
+{{- $podTemplate := dict "metadata" $podMetadata "spec" $podSpec -}}
 apiVersion: slinky.slurm.net/v1alpha1
 kind: Controller
 metadata:
@@ -57,14 +58,13 @@ spec:
   epilogScriptRefs:
     - name: {{ include "slurm.controller.epilogName" $ }}
   {{- end }}{{- /* with .Values.epilogScripts */}}
-  template:
-    {{- include "format-podTemplate" $podTemplate | nindent 4 }}
-    slurmctld:
-      {{- include "format-container" .Values.controller.slurmctld | nindent 6 }}
-    reconfigure:
-      {{- include "format-container" .Values.controller.reconfigure | nindent 6 }}
-    logfile:
-      {{- include "format-container" .Values.controller.logfile | nindent 6 }}
+  slurmctld:
+    {{- include "format-container" .Values.controller.slurmctld | nindent 4 }}
+  reconfigure:
+    {{- include "format-container" .Values.controller.reconfigure | nindent 4 }}
+  logfile:
+    {{- include "format-container" .Values.controller.logfile | nindent 4 }}
+  {{- include "format-podTemplate" $podTemplate | nindent 2 }}
   {{- with .Values.controller.persistence }}
   persistence:
     {{- toYaml . | nindent 4 }}

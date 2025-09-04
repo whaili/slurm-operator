@@ -48,18 +48,14 @@ func newNodeSetWithVolumes(name string, petMounts []corev1.VolumeMount, podMount
 		})
 	}
 
-	template := slinkyv1alpha1.NodeSetPodTemplate{
-		PodTemplate: slinkyv1alpha1.PodTemplate{
-			PodMetadata: slinkyv1alpha1.Metadata{
-				Labels: map[string]string{"foo": "bar"},
-			},
-			PodSpec: slinkyv1alpha1.PodSpec{
+	template := slinkyv1alpha1.PodTemplate{
+		PodMetadata: slinkyv1alpha1.Metadata{
+			Labels: map[string]string{"foo": "bar"},
+		},
+		PodSpecWrapper: slinkyv1alpha1.PodSpecWrapper{
+			PodSpec: corev1.PodSpec{
 				Volumes: vols,
 			},
-		},
-		Slurmd: slinkyv1alpha1.Container{
-			Image:        "nginx",
-			VolumeMounts: mounts,
 		},
 	}
 
@@ -74,7 +70,13 @@ func newNodeSetWithVolumes(name string, petMounts []corev1.VolumeMount, podMount
 			UID:       types.UID("test"),
 		},
 		Spec: slinkyv1alpha1.NodeSetSpec{
-			Replicas:             ptr.To[int32](1),
+			Replicas: ptr.To[int32](1),
+			Slurmd: slinkyv1alpha1.ContainerWrapper{
+				Container: corev1.Container{
+					Image:        "nginx",
+					VolumeMounts: mounts,
+				},
+			},
 			Template:             template,
 			VolumeClaimTemplates: claims,
 			UpdateStrategy: slinkyv1alpha1.NodeSetUpdateStrategy{

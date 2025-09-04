@@ -76,10 +76,31 @@ Format container object.
 Format pod template object.
 */}}
 {{- define "format-podTemplate" -}}
-{{- $template := omit . "metadata" -}}
+{{- with . -}}
+template:
+  {{- include "format-podMetadata" . | nindent 2 -}}
+  {{- include "format-podSpec" . | nindent 2 -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Format pod metadata object.
+*/}}
+{{- define "format-podMetadata" -}}
+{{- with .metadata -}}
 metadata:
-  {{- toYaml .metadata | nindent 2 }}
-{{ toYaml $template }}
+  {{- toYaml . | nindent 2 }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Format pod spec object.
+*/}}
+{{- define "format-podSpec" -}}
+{{- with .spec -}}
+spec:
+  {{- toYaml . | nindent 2 }}
+{{- end -}}
 {{- end -}}
 
 {{/*

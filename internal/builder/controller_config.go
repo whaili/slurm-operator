@@ -196,7 +196,7 @@ func buildSlurmConf(
 			continue
 		}
 		name := nodeset.Name
-		template := nodeset.Spec.Template
+		template := nodeset.Spec.Template.PodSpecWrapper
 		if template.Hostname != "" {
 			name = strings.Trim(template.Hostname, "-")
 		}

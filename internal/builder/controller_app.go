@@ -126,7 +126,8 @@ func (b *Builder) controllerPodTemplate(controller *slinkyv1alpha1.Controller) (
 		}).
 		Build()
 
-	template := controller.Spec.Template
+	spec := controller.Spec
+	template := spec.Template.PodSpecWrapper
 
 	opts := PodTemplateOpts{
 		Key: key,
@@ -138,12 +139,12 @@ func (b *Builder) controllerPodTemplate(controller *slinkyv1alpha1.Controller) (
 			AutomountServiceAccountToken: ptr.To(false),
 			Affinity:                     template.Affinity,
 			Containers: []corev1.Container{
-				slurmctldContainer(template.Slurmctld),
-				reconfigureContainer(template.Reconfigure),
+				slurmctldContainer(spec.Slurmctld),
+				reconfigureContainer(spec.Reconfigure),
 			},
 			Hostname: template.Hostname,
 			InitContainers: []corev1.Container{
-				logfileContainer(template.LogFile, slurmctldLogFilePath),
+				logfileContainer(spec.LogFile, slurmctldLogFilePath),
 			},
 			ImagePullSecrets:  template.ImagePullSecrets,
 			NodeSelector:      template.NodeSelector,
@@ -157,7 +158,7 @@ func (b *Builder) controllerPodTemplate(controller *slinkyv1alpha1.Controller) (
 			Tolerations: template.Tolerations,
 			Volumes:     utils.MergeList(controllerVolumes(controller, extraConfigMapNames), template.Volumes),
 		},
-		merge: template.ToPodSpec(),
+		merge: template.PodSpec,
 	}
 
 	o := b.buildPodTemplate(opts)
@@ -226,7 +227,8 @@ func controllerVolumes(controller *slinkyv1alpha1.Controller, extra []string) []
 	return out
 }
 
-func slurmctldContainer(container slinkyv1alpha1.Container) corev1.Container {
+func slurmctldContainer(containerWrapper slinkyv1alpha1.ContainerWrapper) corev1.Container {
+	container := containerWrapper.Container
 	out := corev1.Container{
 		Name:            labels.ControllerApp,
 		Args:            container.Args,

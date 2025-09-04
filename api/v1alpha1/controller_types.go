@@ -43,11 +43,25 @@ type ControllerSpec struct {
 	// +optional
 	AccountingRef ObjectReference `json:"accountingRef"`
 
+	// The slurmctld container configuration.
+	// See corev1.Container spec.
+	// Ref: https://github.com/kubernetes/api/blob/master/core/v1/types.go#L2885
+	// +optional
+	Slurmctld ContainerWrapper `json:"slurmctld,omitempty"`
+
+	// The reconfigure sidecar configuration.
+	// +optional
+	Reconfigure SideCar `json:"reconfigure,omitzero"`
+
+	// The logfile sidecar configuration.
+	// +optional
+	LogFile SideCar `json:"logfile,omitzero"`
+
 	// Template is the object that describes the pod that will be created if
 	// insufficient replicas are detected.
 	// More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller#pod-template
 	// +optional
-	Template ControllerPodTemplate `json:"template"`
+	Template PodTemplate `json:"template,omitempty"`
 
 	// ExtraConf is appended onto the end of the `slurm.conf` file.
 	// Ref: https://slurm.schedmd.com/slurm.conf.html
@@ -77,22 +91,6 @@ type ControllerSpec struct {
 	// Service defines a template for a Kubernetes Service object.
 	// +optional
 	Service ServiceSpec `json:"service,omitzero"`
-}
-
-type ControllerPodTemplate struct {
-	PodTemplate `json:",inline"`
-
-	// The slurmctld container configuration.
-	// +optional
-	Slurmctld Container `json:"slurmctld,omitempty"`
-
-	// The reconfigure sidecar configuration.
-	// +optional
-	Reconfigure SideCar `json:"reconfigure,omitzero"`
-
-	// The logfile sidecar configuration.
-	// +optional
-	LogFile SideCar `json:"logfile,omitzero"`
 }
 
 type ControllerPersistence struct {

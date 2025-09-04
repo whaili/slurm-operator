@@ -37,11 +37,21 @@ type NodeSetSpec struct {
 	// +optional
 	Replicas *int32 `json:"replicas,omitempty"`
 
+	// The slurmd container configuration.
+	// See corev1.Container spec.
+	// Ref: https://github.com/kubernetes/api/blob/master/core/v1/types.go#L2885
+	// +optional
+	Slurmd ContainerWrapper `json:"slurmd,omitempty"`
+
+	// The logfile sidecar configuration.
+	// +optional
+	LogFile SideCar `json:"logfile,omitzero"`
+
 	// Template is the object that describes the pod that will be created if
 	// insufficient replicas are detected.
 	// More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller#pod-template
 	// +optional
-	Template NodeSetPodTemplate `json:"template,omitempty"`
+	Template PodTemplate `json:"template,omitempty"`
 
 	// ExtraConf is added to the slurmd args as `--conf <extraConf>`.
 	// Ref: https://slurm.schedmd.com/slurmd.html#OPT_conf-%3Cnode-parameters%3E
@@ -87,18 +97,6 @@ type NodeSetSpec struct {
 	// Defaults to 0 (pod will be considered available as soon as it is ready).
 	// +optional
 	MinReadySeconds int32 `json:"minReadySeconds,omitempty"`
-}
-
-type NodeSetPodTemplate struct {
-	PodTemplate `json:",inline"`
-
-	// The slurmd container configuration.
-	// +optional
-	Slurmd Container `json:"slurmd,omitempty"`
-
-	// The logfile sidecar configuration.
-	// +optional
-	LogFile SideCar `json:"logfile,omitzero"`
 }
 
 // NodeSetPartition defines the Slurm partition configuration for the NodeSet.

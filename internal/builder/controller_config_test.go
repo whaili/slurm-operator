@@ -102,9 +102,9 @@ func TestBuilder_BuildControllerConfig(t *testing.T) {
 							Partition: slinkyv1alpha1.NodeSetPartition{
 								Enabled: true,
 							},
-							Template: slinkyv1alpha1.NodeSetPodTemplate{
-								PodTemplate: slinkyv1alpha1.PodTemplate{
-									PodSpec: slinkyv1alpha1.PodSpec{
+							Template: slinkyv1alpha1.PodTemplate{
+								PodSpecWrapper: slinkyv1alpha1.PodSpecWrapper{
+									PodSpec: corev1.PodSpec{
 										Hostname: "foo-",
 									},
 								},
