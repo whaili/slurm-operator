@@ -14,10 +14,11 @@ import (
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
+	clientutils "github.com/SlinkyProject/slurm-client/pkg/utils"
+
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/builder/labels"
 	"github.com/SlinkyProject/slurm-operator/internal/builder/metadata"
-	"github.com/SlinkyProject/slurm-operator/internal/utils"
 )
 
 const (
@@ -139,12 +140,12 @@ func (b *Builder) controllerPodTemplate(controller *slinkyv1alpha1.Controller) (
 			AutomountServiceAccountToken: ptr.To(false),
 			Affinity:                     template.Affinity,
 			Containers: []corev1.Container{
-				slurmctldContainer(spec.Slurmctld),
-				reconfigureContainer(spec.Reconfigure),
+				b.slurmctldContainer(spec.Slurmctld.Container),
+				b.reconfigureContainer(spec.Reconfigure),
 			},
 			Hostname: template.Hostname,
 			InitContainers: []corev1.Container{
-				logfileContainer(spec.LogFile, slurmctldLogFilePath),
+				b.logfileContainer(spec.LogFile, slurmctldLogFilePath),
 			},
 			ImagePullSecrets:  template.ImagePullSecrets,
 			NodeSelector:      template.NodeSelector,
@@ -156,7 +157,7 @@ func (b *Builder) controllerPodTemplate(controller *slinkyv1alpha1.Controller) (
 				FSGroup:      ptr.To(slurmUserGid),
 			},
 			Tolerations: template.Tolerations,
-			Volumes:     utils.MergeList(controllerVolumes(controller, extraConfigMapNames), template.Volumes),
+			Volumes:     controllerVolumes(controller, extraConfigMapNames),
 		},
 		merge: template.PodSpec,
 	}
@@ -227,85 +228,86 @@ func controllerVolumes(controller *slinkyv1alpha1.Controller, extra []string) []
 	return out
 }
 
-func slurmctldContainer(containerWrapper slinkyv1alpha1.ContainerWrapper) corev1.Container {
-	container := containerWrapper.Container
-	out := corev1.Container{
-		Name:            labels.ControllerApp,
-		Args:            container.Args,
-		Image:           container.Image,
-		ImagePullPolicy: container.ImagePullPolicy,
-		Ports: []corev1.ContainerPort{
-			{
-				Name:          labels.ControllerApp,
-				ContainerPort: SlurmctldPort,
-				Protocol:      corev1.ProtocolTCP,
-			},
-		},
-		Resources: container.Resources,
-		StartupProbe: &corev1.Probe{
-			ProbeHandler: corev1.ProbeHandler{
-				TCPSocket: &corev1.TCPSocketAction{
-					Port: intstr.FromInt(SlurmctldPort),
+func (b *Builder) slurmctldContainer(merge corev1.Container) corev1.Container {
+	opts := ContainerOpts{
+		base: corev1.Container{
+			Name: labels.ControllerApp,
+			Ports: []corev1.ContainerPort{
+				{
+					Name:          labels.ControllerApp,
+					ContainerPort: SlurmctldPort,
+					Protocol:      corev1.ProtocolTCP,
 				},
 			},
-			FailureThreshold: 6,
-			PeriodSeconds:    10,
-		},
-		ReadinessProbe: &corev1.Probe{
-			ProbeHandler: corev1.ProbeHandler{
-				TCPSocket: &corev1.TCPSocketAction{
-					Port: intstr.FromInt(SlurmctldPort),
+			StartupProbe: &corev1.Probe{
+				ProbeHandler: corev1.ProbeHandler{
+					TCPSocket: &corev1.TCPSocketAction{
+						Port: intstr.FromInt(SlurmctldPort),
+					},
+				},
+				FailureThreshold: 6,
+				PeriodSeconds:    10,
+			},
+			ReadinessProbe: &corev1.Probe{
+				ProbeHandler: corev1.ProbeHandler{
+					TCPSocket: &corev1.TCPSocketAction{
+						Port: intstr.FromInt(SlurmctldPort),
+					},
 				},
 			},
-		},
-		LivenessProbe: &corev1.Probe{
-			ProbeHandler: corev1.ProbeHandler{
-				TCPSocket: &corev1.TCPSocketAction{
-					Port: intstr.FromInt(SlurmctldPort),
+			LivenessProbe: &corev1.Probe{
+				ProbeHandler: corev1.ProbeHandler{
+					TCPSocket: &corev1.TCPSocketAction{
+						Port: intstr.FromInt(SlurmctldPort),
+					},
 				},
+				FailureThreshold: 6,
+				PeriodSeconds:    10,
 			},
-			FailureThreshold: 6,
-			PeriodSeconds:    10,
+			SecurityContext: &corev1.SecurityContext{
+				RunAsNonRoot: ptr.To(true),
+				RunAsUser:    ptr.To(slurmUserUid),
+				RunAsGroup:   ptr.To(slurmUserGid),
+			},
+			VolumeMounts: []corev1.VolumeMount{
+				{Name: slurmEtcVolume, MountPath: slurmEtcDir, ReadOnly: true},
+				{Name: slurmPidFileVolume, MountPath: slurmPidFileDir},
+				{Name: slurmctldStateSaveVolume, MountPath: slurmctldSpoolDir},
+				{Name: slurmAuthSocketVolume, MountPath: slurmctldAuthSocketDir},
+				{Name: slurmLogFileVolume, MountPath: slurmLogFileDir},
+			},
 		},
-		SecurityContext: &corev1.SecurityContext{
-			RunAsNonRoot: ptr.To(true),
-			RunAsUser:    ptr.To(slurmUserUid),
-			RunAsGroup:   ptr.To(slurmUserGid),
-		},
-		VolumeDevices: container.VolumeDevices,
-		VolumeMounts: []corev1.VolumeMount{
-			{Name: slurmEtcVolume, MountPath: slurmEtcDir, ReadOnly: true},
-			{Name: slurmPidFileVolume, MountPath: slurmPidFileDir},
-			{Name: slurmctldStateSaveVolume, MountPath: slurmctldSpoolDir},
-			{Name: slurmAuthSocketVolume, MountPath: slurmctldAuthSocketDir},
-			{Name: slurmLogFileVolume, MountPath: slurmLogFileDir},
-		},
+		merge: merge,
 	}
-	out.VolumeMounts = append(out.VolumeMounts, container.VolumeMounts...)
-	return out
+
+	return b.BuildContainer(opts)
 }
 
 //go:embed scripts/reconfigure.sh
 var reconfigureScript string
 
-func reconfigureContainer(container slinkyv1alpha1.ContainerMinimal) corev1.Container {
-	out := corev1.Container{
-		Name:            "reconfigure",
-		Image:           container.Image,
-		ImagePullPolicy: container.ImagePullPolicy,
-		Command: []string{
-			"tini",
-			"-g",
-			"--",
-			"bash",
-			"-c",
-			reconfigureScript,
+func (b *Builder) reconfigureContainer(container slinkyv1alpha1.ContainerMinimal) corev1.Container {
+	merge := &corev1.Container{}
+	clientutils.RemarshalOrDie(container, merge)
+
+	opts := ContainerOpts{
+		base: corev1.Container{
+			Name: "reconfigure",
+			Command: []string{
+				"tini",
+				"-g",
+				"--",
+				"bash",
+				"-c",
+				reconfigureScript,
+			},
+			VolumeMounts: []corev1.VolumeMount{
+				{Name: slurmEtcVolume, MountPath: slurmEtcDir, ReadOnly: true},
+				{Name: slurmAuthSocketVolume, MountPath: slurmctldAuthSocketDir, ReadOnly: true},
+			},
 		},
-		Resources: container.Resources,
-		VolumeMounts: []corev1.VolumeMount{
-			{Name: slurmEtcVolume, MountPath: slurmEtcDir, ReadOnly: true},
-			{Name: slurmAuthSocketVolume, MountPath: slurmctldAuthSocketDir, ReadOnly: true},
-		},
+		merge: *merge,
 	}
-	return out
+
+	return b.BuildContainer(opts)
 }

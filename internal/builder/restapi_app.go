@@ -20,7 +20,6 @@ import (
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/builder/labels"
 	"github.com/SlinkyProject/slurm-operator/internal/builder/metadata"
-	"github.com/SlinkyProject/slurm-operator/internal/utils"
 )
 
 const (
@@ -98,7 +97,7 @@ func (b *Builder) restapiPodTemplate(restapi *slinkyv1alpha1.RestApi) (corev1.Po
 			AutomountServiceAccountToken: ptr.To(false),
 			Affinity:                     template.Affinity,
 			Containers: []corev1.Container{
-				slurmrestdContainer(spec.Slurmrestd, hasAccounting),
+				b.slurmrestdContainer(spec.Slurmrestd.Container, hasAccounting),
 			},
 			Hostname:          template.Hostname,
 			ImagePullSecrets:  template.ImagePullSecrets,
@@ -111,7 +110,7 @@ func (b *Builder) restapiPodTemplate(restapi *slinkyv1alpha1.RestApi) (corev1.Po
 				FSGroup:      ptr.To(slurmrestdUserGid),
 			},
 			Tolerations: template.Tolerations,
-			Volumes:     utils.MergeList(restapiVolumes(controller), template.Volumes),
+			Volumes:     restapiVolumes(controller),
 		},
 		merge: template.PodSpec,
 	}
@@ -157,72 +156,62 @@ func restapiVolumes(controller *slinkyv1alpha1.Controller) []corev1.Volume {
 	return out
 }
 
-func slurmrestdContainer(containerWrapper slinkyv1alpha1.ContainerWrapper, hasAccounting bool) corev1.Container {
-	container := containerWrapper.Container
-	out := corev1.Container{
-		Name:            labels.RestapiApp,
-		Env:             slurmrestEnv(containerWrapper),
-		Args:            slurmrestArgs(containerWrapper, hasAccounting),
-		Image:           container.Image,
-		ImagePullPolicy: container.ImagePullPolicy,
-		Ports: []corev1.ContainerPort{
-			{
-				Name:          labels.RestapiApp,
-				ContainerPort: SlurmrestdPort,
-				Protocol:      corev1.ProtocolTCP,
+func (b *Builder) slurmrestdContainer(merge corev1.Container, hasAccounting bool) corev1.Container {
+	opts := ContainerOpts{
+		base: corev1.Container{
+			Name: labels.RestapiApp,
+			Env: []corev1.EnvVar{
+				{Name: "SLURM_JWT", Value: "daemon"},
+				{Name: "SLURMRESTD_SECURITY", Value: strings.Join([]string{
+					"disable_unshare_files",
+					"disable_unshare_sysv",
+				}, ",")},
 			},
-		},
-		Resources: container.Resources,
-		StartupProbe: &corev1.Probe{
-			ProbeHandler: corev1.ProbeHandler{
-				TCPSocket: &corev1.TCPSocketAction{
-					Port: intstr.FromInt(SlurmrestdPort),
+			Args: slurmrestArgs(hasAccounting),
+			Ports: []corev1.ContainerPort{
+				{
+					Name:          labels.RestapiApp,
+					ContainerPort: SlurmrestdPort,
+					Protocol:      corev1.ProtocolTCP,
 				},
 			},
-			FailureThreshold: 6,
-			PeriodSeconds:    10,
-		},
-		ReadinessProbe: &corev1.Probe{
-			ProbeHandler: corev1.ProbeHandler{
-				TCPSocket: &corev1.TCPSocketAction{
-					Port: intstr.FromInt(SlurmrestdPort),
+			StartupProbe: &corev1.Probe{
+				ProbeHandler: corev1.ProbeHandler{
+					TCPSocket: &corev1.TCPSocketAction{
+						Port: intstr.FromInt(SlurmrestdPort),
+					},
+				},
+				FailureThreshold: 6,
+				PeriodSeconds:    10,
+			},
+			ReadinessProbe: &corev1.Probe{
+				ProbeHandler: corev1.ProbeHandler{
+					TCPSocket: &corev1.TCPSocketAction{
+						Port: intstr.FromInt(SlurmrestdPort),
+					},
 				},
 			},
+			SecurityContext: &corev1.SecurityContext{
+				RunAsNonRoot: ptr.To(true),
+				RunAsUser:    ptr.To(slurmrestdUserUid),
+				RunAsGroup:   ptr.To(slurmrestdUserGid),
+			},
+			VolumeMounts: []corev1.VolumeMount{
+				{Name: slurmEtcVolume, MountPath: slurmEtcDir, ReadOnly: true},
+			},
 		},
-		SecurityContext: &corev1.SecurityContext{
-			RunAsNonRoot: ptr.To(true),
-			RunAsUser:    ptr.To(slurmrestdUserUid),
-			RunAsGroup:   ptr.To(slurmrestdUserGid),
-		},
-		VolumeDevices: container.VolumeDevices,
-		VolumeMounts: []corev1.VolumeMount{
-			{Name: slurmEtcVolume, MountPath: slurmEtcDir, ReadOnly: true},
-		},
+		merge: merge,
 	}
-	out.VolumeMounts = append(out.VolumeMounts, container.VolumeMounts...)
-	return out
+
+	return b.BuildContainer(opts)
 }
 
-func slurmrestArgs(containerWrapper slinkyv1alpha1.ContainerWrapper, hasAccounting bool) []string {
-	container := containerWrapper.Container
-	args := container.Args
+func slurmrestArgs(hasAccounting bool) []string {
+	args := []string{}
 	if !hasAccounting {
 		args = append(args, "-s")
 		args = append(args, "openapi/slurmctld")
 	}
 	args = append(args, fmt.Sprintf("0.0.0.0:%d", SlurmrestdPort))
 	return args
-}
-
-func slurmrestEnv(containerWrapper slinkyv1alpha1.ContainerWrapper) []corev1.EnvVar {
-	container := containerWrapper.Container
-	options := []string{
-		"disable_unshare_files",
-		"disable_unshare_sysv",
-	}
-	env := []corev1.EnvVar{
-		{Name: "SLURM_JWT", Value: "daemon"},
-		{Name: "SLURMRESTD_SECURITY", Value: strings.Join(options, ",")},
-	}
-	return mergeEnvVar(container.Env, env, ",")
 }

@@ -11,6 +11,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/utils/ptr"
 
+	clientutils "github.com/SlinkyProject/slurm-client/pkg/utils"
+
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 )
 
@@ -63,60 +65,68 @@ func configlessArgs(controller *slinkyv1alpha1.Controller) []string {
 //go:embed scripts/initconf.sh
 var initConfScript string
 
-func initconfContainer(container slinkyv1alpha1.ContainerMinimal) corev1.Container {
-	out := corev1.Container{
-		Name:            "initconf",
-		Image:           container.Image,
-		ImagePullPolicy: container.ImagePullPolicy,
-		Env: []corev1.EnvVar{
-			{
-				Name:  "SLURM_USER",
-				Value: slurmUser,
+func (b *Builder) initconfContainer(container slinkyv1alpha1.ContainerMinimal) corev1.Container {
+	merge := &corev1.Container{}
+	clientutils.RemarshalOrDie(container, merge)
+
+	opts := ContainerOpts{
+		base: corev1.Container{
+			Name: "initconf",
+			Env: []corev1.EnvVar{
+				{
+					Name:  "SLURM_USER",
+					Value: slurmUser,
+				},
+			},
+			Command: []string{
+				"tini",
+				"-g",
+				"--",
+				"bash",
+				"-c",
+				initConfScript,
+			},
+			VolumeMounts: []corev1.VolumeMount{
+				{Name: slurmEtcVolume, MountPath: slurmEtcMountDir},
+				{Name: slurmConfigVolume, MountPath: slurmConfigDir, ReadOnly: true},
 			},
 		},
-		Command: []string{
-			"tini",
-			"-g",
-			"--",
-			"bash",
-			"-c",
-			initConfScript,
-		},
-		Resources: container.Resources,
-		VolumeMounts: []corev1.VolumeMount{
-			{Name: slurmEtcVolume, MountPath: slurmEtcMountDir},
-			{Name: slurmConfigVolume, MountPath: slurmConfigDir, ReadOnly: true},
-		},
+		merge: *merge,
 	}
-	return out
+
+	return b.BuildContainer(opts)
 }
 
 //go:embed scripts/logfile.sh
 var logfileScript string
 
-func logfileContainer(container slinkyv1alpha1.ContainerMinimal, logfilePath string) corev1.Container {
-	out := corev1.Container{
-		Name:            "logfile",
-		Image:           container.Image,
-		ImagePullPolicy: container.ImagePullPolicy,
-		Env: []corev1.EnvVar{
-			{
-				Name:  "SOCKET",
-				Value: logfilePath,
+func (b *Builder) logfileContainer(container slinkyv1alpha1.ContainerMinimal, logfilePath string) corev1.Container {
+	merge := &corev1.Container{}
+	clientutils.RemarshalOrDie(container, merge)
+
+	opts := ContainerOpts{
+		base: corev1.Container{
+			Name: "logfile",
+			Env: []corev1.EnvVar{
+				{
+					Name:  "SOCKET",
+					Value: logfilePath,
+				},
+			},
+			Command: []string{
+				"sh",
+				"-c",
+				logfileScript,
+			},
+			RestartPolicy: ptr.To(corev1.ContainerRestartPolicyAlways),
+			VolumeMounts: []corev1.VolumeMount{
+				{Name: slurmLogFileVolume, MountPath: slurmLogFileDir},
 			},
 		},
-		Command: []string{
-			"sh",
-			"-c",
-			logfileScript,
-		},
-		RestartPolicy: ptr.To(corev1.ContainerRestartPolicyAlways),
-		Resources:     container.Resources,
-		VolumeMounts: []corev1.VolumeMount{
-			{Name: slurmLogFileVolume, MountPath: slurmLogFileDir},
-		},
+		merge: *merge,
 	}
-	return out
+
+	return b.BuildContainer(opts)
 }
 
 func logFileVolume() corev1.Volume {

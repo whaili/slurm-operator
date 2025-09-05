@@ -20,7 +20,6 @@ import (
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/builder/labels"
 	"github.com/SlinkyProject/slurm-operator/internal/builder/metadata"
-	"github.com/SlinkyProject/slurm-operator/internal/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/crypto"
 )
 
@@ -142,14 +141,14 @@ func (b *Builder) loginPodTemplate(loginset *slinkyv1alpha1.LoginSet) (corev1.Po
 			EnableServiceLinks:           ptr.To(false),
 			Affinity:                     template.Affinity,
 			Containers: []corev1.Container{
-				loginContainer(spec.Login, controller),
+				b.loginContainer(spec.Login.Container, controller),
 			},
 			Hostname:          template.Hostname,
 			ImagePullSecrets:  template.ImagePullSecrets,
 			NodeSelector:      template.NodeSelector,
 			PriorityClassName: template.PriorityClassName,
 			Tolerations:       template.Tolerations,
-			Volumes:           utils.MergeList(loginVolumes(loginset, controller), template.Volumes),
+			Volumes:           loginVolumes(loginset, controller),
 		},
 		merge: template.PodSpec,
 	}
@@ -259,54 +258,50 @@ func loginVolumes(loginset *slinkyv1alpha1.LoginSet, controller *slinkyv1alpha1.
 	return out
 }
 
-func loginContainer(containerWrapper slinkyv1alpha1.ContainerWrapper, controller *slinkyv1alpha1.Controller) corev1.Container {
-	container := containerWrapper.Container
-	out := corev1.Container{
-		Name:            labels.LoginApp,
-		Env:             loginEnv(containerWrapper, controller),
-		Args:            container.Args,
-		Image:           container.Image,
-		ImagePullPolicy: container.ImagePullPolicy,
-		Ports: []corev1.ContainerPort{
-			{
-				Name:          labels.LoginApp,
-				ContainerPort: LoginPort,
-				Protocol:      corev1.ProtocolTCP,
+func (b *Builder) loginContainer(merge corev1.Container, controller *slinkyv1alpha1.Controller) corev1.Container {
+	opts := ContainerOpts{
+		base: corev1.Container{
+			Name: labels.LoginApp,
+			Env:  loginEnv(merge, controller),
+			Ports: []corev1.ContainerPort{
+				{
+					Name:          labels.LoginApp,
+					ContainerPort: LoginPort,
+					Protocol:      corev1.ProtocolTCP,
+				},
 			},
-		},
-		Resources: container.Resources,
-		ReadinessProbe: &corev1.Probe{
-			ProbeHandler: corev1.ProbeHandler{
-				Exec: &corev1.ExecAction{
-					Command: []string{
-						"test",
-						"-S",
-						sackdSocketPath,
+			ReadinessProbe: &corev1.Probe{
+				ProbeHandler: corev1.ProbeHandler{
+					Exec: &corev1.ExecAction{
+						Command: []string{
+							"test",
+							"-S",
+							sackdSocketPath,
+						},
 					},
 				},
 			},
+			VolumeMounts: []corev1.VolumeMount{
+				{Name: slurmEtcVolume, MountPath: slurmEtcDir, ReadOnly: true},
+				{Name: sackdVolume, MountPath: sackdDir},
+				{Name: sshHostKeysVolume, MountPath: sshHostRsaKeyFilePath, SubPath: sshHostRsaKeyFile, ReadOnly: true},
+				{Name: sshHostKeysVolume, MountPath: sshHostRsaKeyPubFilePath, SubPath: sshHostRsaPubKeyFile, ReadOnly: true},
+				{Name: sshHostKeysVolume, MountPath: sshHostEd25519KeyFilePath, SubPath: sshHostEd25519KeyFile, ReadOnly: true},
+				{Name: sshHostKeysVolume, MountPath: sshHostEd25519PubKeyFilePath, SubPath: sshHostEd25519PubKeyFile, ReadOnly: true},
+				{Name: sshHostKeysVolume, MountPath: sshHostEcdsaKeyFilePath, SubPath: sshHostEcdsaKeyFile, ReadOnly: true},
+				{Name: sshHostKeysVolume, MountPath: sshHostEcdsaPubKeyFilePath, SubPath: sshHostEcdsaPubKeyFile, ReadOnly: true},
+				{Name: sshConfigVolume, MountPath: sshdConfigFilePath, SubPath: sshdConfigFile, ReadOnly: true},
+				{Name: sshConfigVolume, MountPath: rootAuthorizedKeysFilePath, SubPath: authorizedKeysFile, ReadOnly: true},
+				{Name: sssdConfVolume, MountPath: sssdConfFilePath, SubPath: sssdConfFile, ReadOnly: true},
+			},
 		},
-		SecurityContext: container.SecurityContext,
-		VolumeDevices:   container.VolumeDevices,
-		VolumeMounts: []corev1.VolumeMount{
-			{Name: slurmEtcVolume, MountPath: slurmEtcDir, ReadOnly: true},
-			{Name: sackdVolume, MountPath: sackdDir},
-			{Name: sshHostKeysVolume, MountPath: sshHostRsaKeyFilePath, SubPath: sshHostRsaKeyFile, ReadOnly: true},
-			{Name: sshHostKeysVolume, MountPath: sshHostRsaKeyPubFilePath, SubPath: sshHostRsaPubKeyFile, ReadOnly: true},
-			{Name: sshHostKeysVolume, MountPath: sshHostEd25519KeyFilePath, SubPath: sshHostEd25519KeyFile, ReadOnly: true},
-			{Name: sshHostKeysVolume, MountPath: sshHostEd25519PubKeyFilePath, SubPath: sshHostEd25519PubKeyFile, ReadOnly: true},
-			{Name: sshHostKeysVolume, MountPath: sshHostEcdsaKeyFilePath, SubPath: sshHostEcdsaKeyFile, ReadOnly: true},
-			{Name: sshHostKeysVolume, MountPath: sshHostEcdsaPubKeyFilePath, SubPath: sshHostEcdsaPubKeyFile, ReadOnly: true},
-			{Name: sshConfigVolume, MountPath: sshdConfigFilePath, SubPath: sshdConfigFile, ReadOnly: true},
-			{Name: sshConfigVolume, MountPath: rootAuthorizedKeysFilePath, SubPath: authorizedKeysFile, ReadOnly: true},
-			{Name: sssdConfVolume, MountPath: sssdConfFilePath, SubPath: sssdConfFile, ReadOnly: true},
-		},
+		merge: merge,
 	}
-	return out
+
+	return b.BuildContainer(opts)
 }
 
-func loginEnv(containerWrapper slinkyv1alpha1.ContainerWrapper, controller *slinkyv1alpha1.Controller) []corev1.EnvVar {
-	container := containerWrapper.Container
+func loginEnv(container corev1.Container, controller *slinkyv1alpha1.Controller) []corev1.EnvVar {
 	env := []corev1.EnvVar{
 		{
 			Name:  "SACKD_OPTIONS",

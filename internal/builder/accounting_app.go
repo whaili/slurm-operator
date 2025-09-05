@@ -97,12 +97,12 @@ func (b *Builder) accountingPodTemplate(accounting *slinkyv1alpha1.Accounting) (
 			AutomountServiceAccountToken: ptr.To(false),
 			Affinity:                     template.Affinity,
 			Containers: []corev1.Container{
-				slurmdbdContainer(spec.Slurmdbd),
+				b.slurmdbdContainer(spec.Slurmdbd.Container),
 			},
 			InitContainers: []corev1.Container{
-				initconfContainer(spec.InitConf),
+				b.initconfContainer(spec.InitConf),
 			},
-			Volumes: utils.MergeList(accountingVolumes(accounting), template.Volumes),
+			Volumes: accountingVolumes(accounting),
 		},
 		merge: template.PodSpec,
 	}
@@ -160,40 +160,38 @@ func accountingVolumes(accounting *slinkyv1alpha1.Accounting) []corev1.Volume {
 	return out
 }
 
-func slurmdbdContainer(containerWrapper slinkyv1alpha1.ContainerWrapper) corev1.Container {
-	container := containerWrapper.Container
-	out := corev1.Container{
-		Name:            labels.AccountingApp,
-		Args:            container.Args,
-		Image:           container.Image,
-		ImagePullPolicy: container.ImagePullPolicy,
-		Ports: []corev1.ContainerPort{
-			{
-				Name:          labels.AccountingApp,
-				ContainerPort: SlurmdbdPort,
-				Protocol:      corev1.ProtocolTCP,
-			},
-		},
-		Resources: container.Resources,
-		ReadinessProbe: &corev1.Probe{
-			ProbeHandler: corev1.ProbeHandler{
-				TCPSocket: &corev1.TCPSocketAction{
-					Port: intstr.FromInt(SlurmdbdPort),
+func (b *Builder) slurmdbdContainer(merge corev1.Container) corev1.Container {
+	opts := ContainerOpts{
+		base: corev1.Container{
+			Name: labels.AccountingApp,
+			Ports: []corev1.ContainerPort{
+				{
+					Name:          labels.AccountingApp,
+					ContainerPort: SlurmdbdPort,
+					Protocol:      corev1.ProtocolTCP,
 				},
 			},
+			ReadinessProbe: &corev1.Probe{
+				ProbeHandler: corev1.ProbeHandler{
+					TCPSocket: &corev1.TCPSocketAction{
+						Port: intstr.FromInt(SlurmdbdPort),
+					},
+				},
+			},
+			SecurityContext: &corev1.SecurityContext{
+				RunAsNonRoot: ptr.To(true),
+				RunAsUser:    ptr.To(slurmUserUid),
+				RunAsGroup:   ptr.To(slurmUserGid),
+			},
+			VolumeMounts: []corev1.VolumeMount{
+				{Name: slurmEtcVolume, MountPath: slurmEtcDir, ReadOnly: true},
+				{Name: slurmPidFileVolume, MountPath: slurmPidFileDir},
+			},
 		},
-		SecurityContext: &corev1.SecurityContext{
-			RunAsNonRoot: ptr.To(true),
-			RunAsUser:    ptr.To(slurmUserUid),
-			RunAsGroup:   ptr.To(slurmUserGid),
-		},
-		VolumeDevices: container.VolumeDevices,
-		VolumeMounts: []corev1.VolumeMount{
-			{Name: slurmEtcVolume, MountPath: slurmEtcDir, ReadOnly: true},
-			{Name: slurmPidFileVolume, MountPath: slurmPidFileDir},
-		},
+		merge: merge,
 	}
-	return out
+
+	return b.BuildContainer(opts)
 }
 
 const (

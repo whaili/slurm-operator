@@ -17,7 +17,6 @@ import (
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
 	"github.com/SlinkyProject/slurm-operator/internal/builder/labels"
 	"github.com/SlinkyProject/slurm-operator/internal/builder/metadata"
-	"github.com/SlinkyProject/slurm-operator/internal/utils"
 )
 
 const (
@@ -56,17 +55,17 @@ func (b *Builder) BuildComputePodTemplate(nodeset *slinkyv1alpha1.NodeSet, contr
 			EnableServiceLinks:           ptr.To(false),
 			Affinity:                     template.Affinity,
 			Containers: []corev1.Container{
-				slurmdContainer(nodeset, controller),
+				b.slurmdContainer(nodeset, controller),
 			},
 			Hostname:         template.Hostname,
 			ImagePullSecrets: template.ImagePullSecrets,
 			InitContainers: []corev1.Container{
-				logfileContainer(spec.LogFile, slurmdLogFilePath),
+				b.logfileContainer(spec.LogFile, slurmdLogFilePath),
 			},
 			NodeSelector:      template.NodeSelector,
 			PriorityClassName: template.PriorityClassName,
 			Tolerations:       template.Tolerations,
-			Volumes:           utils.MergeList(nodesetVolumes(controller), template.Volumes),
+			Volumes:           nodesetVolumes(controller),
 		},
 		merge: template.PodSpec,
 	}
@@ -103,83 +102,82 @@ func nodesetVolumes(controller *slinkyv1alpha1.Controller) []corev1.Volume {
 	return out
 }
 
-func slurmdContainer(nodeset *slinkyv1alpha1.NodeSet, controller *slinkyv1alpha1.Controller) corev1.Container {
-	spec := nodeset.Spec
+func (b *Builder) slurmdContainer(nodeset *slinkyv1alpha1.NodeSet, controller *slinkyv1alpha1.Controller) corev1.Container {
+	merge := nodeset.Spec.Slurmd.Container
 
-	out := corev1.Container{
-		Name:            labels.ComputeApp,
-		Env:             spec.Slurmd.Env,
-		Args:            slurmdArgs(nodeset, controller),
-		Image:           spec.Slurmd.Image,
-		ImagePullPolicy: spec.Slurmd.ImagePullPolicy,
-		Ports: []corev1.ContainerPort{
-			{
-				Name:          labels.ComputeApp,
-				ContainerPort: SlurmdPort,
-				Protocol:      corev1.ProtocolTCP,
+	opts := ContainerOpts{
+		base: corev1.Container{
+			Name: labels.ComputeApp,
+			Args: slurmdArgs(nodeset, controller),
+			Ports: []corev1.ContainerPort{
+				{
+					Name:          labels.ComputeApp,
+					ContainerPort: SlurmdPort,
+					Protocol:      corev1.ProtocolTCP,
+				},
 			},
-		},
-		Resources: spec.Slurmd.Resources,
-		StartupProbe: &corev1.Probe{
-			ProbeHandler: corev1.ProbeHandler{
-				Exec: &corev1.ExecAction{
-					Command: []string{
-						"scontrol",
-						"show",
-						"slurmd",
+			StartupProbe: &corev1.Probe{
+				ProbeHandler: corev1.ProbeHandler{
+					Exec: &corev1.ExecAction{
+						Command: []string{
+							"scontrol",
+							"show",
+							"slurmd",
+						},
+					},
+				},
+				FailureThreshold: 6,
+				PeriodSeconds:    10,
+			},
+			ReadinessProbe: &corev1.Probe{
+				ProbeHandler: corev1.ProbeHandler{
+					Exec: &corev1.ExecAction{
+						Command: []string{
+							"scontrol",
+							"show",
+							"slurmd",
+						},
 					},
 				},
 			},
-			FailureThreshold: 6,
-			PeriodSeconds:    10,
-		},
-		ReadinessProbe: &corev1.Probe{
-			ProbeHandler: corev1.ProbeHandler{
-				Exec: &corev1.ExecAction{
-					Command: []string{
-						"scontrol",
-						"show",
-						"slurmd",
+			SecurityContext: &corev1.SecurityContext{
+				Privileged: ptr.To(true),
+				Capabilities: &corev1.Capabilities{
+					Add: []corev1.Capability{
+						"BPF",
+						"NET_ADMIN",
+						"SYS_ADMIN",
+						"SYS_NICE",
 					},
 				},
 			},
-		},
-		SecurityContext: &corev1.SecurityContext{
-			Privileged: ptr.To(true),
-			Capabilities: &corev1.Capabilities{
-				Add: []corev1.Capability{
-					"BPF",
-					"NET_ADMIN",
-					"SYS_ADMIN",
-					"SYS_NICE",
-				},
-			},
-		},
-		Lifecycle: &corev1.Lifecycle{
-			PreStop: &corev1.LifecycleHandler{
-				Exec: &corev1.ExecAction{
-					Command: []string{
-						"/usr/bin/sh",
-						"-c",
-						"scontrol update nodename=$(hostname) state=down reason=preStop && scontrol delete nodename=$(hostname);",
+			Lifecycle: &corev1.Lifecycle{
+				PreStop: &corev1.LifecycleHandler{
+					Exec: &corev1.ExecAction{
+						Command: []string{
+							"/usr/bin/sh",
+							"-c",
+							"scontrol update nodename=$(hostname) state=down reason=preStop && scontrol delete nodename=$(hostname);",
+						},
 					},
 				},
 			},
+			VolumeMounts: []corev1.VolumeMount{
+				{Name: slurmEtcVolume, MountPath: slurmEtcDir, ReadOnly: true},
+				{Name: slurmLogFileVolume, MountPath: slurmLogFileDir},
+			},
 		},
-		VolumeDevices: spec.Slurmd.VolumeDevices,
-		VolumeMounts: []corev1.VolumeMount{
-			{Name: slurmEtcVolume, MountPath: slurmEtcDir, ReadOnly: true},
-			{Name: slurmLogFileVolume, MountPath: slurmLogFileDir},
-		},
+		merge: merge,
 	}
-	return out
+
+	return b.BuildContainer(opts)
 }
 
 func slurmdArgs(nodeset *slinkyv1alpha1.NodeSet, controller *slinkyv1alpha1.Controller) []string {
 	args := []string{"-Z"}
 	args = append(args, configlessArgs(controller)...)
 	args = append(args, slurmdConfArgs(nodeset)...)
-	return utils.MergeList(args, nodeset.Spec.Slurmd.Args)
+	return args
 }
 
 func slurmdConfArgs(nodeset *slinkyv1alpha1.NodeSet) []string {
