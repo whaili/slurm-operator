@@ -288,11 +288,11 @@ func slurmctldContainer(containerWrapper slinkyv1alpha1.ContainerWrapper) corev1
 //go:embed scripts/reconfigure.sh
 var reconfigureScript string
 
-func reconfigureContainer(sidecar slinkyv1alpha1.SideCar) corev1.Container {
+func reconfigureContainer(container slinkyv1alpha1.ContainerMinimal) corev1.Container {
 	out := corev1.Container{
 		Name:            "reconfigure",
-		Image:           sidecar.Image,
-		ImagePullPolicy: sidecar.ImagePullPolicy,
+		Image:           container.Image,
+		ImagePullPolicy: container.ImagePullPolicy,
 		Command: []string{
 			"tini",
 			"-g",
@@ -301,7 +301,7 @@ func reconfigureContainer(sidecar slinkyv1alpha1.SideCar) corev1.Container {
 			"-c",
 			reconfigureScript,
 		},
-		Resources: sidecar.Resources,
+		Resources: container.Resources,
 		VolumeMounts: []corev1.VolumeMount{
 			{Name: slurmEtcVolume, MountPath: slurmEtcDir, ReadOnly: true},
 			{Name: slurmAuthSocketVolume, MountPath: slurmctldAuthSocketDir, ReadOnly: true},

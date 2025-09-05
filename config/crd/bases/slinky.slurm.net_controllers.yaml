@@ -449,7 +449,7 @@ spec:
                   x-kubernetes-map-type: atomic
                 type: array
               reconfigure:
-                description: The reconfigure sidecar configuration.
+                description: The reconfigure container configuration.
                 properties:
                   image:
                     description: |-

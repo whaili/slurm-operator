@@ -45,7 +45,7 @@ type NodeSetSpec struct {
 
 	// The logfile sidecar configuration.
 	// +optional
-	LogFile SideCar `json:"logfile,omitzero"`
+	LogFile ContainerMinimal `json:"logfile,omitzero"`
 
 	// Template is the object that describes the pod that will be created if
 	// insufficient replicas are detected.

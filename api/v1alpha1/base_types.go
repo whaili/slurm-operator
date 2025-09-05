@@ -128,8 +128,8 @@ func (m *ContainerWrapper) DeepCopy() *ContainerWrapper {
 	}
 }
 
-// SideCar defines container used as a side-car.
-type SideCar struct {
+// ContainerMinimal defines a minimal container.
+type ContainerMinimal struct {
 	// Image URI.
 	// More info: https://kubernetes.io/docs/concepts/containers/images
 	// +optional

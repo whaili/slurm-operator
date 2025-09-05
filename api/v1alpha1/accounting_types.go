@@ -39,9 +39,9 @@ type AccountingSpec struct {
 	// +optional
 	Slurmdbd ContainerWrapper `json:"slurmdbd,omitempty"`
 
-	// The initconf sidecar configuration.
+	// The initconf container configuration.
 	// +optional
-	InitConf SideCar `json:"initconf,omitzero"`
+	InitConf ContainerMinimal `json:"initconf,omitzero"`
 
 	// Template is the object that describes the pod that will be created if
 	// insufficient replicas are detected.

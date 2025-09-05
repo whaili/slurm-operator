@@ -113,7 +113,7 @@ controller:
       # limits:
       #   cpu: 1
       #   memory: 1Gi
-  # Reconfigure sidecar configurations.
+  # Reconfigure container configurations.
   reconfigure:
     # -- The image to use, `${repository}:${tag}`.
     # Ref: https://kubernetes.io/docs/concepts/containers/images/#image-names
@@ -300,7 +300,7 @@ accounting:
       # limits:
       #   cpu: 1
       #   memory: 1Gi
-  # InitConf sidecar configurations.
+  # InitConf container configurations.
   initconf:
     # -- The image to use, `${repository}:${tag}`.
     # Ref: https://kubernetes.io/docs/concepts/containers/images/#image-names

@@ -49,13 +49,13 @@ type ControllerSpec struct {
 	// +optional
 	Slurmctld ContainerWrapper `json:"slurmctld,omitempty"`
 
-	// The reconfigure sidecar configuration.
+	// The reconfigure container configuration.
 	// +optional
-	Reconfigure SideCar `json:"reconfigure,omitzero"`
+	Reconfigure ContainerMinimal `json:"reconfigure,omitzero"`
 
 	// The logfile sidecar configuration.
 	// +optional
-	LogFile SideCar `json:"logfile,omitzero"`
+	LogFile ContainerMinimal `json:"logfile,omitzero"`
 
 	// Template is the object that describes the pod that will be created if
 	// insufficient replicas are detected.

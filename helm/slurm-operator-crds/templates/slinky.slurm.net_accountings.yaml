@@ -51,7 +51,7 @@ spec:
                   Ref: https://slurm.schedmd.com/slurmdbd.conf.html
                 type: string
               initconf:
-                description: The initconf sidecar configuration.
+                description: The initconf container configuration.
                 properties:
                   image:
                     description: |-

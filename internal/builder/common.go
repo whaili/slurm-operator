@@ -63,11 +63,11 @@ func configlessArgs(controller *slinkyv1alpha1.Controller) []string {
 //go:embed scripts/initconf.sh
 var initConfScript string
 
-func initconfContainer(sidecar slinkyv1alpha1.SideCar) corev1.Container {
+func initconfContainer(container slinkyv1alpha1.ContainerMinimal) corev1.Container {
 	out := corev1.Container{
 		Name:            "initconf",
-		Image:           sidecar.Image,
-		ImagePullPolicy: sidecar.ImagePullPolicy,
+		Image:           container.Image,
+		ImagePullPolicy: container.ImagePullPolicy,
 		Env: []corev1.EnvVar{
 			{
 				Name:  "SLURM_USER",
@@ -82,7 +82,7 @@ func initconfContainer(sidecar slinkyv1alpha1.SideCar) corev1.Container {
 			"-c",
 			initConfScript,
 		},
-		Resources: sidecar.Resources,
+		Resources: container.Resources,
 		VolumeMounts: []corev1.VolumeMount{
 			{Name: slurmEtcVolume, MountPath: slurmEtcMountDir},
 			{Name: slurmConfigVolume, MountPath: slurmConfigDir, ReadOnly: true},
@@ -94,11 +94,11 @@ func initconfContainer(sidecar slinkyv1alpha1.SideCar) corev1.Container {
 //go:embed scripts/logfile.sh
 var logfileScript string
 
-func logfileContainer(sidecar slinkyv1alpha1.SideCar, logfilePath string) corev1.Container {
+func logfileContainer(container slinkyv1alpha1.ContainerMinimal, logfilePath string) corev1.Container {
 	out := corev1.Container{
 		Name:            "logfile",
-		Image:           sidecar.Image,
-		ImagePullPolicy: sidecar.ImagePullPolicy,
+		Image:           container.Image,
+		ImagePullPolicy: container.ImagePullPolicy,
 		Env: []corev1.EnvVar{
 			{
 				Name:  "SOCKET",
@@ -111,7 +111,7 @@ func logfileContainer(sidecar slinkyv1alpha1.SideCar, logfilePath string) corev1
 			logfileScript,
 		},
 		RestartPolicy: ptr.To(corev1.ContainerRestartPolicyAlways),
-		Resources:     sidecar.Resources,
+		Resources:     container.Resources,
 		VolumeMounts: []corev1.VolumeMount{
 			{Name: slurmLogFileVolume, MountPath: slurmLogFileDir},
 		},
