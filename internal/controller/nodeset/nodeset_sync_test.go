@@ -296,7 +296,7 @@ func TestNodeSetReconciler_listRevisions(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: corev1.NamespaceDefault,
 						Name:      "foo-00000",
-						Labels:    labels.NewBuilder().WithComputeSelectorLabels(newNodeSet("foo", controller.Name, 2)).Build(),
+						Labels:    labels.NewBuilder().WithWorkerSelectorLabels(newNodeSet("foo", controller.Name, 2)).Build(),
 					},
 				}),
 			},
@@ -308,7 +308,7 @@ func TestNodeSetReconciler_listRevisions(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace:       corev1.NamespaceDefault,
 						Name:            "foo-00000",
-						Labels:          labels.NewBuilder().WithComputeSelectorLabels(newNodeSet("foo", controller.Name, 2)).Build(),
+						Labels:          labels.NewBuilder().WithWorkerSelectorLabels(newNodeSet("foo", controller.Name, 2)).Build(),
 						ResourceVersion: "999",
 					},
 				},

@@ -34,7 +34,7 @@ func NewNodeSetPod(
 	revisionHash string,
 ) *corev1.Pod {
 	controllerRef := metav1.NewControllerRef(nodeset, slinkyv1alpha1.NodeSetGVK)
-	podTemplate := builder.New(nil).BuildComputePodTemplate(nodeset, controller)
+	podTemplate := builder.New(nil).BuildWorkerPodTemplate(nodeset, controller)
 	pod, _ := k8scontroller.GetPodFromTemplate(&podTemplate, nodeset, controllerRef)
 	pod.Name = GetPodName(nodeset, ordinal)
 	initIdentity(nodeset, pod)
@@ -192,7 +192,7 @@ func IsStorageMatch(nodeset *slinkyv1alpha1.NodeSet, pod *corev1.Pod) bool {
 func GetPersistentVolumeClaims(nodeset *slinkyv1alpha1.NodeSet, pod *corev1.Pod) map[string]corev1.PersistentVolumeClaim {
 	ordinal := GetOrdinal(pod)
 	templates := nodeset.Spec.VolumeClaimTemplates
-	selectorLabels := labels.NewBuilder().WithComputeSelectorLabels(nodeset).Build()
+	selectorLabels := labels.NewBuilder().WithWorkerSelectorLabels(nodeset).Build()
 	claims := make(map[string]corev1.PersistentVolumeClaim, len(templates))
 	for i := range templates {
 		claim := templates[i].DeepCopy()

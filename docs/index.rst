@@ -90,8 +90,8 @@ Features
 NodeSets
 ~~~~~~~~
 
-A set of homogeneous Slurm nodes (compute nodes, workers), which are
-delegated to execute the Slurm workload.
+A set of homogeneous Slurm workers (compute nodes), which are delegated
+to execute the Slurm workload.
 
 The operator will take into consideration the running workload among
 Slurm nodes as it needs to scale-in, upgrade, or otherwise handle node

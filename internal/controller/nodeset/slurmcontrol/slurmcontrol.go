@@ -466,7 +466,7 @@ func (r *realSlurmControl) GetNodeDeadlines(ctx context.Context, nodeset *slinky
 			continue
 		}
 
-		// Get startTime, when the job was launched on the compute node.
+		// Get startTime, when the job was launched on the Slurm worker.
 		startTime_NoVal := ptr.Deref(job.StartTime, api.V0043Uint64NoValStruct{})
 		startTime := time.Unix(ptr.Deref(startTime_NoVal.Number, 0), 0)
 		// Get the timeLimit, the wall time of the job.

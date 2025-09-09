@@ -30,14 +30,14 @@ const (
 	slurmdSpoolDir = "/var/spool/slurmd"
 )
 
-func (b *Builder) BuildComputePodTemplate(nodeset *slinkyv1alpha1.NodeSet, controller *slinkyv1alpha1.Controller) corev1.PodTemplateSpec {
+func (b *Builder) BuildWorkerPodTemplate(nodeset *slinkyv1alpha1.NodeSet, controller *slinkyv1alpha1.Controller) corev1.PodTemplateSpec {
 	key := nodeset.Key()
 
 	objectMeta := metadata.NewBuilder(key).
 		WithMetadata(nodeset.Spec.Template.PodMetadata).
-		WithLabels(labels.NewBuilder().WithComputeLabels(nodeset).Build()).
+		WithLabels(labels.NewBuilder().WithWorkerLabels(nodeset).Build()).
 		WithAnnotations(map[string]string{
-			annotationDefaultContainer: labels.ComputeApp,
+			annotationDefaultContainer: labels.WorkerApp,
 		}).
 		Build()
 
@@ -107,11 +107,11 @@ func (b *Builder) slurmdContainer(nodeset *slinkyv1alpha1.NodeSet, controller *s
 
 	opts := ContainerOpts{
 		base: corev1.Container{
-			Name: labels.ComputeApp,
+			Name: labels.WorkerApp,
 			Args: slurmdArgs(nodeset, controller),
 			Ports: []corev1.ContainerPort{
 				{
-					Name:          labels.ComputeApp,
+					Name:          labels.WorkerApp,
 					ContainerPort: SlurmdPort,
 					Protocol:      corev1.ProtocolTCP,
 				},

@@ -93,7 +93,7 @@ func (r *NodeSetReconciler) syncNodeSetStatus(
 ) error {
 	logger := log.FromContext(ctx)
 
-	selectorLabels := labels.NewBuilder().WithComputeSelectorLabels(nodeset).Build()
+	selectorLabels := labels.NewBuilder().WithWorkerSelectorLabels(nodeset).Build()
 	selector := k8slabels.SelectorFromSet(k8slabels.Set(selectorLabels))
 
 	replicaStatus := r.calculateReplicaStatus(nodeset, pods, currentRevision, updateRevision)

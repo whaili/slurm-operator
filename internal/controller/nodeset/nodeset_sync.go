@@ -149,7 +149,7 @@ func (r *NodeSetReconciler) doAdoptOrphanRevisions(
 // listRevisions returns a array of the ControllerRevisions that represent the revisions of nodeset. If the returned
 // error is nil, the returns slice of ControllerRevisions is valid.
 func (r *NodeSetReconciler) listRevisions(nodeset *slinkyv1alpha1.NodeSet) ([]*appsv1.ControllerRevision, error) {
-	selectorLabels := labels.NewBuilder().WithComputeSelectorLabels(nodeset).Build()
+	selectorLabels := labels.NewBuilder().WithWorkerSelectorLabels(nodeset).Build()
 	selector := k8slabels.SelectorFromSet(k8slabels.Set(selectorLabels))
 	return r.historyControl.ListControllerRevisions(nodeset, selector)
 }
@@ -162,7 +162,7 @@ func (r *NodeSetReconciler) getNodeSetPods(
 	ctx context.Context,
 	nodeset *slinkyv1alpha1.NodeSet,
 ) ([]*corev1.Pod, error) {
-	selectorLabels := labels.NewBuilder().WithComputeSelectorLabels(nodeset).Build()
+	selectorLabels := labels.NewBuilder().WithWorkerSelectorLabels(nodeset).Build()
 	selector := k8slabels.SelectorFromSet(k8slabels.Set(selectorLabels))
 
 	// List all pods to include those that do not match the selector anymore but

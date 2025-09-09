@@ -470,7 +470,7 @@ func TestGetPersistentVolumeClaims(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: corev1.NamespaceDefault,
 						Name:      "datadir-foo-0",
-						Labels:    labels.NewBuilder().WithComputeSelectorLabels(newNodeSet("foo")).Build(),
+						Labels:    labels.NewBuilder().WithWorkerSelectorLabels(newNodeSet("foo")).Build(),
 					},
 					Spec: corev1.PersistentVolumeClaimSpec{
 						Resources: corev1.VolumeResourceRequirements{

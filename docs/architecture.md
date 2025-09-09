@@ -73,8 +73,8 @@ not have to live in Kubernetes to be functional with your Slurm cluster.
 ### Autoscale
 
 Kubernetes supports resource autoscaling. In the context of Slurm, autoscaling
-Slurm compute nodes can be quite useful when your Kubernetes and Slurm clusters
-have workload fluctuations.
+Slurm workers can be quite useful when your Kubernetes and Slurm clusters have
+workload fluctuations.
 
 <img src="./_static/images/architecture-autoscale.svg" alt="Autoscale Architecture" width="100%" height="auto" />
 

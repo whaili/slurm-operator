@@ -76,15 +76,15 @@ and related services to control the number of `slurmd` replicas running as part
 of the NodeSet.
 
 To manually scale a NodeSet, use the `kubectl scale` command. In this example,
-the NodeSet (nss) `slurm-compute-radar` is scaled to 1.
+the NodeSet (nss) `slurm-worker-radar` is scaled to 1.
 
 ```sh
-$ kubectl scale -n slurm nss/slurm-compute-radar --replicas=1
-nodeset.slinky.slurm.net/slurm-compute-radar scaled
+$ kubectl scale -n slurm nss/slurm-worker-radar --replicas=1
+nodeset.slinky.slurm.net/slurm-worker-radar scaled
 
-$ kubectl get pods -o wide -n slurm -l app.kubernetes.io/instance=slurm-compute-radar
-NAME                    READY   STATUS    RESTARTS   AGE     IP            NODE          NOMINATED NODE   READINESS GATES
-slurm-compute-radar-0   1/1     Running   0          2m48s   10.244.4.17   kind-worker   <none>           <none>
+$ kubectl get pods -o wide -n slurm -l app.kubernetes.io/instance=slurm-worker-radar
+NAME                   READY   STATUS    RESTARTS   AGE     IP            NODE          NOMINATED NODE   READINESS GATES
+slurm-worker-radar-0   1/1     Running   0          2m48s   10.244.4.17   kind-worker   <none>           <none>
 ```
 
 This corresponds to the Slurm partition `radar`.
@@ -99,8 +99,8 @@ NodeSets may be scaled to zero. In this case, there are no replicas of `slurmd`
 running and all jobs scheduled to that partition will remain in a pending state.
 
 ```sh
-$ kubectl scale nss/slurm-compute-radar -n slurm --replicas=0
-nodeset.slinky.slurm.net/slurm-compute-radar scaled
+$ kubectl scale nss/slurm-worker-radar -n slurm --replicas=0
+nodeset.slinky.slurm.net/slurm-worker-radar scaled
 ```
 
 For NodeSets to scale on demand, an autoscaler needs to be deployed. KEDA allows
@@ -115,7 +115,7 @@ like Prometheus. With Slurm metrics, NodeSets may be scaled based on data
 collected from the Slurm restapi.
 
 This example [ScaledObject] will watch the number of jobs pending for the
-partition `radar` and scale the NodeSet `slurm-compute-radar` until a threshold
+partition `radar` and scale the NodeSet `slurm-worker-radar` until a threshold
 value is satisfied or `maxReplicaCount` is reached.
 
 ```yaml
@@ -127,7 +127,7 @@ spec:
   scaleTargetRef:
     apiVersion: slinky.slurm.net/v1alpha1
     kind: NodeSet
-    name: slurm-compute-radar
+    name: slurm-worker-radar
   idleReplicaCount: 0
   minReplicaCount: 1
   maxReplicaCount: 3
@@ -164,8 +164,8 @@ To verify a KEDA ScaledObject, apply it to the cluster in the appropriate
 namespace on a NodeSet that has no replicas.
 
 ```sh
-$ kubectl scale nss/slurm-compute-radar -n slurm --replicas=0
-nodeset.slinky.slurm.net/slurm-compute-radar scaled
+$ kubectl scale nss/slurm-worker-radar -n slurm --replicas=0
+nodeset.slinky.slurm.net/slurm-worker-radar scaled
 ```
 
 Wait for Slurm to report that the partition has no nodes.
@@ -185,11 +185,11 @@ scaledobject.keda.sh/scale-radar created
 
 $ kubectl get -n slurm scaledobjects
 NAME           SCALETARGETKIND                     SCALETARGETNAME        MIN   MAX   TRIGGERS     AUTHENTICATION   READY   ACTIVE   FALLBACK   PAUSED    AGE
-scale-radar    slinky.slurm.net/v1alpha1.NodeSet   slurm-compute-radar    1     5     prometheus                    True    False    Unknown    Unknown   28s
+scale-radar    slinky.slurm.net/v1alpha1.NodeSet   slurm-worker-radar    1     5     prometheus                    True    False    Unknown    Unknown   28s
 
 $ kubectl get -n slurm hpa
 NAME                    REFERENCE                      TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
-keda-hpa-scale-radar    NodeSet/slurm-compute-radar    <unknown>/5   1         5         0          32s
+keda-hpa-scale-radar    NodeSet/slurm-worker-radar    <unknown>/5   1         5         0          32s
 ```
 
 Once the [ScaledObject] and HPA are created, initiate some jobs to test that the

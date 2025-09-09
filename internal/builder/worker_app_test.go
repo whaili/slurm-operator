@@ -18,7 +18,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
-func TestBuilder_BuildComputePodTemplate(t *testing.T) {
+func TestBuilder_BuildWorkerPodTemplate(t *testing.T) {
 	type fields struct {
 		client client.Client
 	}
@@ -55,7 +55,7 @@ func TestBuilder_BuildComputePodTemplate(t *testing.T) {
 						},
 					},
 					Status: slinkyv1alpha1.NodeSetStatus{
-						Selector: k8slabels.SelectorFromSet(k8slabels.Set(labels.NewBuilder().WithComputeSelectorLabels(&slinkyv1alpha1.NodeSet{ObjectMeta: metav1.ObjectMeta{Name: "slurm"}}).Build())).String(),
+						Selector: k8slabels.SelectorFromSet(k8slabels.Set(labels.NewBuilder().WithWorkerSelectorLabels(&slinkyv1alpha1.NodeSet{ObjectMeta: metav1.ObjectMeta{Name: "slurm"}}).Build())).String(),
 					},
 				},
 				controller: &slinkyv1alpha1.Controller{
@@ -69,7 +69,7 @@ func TestBuilder_BuildComputePodTemplate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			b := New(tt.fields.client)
-			got := b.BuildComputePodTemplate(tt.args.nodeset, tt.args.controller)
+			got := b.BuildWorkerPodTemplate(tt.args.nodeset, tt.args.controller)
 			selector, err := k8slabels.ConvertSelectorToLabelsMap(tt.args.nodeset.Status.Selector)
 			if err != nil {
 				t.Errorf("ConvertSelectorToLabelsMap() = %v", err)
@@ -78,13 +78,13 @@ func TestBuilder_BuildComputePodTemplate(t *testing.T) {
 			case !set.KeySet(got.Labels).HasAll(set.KeySet(selector).UnsortedList()...):
 				t.Errorf("Labels = %v , Selector = %v", got.Labels, selector)
 
-			case got.Spec.Containers[0].Name != labels.ComputeApp:
+			case got.Spec.Containers[0].Name != labels.WorkerApp:
 				t.Errorf("Containers[0].Name = %v , want = %v",
-					got.Spec.Containers[0].Name, labels.ComputeApp)
+					got.Spec.Containers[0].Name, labels.WorkerApp)
 
-			case got.Spec.Containers[0].Ports[0].Name != labels.ComputeApp:
+			case got.Spec.Containers[0].Ports[0].Name != labels.WorkerApp:
 				t.Errorf("Containers[0].Ports[0].Name = %v , want = %v",
-					got.Spec.Containers[0].Ports[0].Name, labels.ComputeApp)
+					got.Spec.Containers[0].Ports[0].Name, labels.WorkerApp)
 
 			case got.Spec.Containers[0].Ports[0].ContainerPort != SlurmdPort:
 				t.Errorf("Containers[0].Ports[0].ContainerPort = %v , want = %v",

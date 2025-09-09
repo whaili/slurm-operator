@@ -68,8 +68,8 @@ const (
 	AccountingApp  = "slurmdbd"
 	AccountingComp = "accounting"
 
-	ComputeApp  = "slurmd"
-	ComputeComp = "compute"
+	WorkerApp  = "slurmd"
+	WorkerComp = "worker"
 
 	LoginApp  = "login"
 	LoginComp = "login"
@@ -111,16 +111,16 @@ func (b *Builder) WithAccountingLabels(obj *slinkyv1alpha1.Accounting) *Builder 
 		WithComponent(AccountingComp)
 }
 
-func (b *Builder) WithComputeSelectorLabels(obj *slinkyv1alpha1.NodeSet) *Builder {
+func (b *Builder) WithWorkerSelectorLabels(obj *slinkyv1alpha1.NodeSet) *Builder {
 	return b.
-		WithApp(ComputeApp).
+		WithApp(WorkerApp).
 		WithInstance(obj.Name)
 }
 
-func (b *Builder) WithComputeLabels(obj *slinkyv1alpha1.NodeSet) *Builder {
+func (b *Builder) WithWorkerLabels(obj *slinkyv1alpha1.NodeSet) *Builder {
 	return b.
-		WithComputeSelectorLabels(obj).
-		WithComponent(ComputeComp)
+		WithWorkerSelectorLabels(obj).
+		WithComponent(WorkerComp)
 }
 
 func (b *Builder) WithLoginSelectorLabels(obj *slinkyv1alpha1.LoginSet) *Builder {

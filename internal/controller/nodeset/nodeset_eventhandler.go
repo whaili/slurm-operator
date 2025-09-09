@@ -307,7 +307,7 @@ func (e *podEventHandler) getPodNodeSets(ctx context.Context, pod *corev1.Pod) [
 	var nsMatched []*slinkyv1alpha1.NodeSet
 	for i := range nodesetList.Items {
 		nodeset := &nodesetList.Items[i]
-		selectorLabels := labels.NewBuilder().WithComputeSelectorLabels(nodeset).Build()
+		selectorLabels := labels.NewBuilder().WithWorkerSelectorLabels(nodeset).Build()
 		selector := k8slabels.SelectorFromSet(k8slabels.Set(selectorLabels))
 		if selector.Empty() || !selector.Matches(k8slabels.Set(pod.Labels)) {
 			continue
