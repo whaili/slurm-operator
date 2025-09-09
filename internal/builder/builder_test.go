@@ -20,6 +20,7 @@ func init() {
 }
 
 func TestNew(t *testing.T) {
+	c := fake.NewFakeClient()
 	type args struct {
 		c client.Client
 	}
@@ -41,11 +42,11 @@ func TestNew(t *testing.T) {
 		{
 			name: "non-nil",
 			args: args{
-				c: fake.NewFakeClient(),
+				c: c,
 			},
 			want: &Builder{
-				client:      fake.NewFakeClient(),
-				refResolver: refresolver.New(fake.NewFakeClient()),
+				client:      c,
+				refResolver: refresolver.New(c),
 			},
 		},
 	}
