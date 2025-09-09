@@ -167,6 +167,17 @@ Limitations
 Installation
 ------------
 
+Install the
+`cert-manager <https://cert-manager.io/docs/installation/helm/>`__ with
+its CRDs:
+
+.. code:: sh
+
+   helm install \
+     cert-manager oci://quay.io/jetstack/charts/cert-manager \
+     --set crds.enabled=true \
+     --namespace cert-manager
+
 Install the slurm-operator and its CRDs:
 
 .. code:: sh

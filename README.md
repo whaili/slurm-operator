@@ -131,6 +131,15 @@ Slurm is a full featured HPC workload manager. To highlight a few features:
 
 ## Installation
 
+Install the [cert-manager] with its CRDs:
+
+```sh
+helm install \
+  cert-manager oci://quay.io/jetstack/charts/cert-manager \
+  --set crds.enabled=true \
+  --namespace cert-manager
+```
+
 Install the slurm-operator and its CRDs:
 
 ```sh
@@ -206,6 +215,7 @@ specific language governing permissions and limitations under the License.
 <!-- links -->
 
 [architecture]: ./docs/architecture.md
+[cert-manager]: https://cert-manager.io/docs/installation/helm/
 [contact-schedmd]: https://www.schedmd.com/slurm-resources/contact-schedmd/
 [crds]: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#customresourcedefinitions
 [custom-controllers]: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#custom-controllers
