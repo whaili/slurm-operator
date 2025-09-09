@@ -4,14 +4,14 @@ Github/Gitlab submitted issues and PRs/MRs are handled on a best effort basis.
 The SchedMD official issue tracker is at <https://support.schedmd.com/>.
 -->
 
-## Summary
+## Description
 
 <!--
-Describe what the problem is.
-Are there any workarounds?
+Describe the problem being solved.
+What alternatives/workarounds have been considered?
 -->
 
-## Solution
+## Intended Behavior
 
 <!--
 Describe the desired behavior.
