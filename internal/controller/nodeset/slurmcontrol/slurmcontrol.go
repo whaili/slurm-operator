@@ -27,7 +27,7 @@ import (
 	nodesetutils "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/podinfo"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/timestore"
-	slurmconditions "github.com/SlinkyProject/slurm-operator/pkg/utils/conditions"
+	slurmconditions "github.com/SlinkyProject/slurm-operator/pkg/conditions"
 )
 
 type SlurmControlInterface interface {

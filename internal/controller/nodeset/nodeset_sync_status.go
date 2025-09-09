@@ -30,7 +30,7 @@ import (
 	"github.com/SlinkyProject/slurm-operator/internal/utils/historycontrol"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/mathutils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/podutils"
-	slurmconditions "github.com/SlinkyProject/slurm-operator/pkg/utils/conditions"
+	slurmconditions "github.com/SlinkyProject/slurm-operator/pkg/conditions"
 )
 
 // syncStatus handles synchronizing Slurm Nodes and NodeSet Status.

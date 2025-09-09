@@ -31,7 +31,7 @@ import (
 	"github.com/SlinkyProject/slurm-operator/internal/clientmap"
 	nodesetutils "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/podinfo"
-	slurmconditions "github.com/SlinkyProject/slurm-operator/pkg/utils/conditions"
+	slurmconditions "github.com/SlinkyProject/slurm-operator/pkg/conditions"
 )
 
 func newNodeSet(name, controllerName string, replicas int32) *slinkyv1alpha1.NodeSet {

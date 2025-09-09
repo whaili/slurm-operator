@@ -26,7 +26,7 @@ import (
 	"github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/slurmcontrol"
 	nodesetutils "github.com/SlinkyProject/slurm-operator/internal/controller/nodeset/utils"
 	"github.com/SlinkyProject/slurm-operator/internal/utils/structutils"
-	slurmconditions "github.com/SlinkyProject/slurm-operator/pkg/utils/conditions"
+	slurmconditions "github.com/SlinkyProject/slurm-operator/pkg/conditions"
 )
 
 func TestNodeSetReconciler_syncStatus(t *testing.T) {
