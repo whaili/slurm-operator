@@ -1,3 +1,9 @@
+---
+name: Feature Request
+about: Suggest a new feature.
+title: "[Feature]: "
+---
+
 <!--
 Feature requests, code contributions, and bug reports are welcome!
 Github/Gitlab submitted issues and PRs/MRs are handled on a best effort basis.
