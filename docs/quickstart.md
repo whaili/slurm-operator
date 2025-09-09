@@ -238,7 +238,7 @@ helm install slurm oci://ghcr.io/slinkyproject/charts/slurm \
 
 > [!NOTE]
 >
-> Even if [sssd] is misconfigured, this method can still be used to ssh into the
+> Even if [sssd] is misconfigured, this method can still be used to SSH into the
 > pod.
 
 Install a Slurm cluster via helm chart with the

@@ -77,6 +77,10 @@ as it needs to scale-in, upgrade, or otherwise handle node failures. Slurm nodes
 will be marked as [drain][slurm-drain] before their eventual termination pending
 scale-in or upgrade.
 
+Slurm node states (e.g. Idle, Allocated, Mixed, Down, Drain, Not Responding,
+etc...) are applied to each NodeSet pod via their pod conditions; each NodeSet
+pod contains a pod status that reflects their own Slurm node state.
+
 The operator supports NodeSet scale to zero, scaling the resource down to zero
 replicas. Hence, any Horizontal Pod Autoscaler (HPA) that also support scale to
 zero can be best paired with NodeSets.
