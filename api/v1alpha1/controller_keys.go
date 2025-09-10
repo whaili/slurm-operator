@@ -69,7 +69,6 @@ func (o *Controller) AuthSlurmRef() *SecretKeySelector {
 			},
 			Key: ref.Key,
 		},
-		Generate: false,
 	}
 }
 
@@ -89,7 +88,6 @@ func (o *Controller) AuthJwtHs256Ref() *SecretKeySelector {
 			},
 			Key: ref.Key,
 		},
-		Generate: false,
 	}
 }
 

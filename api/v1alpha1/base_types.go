@@ -46,11 +46,6 @@ type SecretKeySelector struct {
 	// SecretKeySelector selects a key of a Secret.
 	// +structType=atomic
 	corev1.SecretKeySelector `json:",inline"`
-
-	// Generate indicates whether the Secret should be generated if the Secret referenced is not present.
-	// +optional
-	// +default:=false
-	Generate bool `json:"generate,omitzero"`
 }
 
 // PodTemplate describes a template for creating copies of a predefined pod.

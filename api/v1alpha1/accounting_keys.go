@@ -56,7 +56,6 @@ func (o *Accounting) AuthStorageRef() *SecretKeySelector {
 			},
 			Key: o.Spec.StorageConfig.PasswordKeyRef.Key,
 		},
-		Generate: false,
 	}
 }
 
@@ -76,7 +75,6 @@ func (o *Accounting) AuthSlurmRef() *SecretKeySelector {
 			},
 			Key: ref.Key,
 		},
-		Generate: false,
 	}
 }
 
@@ -96,7 +94,6 @@ func (o *Accounting) AuthJwtHs256Ref() *SecretKeySelector {
 			},
 			Key: ref.Key,
 		},
-		Generate: false,
 	}
 }
 

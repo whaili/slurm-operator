@@ -51,7 +51,6 @@ func (o *LoginSet) SssdSecretRef() *SecretKeySelector {
 			},
 			Key: o.Spec.SssdConfRef.Key,
 		},
-		Generate: true,
 	}
 }
 

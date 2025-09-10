@@ -50,7 +50,6 @@ func (o *Token) JwtHs256Ref() *SecretKeySelector {
 			},
 			Key: ref.Key,
 		},
-		Generate: false,
 	}
 }
 
@@ -78,6 +77,5 @@ func (o *Token) SecretRef() *SecretKeySelector {
 			},
 			Key: key,
 		},
-		Generate: false,
 	}
 }

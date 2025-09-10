@@ -130,11 +130,6 @@ spec:
               jwtHs256KeyRef:
                 description: Slurm `auth/jwt` JWT HS256 key authentication.
                 properties:
-                  generate:
-                    default: false
-                    description: Generate indicates whether the Secret should be generated
-                      if the Secret referenced is not present.
-                    type: boolean
                   key:
                     description: The key of the secret to select from.  Must be a
                       valid secret key.
@@ -166,11 +161,6 @@ spec:
               slurmKeyRef:
                 description: Slurm `auth/slurm` key authentication.
                 properties:
-                  generate:
-                    default: false
-                    description: Generate indicates whether the Secret should be generated
-                      if the Secret referenced is not present.
-                    type: boolean
                   key:
                     description: The key of the secret to select from.  Must be a
                       valid secret key.
