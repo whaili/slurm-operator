@@ -147,10 +147,10 @@ func nextRevision(revisions []*appsv1.ControllerRevision) int64 {
 	return revisions[count-1].Revision + 1
 }
 
-// newRevision creates a new ControllerRevision containing a patch that reapplies the target state of nodeset.
-// The Revision of the returned ControllerRevision is nodeset to revision. If the returned error is nil, the returned
-// ControllerRevision is valid. StatefulSet revisions are stored as patches that re-apply the current state of nodeset
-// to a new StatefulSet using a strategic merge patch to replace the saved state of the new StatefulSet.
+// newRevision creates a new ControllerRevision containing a patch that reapplies the target state of set.
+// The Revision of the returned ControllerRevision is set to revision. If the returned error is nil, the returned
+// ControllerRevision is valid. NodeSet revisions are stored as patches that re-apply the current state of NodeSet
+// to a new NodeSet using a strategic merge patch to replace the saved state of the new NodeSet.
 func newRevision(nodeset *slinkyv1alpha1.NodeSet, revision int64, collisionCount *int32) (*appsv1.ControllerRevision, error) {
 	patch, err := getPatch(nodeset)
 	if err != nil {
