@@ -88,7 +88,7 @@ zero can be best paired with NodeSets.
 ### LoginSets
 
 A set of homogeneous login nodes (submit node, jump host) for Slurm, which
-manage user identity via LDAP.
+manage user identity via SSSD.
 
 The operator supports LoginSet scale to zero, scaling the resource down to zero
 replicas. Hence, any Horizontal Pod Autoscaler (HPA) that also support scale to
