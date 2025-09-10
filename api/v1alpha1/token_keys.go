@@ -41,15 +41,13 @@ func (o *Token) JwtHs256Key() types.NamespacedName {
 	}
 }
 
-func (o *Token) JwtHs256Ref() *SecretKeySelector {
+func (o *Token) JwtHs256Ref() *corev1.SecretKeySelector {
 	ref := o.Spec.JwtHs256KeyRef
-	return &SecretKeySelector{
-		SecretKeySelector: corev1.SecretKeySelector{
-			LocalObjectReference: corev1.LocalObjectReference{
-				Name: ref.Name,
-			},
-			Key: ref.Key,
+	return &corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{
+			Name: ref.Name,
 		},
+		Key: ref.Key,
 	}
 }
 
@@ -64,18 +62,16 @@ func (o *Token) SecretKey() types.NamespacedName {
 	}
 }
 
-func (o *Token) SecretRef() *SecretKeySelector {
+func (o *Token) SecretRef() *corev1.SecretKeySelector {
 	name := o.SecretKey().Name
 	key := "SLURM_JWT"
 	if o.Spec.SecretRef != nil {
 		key = o.Spec.SecretRef.Key
 	}
-	return &SecretKeySelector{
-		SecretKeySelector: corev1.SecretKeySelector{
-			LocalObjectReference: corev1.LocalObjectReference{
-				Name: name,
-			},
-			Key: key,
+	return &corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{
+			Name: name,
 		},
+		Key: key,
 	}
 }

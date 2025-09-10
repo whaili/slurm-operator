@@ -60,15 +60,13 @@ func (o *Controller) AuthSlurmKey() types.NamespacedName {
 	}
 }
 
-func (o *Controller) AuthSlurmRef() *SecretKeySelector {
+func (o *Controller) AuthSlurmRef() *corev1.SecretKeySelector {
 	ref := o.Spec.SlurmKeyRef
-	return &SecretKeySelector{
-		SecretKeySelector: corev1.SecretKeySelector{
-			LocalObjectReference: corev1.LocalObjectReference{
-				Name: ref.Name,
-			},
-			Key: ref.Key,
+	return &corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{
+			Name: ref.Name,
 		},
+		Key: ref.Key,
 	}
 }
 
@@ -79,15 +77,13 @@ func (o *Controller) AuthJwtHs256Key() types.NamespacedName {
 	}
 }
 
-func (o *Controller) AuthJwtHs256Ref() *SecretKeySelector {
+func (o *Controller) AuthJwtHs256Ref() *corev1.SecretKeySelector {
 	ref := o.Spec.JwtHs256KeyRef
-	return &SecretKeySelector{
-		SecretKeySelector: corev1.SecretKeySelector{
-			LocalObjectReference: corev1.LocalObjectReference{
-				Name: ref.Name,
-			},
-			Key: ref.Key,
+	return &corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{
+			Name: ref.Name,
 		},
+		Key: ref.Key,
 	}
 }
 

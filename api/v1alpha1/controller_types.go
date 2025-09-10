@@ -33,11 +33,11 @@ type ControllerSpec struct {
 
 	// Slurm `auth/slurm` key authentication.
 	// +required
-	SlurmKeyRef SecretKeySelector `json:"slurmKeyRef,omitzero"`
+	SlurmKeyRef corev1.SecretKeySelector `json:"slurmKeyRef,omitzero"`
 
 	// Slurm `auth/jwt` JWT HS256 key authentication.
 	// +required
-	JwtHs256KeyRef SecretKeySelector `json:"jwtHs256KeyRef,omitzero"`
+	JwtHs256KeyRef corev1.SecretKeySelector `json:"jwtHs256KeyRef,omitzero"`
 
 	// accountingRef is a reference to the Accounting CR to which this has membership.
 	// +optional

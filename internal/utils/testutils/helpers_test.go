@@ -59,8 +59,8 @@ func TestNewObjectRef(t *testing.T) {
 func TestNewController(t *testing.T) {
 	type args struct {
 		name           string
-		slurmKeyRef    slinkyv1alpha1.SecretKeySelector
-		jwtHs256KeyRef slinkyv1alpha1.SecretKeySelector
+		slurmKeyRef    corev1.SecretKeySelector
+		jwtHs256KeyRef corev1.SecretKeySelector
 		accounting     *slinkyv1alpha1.Accounting
 	}
 	tests := []struct {
@@ -126,7 +126,7 @@ func TestNewSlurmKeyRef(t *testing.T) {
 
 func TestNewSlurmKeySecret(t *testing.T) {
 	type args struct {
-		ref slinkyv1alpha1.SecretKeySelector
+		ref corev1.SecretKeySelector
 	}
 	tests := []struct {
 		name string
@@ -179,7 +179,7 @@ func TestNewJwtHs256KeyRef(t *testing.T) {
 
 func TestNewJwtHs256KeySecret(t *testing.T) {
 	type args struct {
-		ref slinkyv1alpha1.SecretKeySelector
+		ref corev1.SecretKeySelector
 	}
 	tests := []struct {
 		name string
@@ -208,8 +208,8 @@ func TestNewJwtHs256KeySecret(t *testing.T) {
 func TestNewAccounting(t *testing.T) {
 	type args struct {
 		name           string
-		slurmKeyRef    slinkyv1alpha1.SecretKeySelector
-		jwtHs256KeyRef slinkyv1alpha1.SecretKeySelector
+		slurmKeyRef    corev1.SecretKeySelector
+		jwtHs256KeyRef corev1.SecretKeySelector
 		passwordRef    corev1.SecretKeySelector
 	}
 	tests := []struct {

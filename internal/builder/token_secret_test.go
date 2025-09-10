@@ -51,7 +51,7 @@ func TestBuilder_BuildTokenSecret(t *testing.T) {
 					},
 					Spec: slinkyv1alpha1.TokenSpec{
 						Username:       "foo",
-						JwtHs256KeyRef: testutils.NewJwtHs256KeyRef("slurm").SecretKeySelector,
+						JwtHs256KeyRef: testutils.NewJwtHs256KeyRef("slurm"),
 					},
 				},
 			},
@@ -67,7 +67,7 @@ func TestBuilder_BuildTokenSecret(t *testing.T) {
 						Name: "slurm",
 					},
 					Spec: slinkyv1alpha1.TokenSpec{
-						JwtHs256KeyRef: testutils.NewJwtHs256KeyRef("slurm").SecretKeySelector,
+						JwtHs256KeyRef: testutils.NewJwtHs256KeyRef("slurm"),
 					},
 				},
 			},

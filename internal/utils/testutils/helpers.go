@@ -23,7 +23,7 @@ func NewObjectRef(obj client.Object) slinkyv1alpha1.ObjectReference {
 	}
 }
 
-func NewController(name string, slurmKeyRef, jwtHs256KeyRef slinkyv1alpha1.SecretKeySelector, accounting *slinkyv1alpha1.Accounting) *slinkyv1alpha1.Controller {
+func NewController(name string, slurmKeyRef, jwtHs256KeyRef corev1.SecretKeySelector, accounting *slinkyv1alpha1.Accounting) *slinkyv1alpha1.Controller {
 	accountingRef := slinkyv1alpha1.ObjectReference{}
 	if accounting != nil {
 		accountingRef = NewObjectRef(accounting)
@@ -56,18 +56,16 @@ func NewController(name string, slurmKeyRef, jwtHs256KeyRef slinkyv1alpha1.Secre
 	}
 }
 
-func NewSlurmKeyRef(name string) slinkyv1alpha1.SecretKeySelector {
-	return slinkyv1alpha1.SecretKeySelector{
-		SecretKeySelector: corev1.SecretKeySelector{
-			LocalObjectReference: corev1.LocalObjectReference{
-				Name: name + "-slurmkey",
-			},
-			Key: "slurm.key",
+func NewSlurmKeyRef(name string) corev1.SecretKeySelector {
+	return corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{
+			Name: name + "-slurmkey",
 		},
+		Key: "slurm.key",
 	}
 }
 
-func NewSlurmKeySecret(ref slinkyv1alpha1.SecretKeySelector) *corev1.Secret {
+func NewSlurmKeySecret(ref corev1.SecretKeySelector) *corev1.Secret {
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ref.Name,
@@ -79,18 +77,16 @@ func NewSlurmKeySecret(ref slinkyv1alpha1.SecretKeySelector) *corev1.Secret {
 	}
 }
 
-func NewJwtHs256KeyRef(name string) slinkyv1alpha1.SecretKeySelector {
-	return slinkyv1alpha1.SecretKeySelector{
-		SecretKeySelector: corev1.SecretKeySelector{
-			LocalObjectReference: corev1.LocalObjectReference{
-				Name: name + "-jwths256key",
-			},
-			Key: "jwt_hs256.key",
+func NewJwtHs256KeyRef(name string) corev1.SecretKeySelector {
+	return corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{
+			Name: name + "-jwths256key",
 		},
+		Key: "jwt_hs256.key",
 	}
 }
 
-func NewJwtHs256KeySecret(ref slinkyv1alpha1.SecretKeySelector) *corev1.Secret {
+func NewJwtHs256KeySecret(ref corev1.SecretKeySelector) *corev1.Secret {
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ref.Name,
@@ -102,7 +98,7 @@ func NewJwtHs256KeySecret(ref slinkyv1alpha1.SecretKeySelector) *corev1.Secret {
 	}
 }
 
-func NewAccounting(name string, slurmKeyRef, jwtHs256KeyRef slinkyv1alpha1.SecretKeySelector, passwordRef corev1.SecretKeySelector) *slinkyv1alpha1.Accounting {
+func NewAccounting(name string, slurmKeyRef, jwtHs256KeyRef corev1.SecretKeySelector, passwordRef corev1.SecretKeySelector) *slinkyv1alpha1.Accounting {
 	return &slinkyv1alpha1.Accounting{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: slinkyv1alpha1.AccountingAPIVersion,

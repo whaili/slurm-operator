@@ -42,15 +42,13 @@ func (o *LoginSet) SssdSecretKey() types.NamespacedName {
 	}
 }
 
-func (o *LoginSet) SssdSecretRef() *SecretKeySelector {
+func (o *LoginSet) SssdSecretRef() *corev1.SecretKeySelector {
 	key := o.SssdSecretKey()
-	return &SecretKeySelector{
-		SecretKeySelector: corev1.SecretKeySelector{
-			LocalObjectReference: corev1.LocalObjectReference{
-				Name: key.Name,
-			},
-			Key: o.Spec.SssdConfRef.Key,
+	return &corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{
+			Name: key.Name,
 		},
+		Key: o.Spec.SssdConfRef.Key,
 	}
 }
 

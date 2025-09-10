@@ -47,15 +47,13 @@ func (o *Accounting) AuthStorageKey() types.NamespacedName {
 	}
 }
 
-func (o *Accounting) AuthStorageRef() *SecretKeySelector {
+func (o *Accounting) AuthStorageRef() *corev1.SecretKeySelector {
 	authKey := o.AuthStorageKey()
-	return &SecretKeySelector{
-		SecretKeySelector: corev1.SecretKeySelector{
-			LocalObjectReference: corev1.LocalObjectReference{
-				Name: authKey.Name,
-			},
-			Key: o.Spec.StorageConfig.PasswordKeyRef.Key,
+	return &corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{
+			Name: authKey.Name,
 		},
+		Key: o.Spec.StorageConfig.PasswordKeyRef.Key,
 	}
 }
 
@@ -66,15 +64,13 @@ func (o *Accounting) AuthSlurmKey() types.NamespacedName {
 	}
 }
 
-func (o *Accounting) AuthSlurmRef() *SecretKeySelector {
+func (o *Accounting) AuthSlurmRef() *corev1.SecretKeySelector {
 	ref := o.Spec.SlurmKeyRef
-	return &SecretKeySelector{
-		SecretKeySelector: corev1.SecretKeySelector{
-			LocalObjectReference: corev1.LocalObjectReference{
-				Name: ref.Name,
-			},
-			Key: ref.Key,
+	return &corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{
+			Name: ref.Name,
 		},
+		Key: ref.Key,
 	}
 }
 
@@ -85,15 +81,13 @@ func (o *Accounting) AuthJwtHs256Key() types.NamespacedName {
 	}
 }
 
-func (o *Accounting) AuthJwtHs256Ref() *SecretKeySelector {
+func (o *Accounting) AuthJwtHs256Ref() *corev1.SecretKeySelector {
 	ref := o.Spec.JwtHs256KeyRef
-	return &SecretKeySelector{
-		SecretKeySelector: corev1.SecretKeySelector{
-			LocalObjectReference: corev1.LocalObjectReference{
-				Name: ref.Name,
-			},
-			Key: ref.Key,
+	return &corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{
+			Name: ref.Name,
 		},
+		Key: ref.Key,
 	}
 }
 

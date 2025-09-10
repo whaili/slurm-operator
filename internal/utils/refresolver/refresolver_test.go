@@ -556,7 +556,7 @@ func TestRefResolver_GetSecretKeyRef(t *testing.T) {
 	}
 	type args struct {
 		ctx       context.Context
-		selector  *slinkyv1alpha1.SecretKeySelector
+		selector  *corev1.SecretKeySelector
 		namespace string
 	}
 	tests := []struct {
@@ -575,13 +575,11 @@ func TestRefResolver_GetSecretKeyRef(t *testing.T) {
 			},
 			args: args{
 				ctx: context.TODO(),
-				selector: &slinkyv1alpha1.SecretKeySelector{
-					SecretKeySelector: corev1.SecretKeySelector{
-						LocalObjectReference: corev1.LocalObjectReference{
-							Name: "secret",
-						},
-						Key: "password",
+				selector: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "secret",
 					},
+					Key: "password",
 				},
 				namespace: metav1.NamespaceDefault,
 			},
@@ -605,13 +603,11 @@ func TestRefResolver_GetSecretKeyRef(t *testing.T) {
 			},
 			args: args{
 				ctx: context.TODO(),
-				selector: &slinkyv1alpha1.SecretKeySelector{
-					SecretKeySelector: corev1.SecretKeySelector{
-						LocalObjectReference: corev1.LocalObjectReference{
-							Name: "secret",
-						},
-						Key: "password",
+				selector: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "secret",
 					},
+					Key: "password",
 				},
 				namespace: metav1.NamespaceDefault,
 			},

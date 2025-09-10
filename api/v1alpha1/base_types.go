@@ -42,12 +42,6 @@ func (o *ObjectReference) IsMatch(key types.NamespacedName) bool {
 	}
 }
 
-type SecretKeySelector struct {
-	// SecretKeySelector selects a key of a Secret.
-	// +structType=atomic
-	corev1.SecretKeySelector `json:",inline"`
-}
-
 // PodTemplate describes a template for creating copies of a predefined pod.
 type PodTemplate struct {
 	// Standard object's metadata.
