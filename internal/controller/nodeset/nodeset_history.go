@@ -178,13 +178,12 @@ func newRevision(nodeset *slinkyv1alpha1.NodeSet, revision int64, collisionCount
 // PodSpecTemplate. We can modify this later to encompass more state (or less) and remain compatible with previously
 // recorded patches.
 func getPatch(nodeset *slinkyv1alpha1.NodeSet) ([]byte, error) {
-	setBytes, err := json.Marshal(nodeset)
+	crBytes, err := json.Marshal(nodeset)
 	if err != nil {
 		return nil, err
 	}
 	var raw map[string]any
-	err = json.Unmarshal(setBytes, &raw)
-	if err != nil {
+	if err := json.Unmarshal(crBytes, &raw); err != nil {
 		return nil, err
 	}
 	objCopy := make(map[string]any)
