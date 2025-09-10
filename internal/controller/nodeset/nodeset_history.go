@@ -7,6 +7,7 @@ package nodeset
 import (
 	"context"
 	"encoding/json"
+	"maps"
 
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -168,9 +169,7 @@ func newRevision(nodeset *slinkyv1alpha1.NodeSet, revision int64, collisionCount
 	if cr.Annotations == nil {
 		cr.Annotations = make(map[string]string)
 	}
-	for key, value := range nodeset.Annotations {
-		cr.Annotations[key] = value
-	}
+	maps.Copy(cr.Annotations, nodeset.Annotations)
 	return cr, nil
 }
 
