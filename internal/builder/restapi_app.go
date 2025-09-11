@@ -167,7 +167,7 @@ func (b *Builder) slurmrestdContainer(merge corev1.Container, hasAccounting bool
 					"disable_unshare_sysv",
 				}, ",")},
 			},
-			Args: slurmrestArgs(hasAccounting),
+			Args: slurmrestdArgs(hasAccounting),
 			Ports: []corev1.ContainerPort{
 				{
 					Name:          labels.RestapiApp,
@@ -206,7 +206,7 @@ func (b *Builder) slurmrestdContainer(merge corev1.Container, hasAccounting bool
 	return b.BuildContainer(opts)
 }
 
-func slurmrestArgs(hasAccounting bool) []string {
+func slurmrestdArgs(hasAccounting bool) []string {
 	args := []string{}
 	if !hasAccounting {
 		args = append(args, "-s")
