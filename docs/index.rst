@@ -32,7 +32,7 @@ Table of Contents
     - `Hybrid Support <#hybrid-support>`__
     - `Slurm <#slurm>`__
 
-  - `Limitations <#limitations>`__
+  - `Compatibility <#compatibility>`__
   - `Quick Start <#quick-start>`__
   - `Upgrades <#upgrades>`__
 
@@ -161,13 +161,16 @@ features:
   Check <https://slurm.schedmd.com/slurm.conf.html#OPT_HealthCheckProgram>`__:
   periodically check node health via script.
 
-Limitations
------------
+Compatibility
+-------------
 
-- **Kubernetes Version**: >=
-  `v1.29 <https://kubernetes.io/blog/2023/12/13/kubernetes-v1-29-release/>`__
-- **Slurm Version**: >=
-  `25.05 <https://www.schedmd.com/slurm-version-25-05-0-is-now-available/>`__
++------------+-----------------------------------------------------------------------------+
+| Software   | Minimum Version                                                             |
++============+=============================================================================+
+| Kubernetes | `v1.29 <https://kubernetes.io/blog/2023/12/13/kubernetes-v1-29-release/>`__ |
++------------+-----------------------------------------------------------------------------+
+| Slurm      | `25.05 <https://www.schedmd.com/slurm-version-25-05-0-is-now-available/>`__ |
++------------+-----------------------------------------------------------------------------+
 
 Quick Start
 -----------

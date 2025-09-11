@@ -24,7 +24,7 @@ Run [Slurm] on [Kubernetes], by [SchedMD]. A [Slinky] project.
     - [LoginSets](#loginsets)
     - [Hybrid Support](#hybrid-support)
     - [Slurm](#slurm)
-  - [Limitations](#limitations)
+  - [Compatibility](#compatibility)
   - [Quick Start](#quick-start)
   - [Upgrades](#upgrades)
     - [0.X Releases](#0x-releases)
@@ -126,12 +126,12 @@ Slurm is a full featured HPC workload manager. To highlight a few features:
 - [**Node Health Check**][slurm-healthcheck]: periodically check node health via
   script.
 
-## Limitations
+## Compatibility
 
-- **Kubernetes Version**: >=
-  [v1.29](https://kubernetes.io/blog/2023/12/13/kubernetes-v1-29-release/)
-- **Slurm Version**: >=
-  [25.05](https://www.schedmd.com/slurm-version-25-05-0-is-now-available/)
+| Software   |                             Minimum Version                              |
+| :--------- | :----------------------------------------------------------------------: |
+| Kubernetes | [v1.29](https://kubernetes.io/blog/2023/12/13/kubernetes-v1-29-release/) |
+| Slurm      | [25.05](https://www.schedmd.com/slurm-version-25-05-0-is-now-available/) |
 
 ## Quick Start
 
