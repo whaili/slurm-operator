@@ -90,18 +90,18 @@ type PodSpecWrapper struct {
 }
 
 // MarshalJSON defers JSON encoding data from the wrapper.
-func (m *PodSpecWrapper) MarshalJSON() ([]byte, error) {
-	return json.Marshal(m.PodSpec)
+func (o *PodSpecWrapper) MarshalJSON() ([]byte, error) {
+	return json.Marshal(o.PodSpec)
 }
 
 // UnmarshalJSON will decode the data into the wrapper.
-func (m *PodSpecWrapper) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, &m.PodSpec)
+func (o *PodSpecWrapper) UnmarshalJSON(data []byte) error {
+	return json.Unmarshal(data, &o.PodSpec)
 }
 
-func (m *PodSpecWrapper) DeepCopy() *PodSpecWrapper {
+func (o *PodSpecWrapper) DeepCopy() *PodSpecWrapper {
 	return &PodSpecWrapper{
-		PodSpec: m.PodSpec,
+		PodSpec: o.PodSpec,
 	}
 }
 
@@ -113,18 +113,18 @@ type ContainerWrapper struct {
 }
 
 // MarshalJSON defers JSON encoding data from the wrapper.
-func (m *ContainerWrapper) MarshalJSON() ([]byte, error) {
-	return json.Marshal(m.Container)
+func (o *ContainerWrapper) MarshalJSON() ([]byte, error) {
+	return json.Marshal(o.Container)
 }
 
 // UnmarshalJSON will decode the data into the wrapper.
-func (m *ContainerWrapper) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, &m.Container)
+func (o *ContainerWrapper) UnmarshalJSON(data []byte) error {
+	return json.Unmarshal(data, &o.Container)
 }
 
-func (m *ContainerWrapper) DeepCopy() *ContainerWrapper {
+func (o *ContainerWrapper) DeepCopy() *ContainerWrapper {
 	return &ContainerWrapper{
-		Container: m.Container,
+		Container: o.Container,
 	}
 }
 
@@ -167,17 +167,17 @@ type ServiceSpecWrapper struct {
 }
 
 // MarshalJSON defers JSON encoding data from the wrapper.
-func (m *ServiceSpecWrapper) MarshalJSON() ([]byte, error) {
-	return json.Marshal(m.ServiceSpec)
+func (o *ServiceSpecWrapper) MarshalJSON() ([]byte, error) {
+	return json.Marshal(o.ServiceSpec)
 }
 
 // UnmarshalJSON will decode the data into the wrapper.
-func (m *ServiceSpecWrapper) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, &m.ServiceSpec)
+func (o *ServiceSpecWrapper) UnmarshalJSON(data []byte) error {
+	return json.Unmarshal(data, &o.ServiceSpec)
 }
 
-func (m *ServiceSpecWrapper) DeepCopy() *ServiceSpecWrapper {
+func (o *ServiceSpecWrapper) DeepCopy() *ServiceSpecWrapper {
 	return &ServiceSpecWrapper{
-		ServiceSpec: m.ServiceSpec,
+		ServiceSpec: o.ServiceSpec,
 	}
 }
