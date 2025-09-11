@@ -203,7 +203,12 @@ func (b *Builder) slurmrestdContainer(merge corev1.Container, hasAccounting bool
 		merge: merge,
 	}
 
-	return b.BuildContainer(opts)
+	out := b.BuildContainer(opts)
+
+	// Usage: slurmrestd [OPTIONS] [host:port]...
+	out.Args = append(out.Args, fmt.Sprintf("0.0.0.0:%d", SlurmrestdPort))
+
+	return out
 }
 
 func slurmrestdArgs(hasAccounting bool) []string {
@@ -212,6 +217,5 @@ func slurmrestdArgs(hasAccounting bool) []string {
 		args = append(args, "-s")
 		args = append(args, "openapi/slurmctld")
 	}
-	args = append(args, fmt.Sprintf("0.0.0.0:%d", SlurmrestdPort))
 	return args
 }
