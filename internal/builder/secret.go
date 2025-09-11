@@ -36,8 +36,14 @@ func (b *Builder) BuildSecret(opts SecretOpts, owner metav1.Object) (*corev1.Sec
 		Immutable:  ptr.To(opts.Immutable),
 	}
 
-	if err := controllerutil.SetControllerReference(owner, o, b.client.Scheme()); err != nil {
-		return nil, fmt.Errorf("failed to set owner controller: %w", err)
+	if owner == nil {
+		return nil, fmt.Errorf("failed to specify an owner")
+	}
+
+	if owner.GetNamespace() == o.GetNamespace() {
+		if err := controllerutil.SetControllerReference(owner, o, b.client.Scheme()); err != nil {
+			return nil, fmt.Errorf("failed to set owner controller: %w", err)
+		}
 	}
 
 	return o, nil

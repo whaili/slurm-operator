@@ -35,20 +35,22 @@ func (o *Token) Lifetime() time.Duration {
 }
 
 func (o *Token) JwtHs256Key() types.NamespacedName {
+	namespace := o.Spec.JwtHs256KeyRef.Namespace
+	if namespace == "" {
+		namespace = o.Namespace
+	}
 	return types.NamespacedName{
 		Name:      o.Spec.JwtHs256KeyRef.Name,
-		Namespace: o.Namespace,
+		Namespace: namespace,
 	}
 }
 
-func (o *Token) JwtHs256Ref() *corev1.SecretKeySelector {
+func (o *Token) JwtHs256Ref() *JwtSecretKeySelector {
 	ref := o.Spec.JwtHs256KeyRef
-	return &corev1.SecretKeySelector{
-		LocalObjectReference: corev1.LocalObjectReference{
-			Name: ref.Name,
-		},
-		Key: ref.Key,
+	if ref.Namespace == "" {
+		ref.Namespace = o.Namespace
 	}
+	return &ref
 }
 
 func (o *Token) SecretKey() types.NamespacedName {

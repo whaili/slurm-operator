@@ -50,6 +50,7 @@ All notable changes to this project will be documented in this file.
 - Changed ConfigFiles, PrologScripts, and EpilogScripts to list of object
   references.
 - Changed `nodeset.spec.template.extraConf` => `nodeset.spec.extraConf`.
+- Changed Token CR field JwtHs256KeyRef to include an optional namespace.
 
 ### Removed
 

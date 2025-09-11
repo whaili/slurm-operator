@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	slinkyv1alpha1 "github.com/SlinkyProject/slurm-operator/api/v1alpha1"
-	"github.com/SlinkyProject/slurm-operator/internal/utils/testutils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
@@ -50,8 +49,15 @@ func TestBuilder_BuildTokenSecret(t *testing.T) {
 						Name: "slurm",
 					},
 					Spec: slinkyv1alpha1.TokenSpec{
-						Username:       "foo",
-						JwtHs256KeyRef: testutils.NewJwtHs256KeyRef("slurm"),
+						Username: "foo",
+						JwtHs256KeyRef: slinkyv1alpha1.JwtSecretKeySelector{
+							SecretKeySelector: corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "slurm-jwths256key",
+								},
+								Key: "jwt_hs256.key",
+							},
+						},
 					},
 				},
 			},
@@ -67,7 +73,15 @@ func TestBuilder_BuildTokenSecret(t *testing.T) {
 						Name: "slurm",
 					},
 					Spec: slinkyv1alpha1.TokenSpec{
-						JwtHs256KeyRef: testutils.NewJwtHs256KeyRef("slurm"),
+						Username: "foo",
+						JwtHs256KeyRef: slinkyv1alpha1.JwtSecretKeySelector{
+							SecretKeySelector: corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "slurm-jwths256key",
+								},
+								Key: "jwt_hs256.key",
+							},
+						},
 					},
 				},
 			},

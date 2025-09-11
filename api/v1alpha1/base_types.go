@@ -42,6 +42,16 @@ func (o *ObjectReference) IsMatch(key types.NamespacedName) bool {
 	}
 }
 
+type JwtSecretKeySelector struct {
+	// SecretKeySelector selects a key of a Secret.
+	// +structType=atomic
+	corev1.SecretKeySelector `json:",inline"`
+
+	// The namespace of the Slurm `auth/jwt` JWT HS256 key.
+	// +optional
+	Namespace string `json:"namespace,omitempty"`
+}
+
 // PodTemplate describes a template for creating copies of a predefined pod.
 type PodTemplate struct {
 	// Standard object's metadata.
