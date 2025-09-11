@@ -187,14 +187,11 @@ func getPatch(nodeset *slinkyv1alpha1.NodeSet) ([]byte, error) {
 		return nil, err
 	}
 	objCopy := make(map[string]any)
-	specCopy := make(map[string]any)
 
 	// Create a patch of the NodeSet that replaces spec.template
 	spec := raw["spec"].(map[string]any)
-	template := spec["template"].(map[string]any)
-	specCopy["template"] = template
-	template["$patch"] = "replace"
-	objCopy["spec"] = specCopy
+	objCopy["$patch"] = "replace"
+	objCopy["spec"] = spec
 	patch, err := json.Marshal(objCopy)
 	return patch, err
 }
