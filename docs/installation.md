@@ -1,10 +1,10 @@
-# QuickStart Guide
+# Installation Guide
 
 ## Table of Contents
 
 <!-- mdformat-toc start --slug=github --no-anchors --maxlevel=6 --minlevel=1 -->
 
-- [QuickStart Guide](#quickstart-guide)
+- [Installation Guide](#installation-guide)
   - [Table of Contents](#table-of-contents)
   - [Overview](#overview)
   - [Slurm Operator And CRDs](#slurm-operator-and-crds)
@@ -22,18 +22,16 @@
 
 ## Overview
 
-This quickstart guide will help you get the slurm-operator running and deploy
-Slurm clusters to Kubernetes.
+Installation instructions for the Slurm Operator on Kubernetes.
 
 ## Slurm Operator And CRDs
 
 Install the [cert-manager] with its CRDs, if not already installed:
 
 ```sh
-helm install \
-  cert-manager oci://quay.io/jetstack/charts/cert-manager \
+helm install cert-manager oci://quay.io/jetstack/charts/cert-manager \
   --set 'crds.enabled=true' \
-  --namespace cert-manager
+  --namespace cert-manager --create-namespace
 ```
 
 Install the slurm-operator and its CRDs:

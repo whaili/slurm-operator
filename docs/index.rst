@@ -33,7 +33,7 @@ Table of Contents
     - `Slurm <#slurm>`__
 
   - `Limitations <#limitations>`__
-  - `Installation <#installation>`__
+  - `Quick Start <#quick-start>`__
   - `Upgrades <#upgrades>`__
 
     - `0.X Releases <#0x-releases>`__
@@ -169,8 +169,8 @@ Limitations
 - **Slurm Version**: >=
   `25.05 <https://www.schedmd.com/slurm-version-25-05-0-is-now-available/>`__
 
-Installation
-------------
+Quick Start
+-----------
 
 Install the
 `cert-manager <https://cert-manager.io/docs/installation/helm/>`__ with
@@ -178,10 +178,9 @@ its CRDs:
 
 .. code:: sh
 
-   helm install \
-     cert-manager oci://quay.io/jetstack/charts/cert-manager \
-     --set crds.enabled=true \
-     --namespace cert-manager
+   helm install cert-manager oci://quay.io/jetstack/charts/cert-manager \
+     --set 'crds.enabled=true' \
+     --namespace cert-manager --create-namespace
 
 Install the slurm-operator and its CRDs:
 
@@ -199,7 +198,7 @@ Install a Slurm cluster:
      --namespace=slurm --create-namespace
 
 For additional instructions, see the
-`quickstart <quickstart.html>`__ guide.
+`installation <installation.html>`__ guide.
 
 Upgrades
 --------
@@ -286,10 +285,10 @@ limitations under the License.
     architecture.md
     autoscaling.md
     develop.md
+    installation.md
     nodeset-controller.md
     override-config-file.md
     pyxis.md
-    quickstart.md
     slurm.md
     slurmclient-controller.md
     workload-isolation.md

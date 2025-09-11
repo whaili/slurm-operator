@@ -25,7 +25,7 @@ Run [Slurm] on [Kubernetes], by [SchedMD]. A [Slinky] project.
     - [Hybrid Support](#hybrid-support)
     - [Slurm](#slurm)
   - [Limitations](#limitations)
-  - [Installation](#installation)
+  - [Quick Start](#quick-start)
   - [Upgrades](#upgrades)
     - [0.X Releases](#0x-releases)
   - [Documentation](#documentation)
@@ -133,15 +133,14 @@ Slurm is a full featured HPC workload manager. To highlight a few features:
 - **Slurm Version**: >=
   [25.05](https://www.schedmd.com/slurm-version-25-05-0-is-now-available/)
 
-## Installation
+## Quick Start
 
 Install the [cert-manager] with its CRDs:
 
 ```sh
-helm install \
-  cert-manager oci://quay.io/jetstack/charts/cert-manager \
-  --set crds.enabled=true \
-  --namespace cert-manager
+helm install cert-manager oci://quay.io/jetstack/charts/cert-manager \
+  --set 'crds.enabled=true' \
+  --namespace cert-manager --create-namespace
 ```
 
 Install the slurm-operator and its CRDs:
@@ -159,7 +158,7 @@ helm install slurm oci://ghcr.io/slinkyproject/charts/slurm \
   --namespace=slurm --create-namespace
 ```
 
-For additional instructions, see the [quickstart] guide.
+For additional instructions, see the [installation] guide.
 
 ## Upgrades
 
@@ -223,8 +222,8 @@ specific language governing permissions and limitations under the License.
 [contact-schedmd]: https://www.schedmd.com/slurm-resources/contact-schedmd/
 [crds]: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#customresourcedefinitions
 [custom-controllers]: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#custom-controllers
+[installation]: ./docs/installation.md
 [kubernetes]: https://kubernetes.io/
-[quickstart]: ./docs/quickstart.md
 [schedmd]: https://schedmd.com/
 [slinky]: https://slinky.ai/
 [slinky-docs]: https://slinky.schedmd.com/
