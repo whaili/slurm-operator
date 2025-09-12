@@ -6,6 +6,16 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+### Fixed
+
+### Changed
+
+### Removed
+
+## v0.4.0
+
+### Added
+
 - Added NodeSet level authcred configuration.
 - Added topology.yaml to config files
 - Added Accounting, Controller, Restapi, and LoginSet CRDs.
