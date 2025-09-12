@@ -267,7 +267,7 @@ restapi:
     # externalName: ""
 
 # `slinky/slurm-exporter` subchart configurations.
-# Ref: https://github.com/SlinkyProject/slurm-exporter/-/blob/main/helm/slurm-exporter/values.yaml
+# Ref: https://github.com/SlinkyProject/slurm-exporter/blob/main/helm/slurm-exporter/values.yaml
 slurm-exporter:
   enabled: true
   exporter:
