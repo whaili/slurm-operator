@@ -71,6 +71,11 @@ and `custom resource definitions
 designed for the lifecycle (creation, upgrade, graceful shutdown) of
 Slurm clusters.
 
+.. figure:: _static/images/architecture-operator.svg
+   :alt: “Slurm Operator Architecture”
+
+   “Slurm Operator Architecture”
+
 For additional architectural notes, see the
 `architecture <architecture.html>`__ docs.
 
@@ -80,6 +85,11 @@ Slurm Cluster
 Slurm clusters are very flexible and can be configured in various ways.
 Our Slurm helm chart provides a reference implementation that is highly
 customizable and tries to expose everything Slurm has to offer.
+
+.. figure:: _static/images/architecture-slurm.svg
+   :alt: “Slurm Architecture”
+
+   “Slurm Architecture”
 
 For additional information about Slurm, see the
 `slurm <slurm.html>`__ docs.
