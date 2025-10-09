@@ -50,6 +50,7 @@ func init() {
 type Flags struct {
 	enableLeaderElection bool
 	probeAddr            string
+	metricsAddr          string
 	secureMetrics        bool
 	enableHTTP2          bool
 }
@@ -57,9 +58,15 @@ type Flags struct {
 func parseFlags(flags *Flags) {
 	flag.StringVar(
 		&flags.probeAddr,
-		"health-probe-bind-address",
+		"health-addr",
 		":8081",
 		"The address the probe endpoint binds to.",
+	)
+	flag.StringVar(
+		&flags.metricsAddr,
+		"metrics-addr",
+		":8080",
+		"The address the metrics server binds to.",
 	)
 	flag.BoolVar(
 		&flags.enableLeaderElection,
@@ -101,7 +108,8 @@ func main() {
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme: scheme,
 		Metrics: server.Options{
-			TLSOpts: tlsOpts,
+			TLSOpts:     tlsOpts,
+			BindAddress: flags.metricsAddr,
 		},
 		HealthProbeBindAddress:        flags.probeAddr,
 		LeaderElection:                flags.enableLeaderElection,
