@@ -145,33 +145,25 @@ func (b *Builder) controllerPodTemplate(controller *slinkyv1alpha1.Controller) (
 		},
 		base: corev1.PodSpec{
 			AutomountServiceAccountToken: ptr.To(false),
-			Affinity:                     template.Affinity,
 			Containers: []corev1.Container{
 				b.slurmctldContainer(spec.Slurmctld.Container, controller.ClusterName()),
-				b.reconfigureContainer(spec.Reconfigure),
 			},
-			Hostname: template.Hostname,
 			InitContainers: []corev1.Container{
+				b.reconfigureContainer(spec.Reconfigure),
 				b.logfileContainer(spec.LogFile, slurmctldLogFilePath),
 			},
-			ImagePullSecrets:  template.ImagePullSecrets,
-			NodeSelector:      template.NodeSelector,
-			PriorityClassName: template.PriorityClassName,
 			SecurityContext: &corev1.PodSecurityContext{
 				RunAsNonRoot: ptr.To(true),
 				RunAsUser:    ptr.To(slurmUserUid),
 				RunAsGroup:   ptr.To(slurmUserGid),
 				FSGroup:      ptr.To(slurmUserGid),
 			},
-			Tolerations: template.Tolerations,
-			Volumes:     controllerVolumes(controller, extraConfigMapNames),
+			Volumes: controllerVolumes(controller, extraConfigMapNames),
 		},
 		merge: template.PodSpec,
 	}
 
-	o := b.buildPodTemplate(opts)
-
-	return o, nil
+	return b.buildPodTemplate(opts), nil
 }
 
 func controllerVolumes(controller *slinkyv1alpha1.Controller, extra []string) []corev1.Volume {
@@ -312,6 +304,7 @@ func (b *Builder) reconfigureContainer(container slinkyv1alpha1.ContainerMinimal
 				"-c",
 				reconfigureScript,
 			},
+			RestartPolicy: ptr.To(corev1.ContainerRestartPolicyAlways),
 			VolumeMounts: []corev1.VolumeMount{
 				{Name: slurmEtcVolume, MountPath: slurmEtcDir, ReadOnly: true},
 				{Name: slurmAuthSocketVolume, MountPath: slurmctldAuthSocketDir, ReadOnly: true},
